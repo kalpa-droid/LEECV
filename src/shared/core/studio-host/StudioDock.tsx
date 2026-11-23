@@ -251,7 +251,9 @@ export function StudioDock({
             const role = resolveDockRole(sec);
             const prevGroup = idx > 0 ? resolveDockGroup(resolveDockRole(dockTabs[idx - 1])) : null;
             const currentGroup = resolveDockGroup(role);
-            const showGroupBreak = sec.groupBreakBefore === true || (prevGroup !== null && prevGroup !== currentGroup);
+            const showGroupBreak =
+              sec.groupBreakBefore === true ||
+              (sec.groupBreakBefore !== false && prevGroup !== null && prevGroup !== currentGroup);
 
             return (
               <React.Fragment key={sec.id}>
@@ -344,7 +346,9 @@ export function StudioDock({
           const role = resolveDockRole(sec);
           const prevGroup = idx > 0 ? resolveDockGroup(resolveDockRole(dockTabs[idx - 1])) : null;
           const currentGroup = resolveDockGroup(role);
-          const showGroupBreak = sec.groupBreakBefore === true || (prevGroup !== null && prevGroup !== currentGroup);
+          const showGroupBreak =
+            sec.groupBreakBefore === true ||
+            (sec.groupBreakBefore !== false && prevGroup !== null && prevGroup !== currentGroup);
 
           return (
             <React.Fragment key={sec.id}>

@@ -13,7 +13,6 @@ export interface AppShellProps {
   tabsBarProps: DocumentTabsBarProps;
   bannerSlot?: React.ReactNode;
   isPanelOpen?: boolean;
-  mobileTabState?: string;
   modalsSlot?: React.ReactNode;
   containerRef?: React.Ref<HTMLDivElement>;
 }
@@ -27,7 +26,6 @@ export const AppShell: React.FC<AppShellProps> = ({
   tabsBarProps,
   bannerSlot = null,
   isPanelOpen = true,
-  mobileTabState = 'editor',
   modalsSlot = null,
   containerRef,
 }) => {
@@ -41,12 +39,12 @@ export const AppShell: React.FC<AppShellProps> = ({
       <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-24">
         {dockSlot}
 
-        <div 
-          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto pb-24 md:pb-0 ${
-            isPanelOpen 
-              ? `w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.floating}` 
-              : 'w-0 opacity-0 overflow-hidden hidden md:block'
-          } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
+        <div
+          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex-col h-full overflow-y-auto pb-24 md:pb-0 ${
+            isPanelOpen
+              ? `flex w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.floating}`
+              : 'hidden md:block w-0 opacity-0 overflow-hidden'
+          }`}
         >
           {panelSlot}
         </div>
@@ -57,11 +55,11 @@ export const AppShell: React.FC<AppShellProps> = ({
             Flexbox+overflow). El centrado real lo hace CVPreview con
             margin:auto sobre la hoja + el scrollLeft calculado a mano en
             useDocumentViewport, que sí funciona en cualquier caso. */}
-        <div 
+        <div
           ref={containerRef}
           id="preview-viewport-container"
-          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 pb-24 sm:p-4 md:pb-4 flex flex-col items-start relative touch-pan-x touch-pan-y overscroll-contain ${
-            mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
+          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 pb-24 sm:p-4 md:pb-4 flex-col items-start relative touch-pan-x touch-pan-y overscroll-contain ${
+            isPanelOpen ? 'hidden md:flex' : 'flex'
           }`}
         >
           {mainSlot}

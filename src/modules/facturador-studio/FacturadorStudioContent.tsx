@@ -75,6 +75,7 @@ export interface FacturadorStudioContentProps {
   onNewEditorial?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTab[]) => void;
+  onOpenCreditsModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
 }
@@ -107,6 +108,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
   onNewEditorial,
   cycleUITheme,
   onTabsChanged = () => {},
+  onOpenCreditsModal,
   onOpenShareAppModal,
   onOpenPrivacy,
 }) => {
@@ -468,6 +470,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
             onOpenJsonDownloadModal={() => {}}
             onPrint={handleExportPDF}
             isSaving={isExporting}
+            onOpenCreditsModal={onOpenCreditsModal}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
             zoomLevel={viewport.zoomLevel}
@@ -475,6 +478,11 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
             triggerAutoFit={viewport.fitAndCenter}
             isAutoFitMode={viewport.isAutoFitMode}
             cycleUITheme={cycleUITheme}
+            isPanelOpen={isPanelOpen}
+            onCloseMobilePanel={() => {
+              setIsPanelOpen(false);
+              viewport.fitAndCenter();
+            }}
           />
         }
         dockSlot={

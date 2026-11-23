@@ -72,6 +72,7 @@ interface PlannerStudioContentProps {
   onOpenSavedCVsModal?: () => void;
   onOpenSaveAsModal?: () => void;
   onOpenJsonDownloadModal?: () => void;
+  onOpenCreditsModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
 }
@@ -100,6 +101,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   onOpenSavedCVsModal,
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
+  onOpenCreditsModal,
   onOpenShareAppModal,
   onOpenPrivacy,
 }) => {
@@ -290,6 +292,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
           onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
           onPrint={handlePrint}
+          onOpenCreditsModal={onOpenCreditsModal}
           onOpenShareAppModal={onOpenShareAppModal || (() => {})}
           onOpenPrivacy={onOpenPrivacy || (() => {})}
           zoomLevel={viewport.zoomLevel}
@@ -297,6 +300,11 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           triggerAutoFit={viewport.fitAndCenter}
           isAutoFitMode={viewport.isAutoFitMode}
           cycleUITheme={cycleUITheme}
+          isPanelOpen={isPanelOpen}
+          onCloseMobilePanel={() => {
+            setIsPanelOpen(false);
+            viewport.fitAndCenter();
+          }}
         />
       }
       dockSlot={

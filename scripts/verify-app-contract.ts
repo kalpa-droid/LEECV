@@ -35,6 +35,9 @@ import {
 import { ICON_REGISTRY } from '../src/shared/core/pdf-engine/layers/icons/iconRegistry';
 import { resolveDocumentIdWithHandoff } from '../src/shared/core/documents/useRegisterDocumentTab';
 import { deriveDocumentTitle, generateDocumentId } from '../src/shared/core/documents/documentEngine/titleEngine';
+import { TOPBAR_BUDGET } from '../src/shared/contracts/appContract';
+import { hasLeadingEmoji } from '../src/shared/core/ui/topBarActionRegistry';
+import { BOOK_PRINT_PROFILES } from '../src/modules/book-studio/domain/bookPrintProfileEngine';
 
 console.log('🔍 Verificando contrato de plataforma por app (Fase 10 — verify:app-contract)...\n');
 
@@ -212,6 +215,34 @@ for (const id of ALL_DOCUMENT_TYPE_IDS) {
   ) {
     errors.push(`[${id}] Declara seo.prerender=true pero "${manifest.route}" falta en scripts/prerenderMeta.mjs.`);
   }
+}
+
+// 10. Gobernanza TopBar, reubicación de tema, anti emoji+ícono y Docks compactos
+if (TOPBAR_BUDGET.maxGlobalContextPills !== 3 || TOPBAR_BUDGET.maxGlobalActions !== 2) {
+  errors.push('TOPBAR_BUDGET debe fijar maxGlobalContextPills=3 y maxGlobalActions=2.');
+}
+for (const profileId of ['home', 'print_shop'] as const) {
+  const pillText = BOOK_PRINT_PROFILES[profileId].pillText;
+  if (hasLeadingEmoji(pillText)) {
+    errors.push(`BOOK_PRINT_PROFILES.${profileId}.pillText ("${pillText}") no debe llevar emoji inicial.`);
+  }
+}
+const studioNavbarSrc = fs.readFileSync(
+  path.join(ROOT, 'src/shared/core/studio-host/StudioNavbar.tsx'),
+  'utf8',
+);
+if (studioNavbarSrc.includes('<ThemeToggleButton') || studioNavbarSrc.includes('ThemeToggleButton')) {
+  errors.push('StudioNavbar.tsx no debe incluir ThemeToggleButton en barra superior; el tema vive en Cuenta & Preferencias.');
+}
+if (!studioNavbarSrc.includes('onCloseMobilePanel') || !studioNavbarSrc.includes('UI_THEME_CYCLE')) {
+  errors.push('StudioNavbar.tsx debe incluir selector de tema en popover y transición Ver móvil unificada.');
+}
+const studioHostSrc = fs.readFileSync(
+  path.join(ROOT, 'src/shared/core/studio-host/StudioHost.tsx'),
+  'utf8',
+);
+if (!studioHostSrc.includes('<StudioNavbar') || !studioHostSrc.includes('<StudioDock')) {
+  errors.push('StudioHost.tsx debe delegar en <StudioNavbar /> y <StudioDock />.');
 }
 
 if (errors.length > 0) {

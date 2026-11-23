@@ -704,6 +704,45 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M12 10.5v5.5',
       'M9.75 13.25h4.5'
     ]
+  },
+  printHome: {
+    id: 'printHome',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 10.5L12 3l9 7.5',
+      'M5 9.5V20h14V9.5',
+      'M9.5 20v-5.5h5V20'
+    ]
+  },
+  printShop: {
+    id: 'printShop',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M6 9V3h12v6',
+      'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2',
+      'M6 14h12v7H6z'
+    ]
+  },
+  editorialNorm: {
+    id: 'editorialNorm',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 3h16v18H4z',
+      'M8 7v10',
+      'M12 7h4',
+      'M12 11h4',
+      'M12 15h3'
+    ]
+  },
+  editorialCitations: {
+    id: 'editorialCitations',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M8 5H5v14h3',
+      'M16 5h3v14h-3',
+      'M12 8v8',
+      'M10 10l2-2'
+    ]
   }
 };
 

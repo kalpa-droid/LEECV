@@ -49,6 +49,7 @@ interface CardStudioContentProps {
   onOpenSavedCVsModal?: () => void;
   onOpenSaveAsModal?: () => void;
   onOpenJsonDownloadModal?: () => void;
+  onOpenCreditsModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
 }
@@ -70,6 +71,7 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
   onOpenSavedCVsModal,
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
+  onOpenCreditsModal,
   onOpenShareAppModal,
   onOpenPrivacy,
 }) => {
@@ -227,6 +229,7 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
             onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
             onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
             onPrint={() => setIsExportModalOpen(true)}
+            onOpenCreditsModal={onOpenCreditsModal}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
             zoomLevel={viewport.zoomLevel}
@@ -234,6 +237,11 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
             triggerAutoFit={viewport.fitAndCenter}
             isAutoFitMode={viewport.isAutoFitMode}
             cycleUITheme={cycleUITheme}
+            isPanelOpen={isPanelOpen}
+            onCloseMobilePanel={() => {
+              setIsPanelOpen(false);
+              viewport.fitAndCenter();
+            }}
           />
         }
         dockSlot={

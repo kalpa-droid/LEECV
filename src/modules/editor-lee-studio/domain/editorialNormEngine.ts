@@ -453,3 +453,39 @@ export function formatEditorialPillLabel(draft: any): {
     tooltip: `Obra: ${preset.shortLabel} | Estructura: ${EDITORIAL_STRUCTURAL_NORMS[structuralNorm].label} | Citas: ${BIBLIOGRAPHY_NORM_GUIDES[bibStyle].label}.`,
   };
 }
+
+export interface EditorialThreePillLabels {
+  presetShort: string;
+  presetTooltip: string;
+  normShort: string;
+  normTooltip: string;
+  bibShort: string;
+  bibTooltip: string;
+}
+
+export function formatEditorialGlobalPills(draft: any): EditorialThreePillLabels {
+  const preset = getEditorialPreset(draft?.design?.presetId || '') || DEFAULT_EDITORIAL_PRESET;
+  const structuralNorm = resolveStructuralNormFromDraft(draft);
+  const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNorm];
+  const bibStyle = normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId);
+  const bibGuide = BIBLIOGRAPHY_NORM_GUIDES[bibStyle];
+  const bibShortMap: Record<CanonicalCitationStyle, string> = {
+    apa7: 'APA 7',
+    vancouver: 'Vancouver',
+    ieee: 'IEEE',
+    harvard: 'Harvard',
+    chicago: 'Chicago',
+    mla: 'MLA 9',
+    tradicional: 'Libre',
+  };
+
+  const bibShort = bibShortMap[bibStyle] || 'APA 7';
+  return {
+    presetShort: preset.shortLabel,
+    presetTooltip: `Tipo de obra: ${preset.label}. Tocá para cambiar la plantilla base.`,
+    normShort: normSpec.shortLabel,
+    normTooltip: `Norma visual de página: ${normSpec.label}. Tocá para ajustar márgenes e interlineado globales.`,
+    bibShort: `Citas: ${bibShort}`,
+    bibTooltip: `Estilo bibliográfico: ${bibGuide.label}. Tocá para cambiar el formato de citas.`,
+  };
+}

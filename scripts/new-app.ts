@@ -211,6 +211,7 @@ import { ActionGrid } from '../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
 import { AIButton } from '../../shared/core/ui/AIButton';
 import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import {
   clearManualOverride,
   isManuallyOverridden,
@@ -236,6 +237,7 @@ interface ${studioComponentName}Props {
   onOpenJsonDownloadModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
+  onOpenCreditsModal?: () => void;
 }
 
 export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
@@ -253,6 +255,7 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
   onOpenJsonDownloadModal,
   onOpenShareAppModal,
   onOpenPrivacy,
+  onOpenCreditsModal,
 }) => {
   const { showInfo } = useToast();
   const [activeStepTab, setActiveStepTab] = useState<string>('${input.id}_inicio');
@@ -299,16 +302,26 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
             onPrint={() => showInfo('Conectar exportador PDF + useExportEntitlement.')}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
-            globalContextPill={{
-              shortLabel: docData.globalContext,
-              tooltip: 'Configuración global de ${input.title}. Tocá para alternar o abrir selector.',
-              hasOverrides: isManuallyOverridden(docData.manualOverrides, 'activePresetId'),
-              onClick: () =>
-                setDocData((prev) => ({
-                  ...prev,
-                  globalContext: prev.globalContext === 'Estándar' ? 'Compacto' : 'Estándar',
-                })),
+            onOpenCreditsModal={onOpenCreditsModal}
+            isPanelOpen={isPanelOpen}
+            onCloseMobilePanel={() => {
+              setIsPanelOpen(false);
+              viewport.fitAndCenter();
             }}
+            globalContextPills={[
+              {
+                id: '${input.id}_global',
+                shortLabel: docData.globalContext,
+                tooltip: 'Configuración global de ${input.title}. Cada píldora controla un solo eje global (máx. 3; sin emojis junto al ícono).',
+                iconId: UI_ICON_IDS.template,
+                hasOverrides: isManuallyOverridden(docData.manualOverrides, 'activePresetId'),
+                onClick: () =>
+                  setDocData((prev) => ({
+                    ...prev,
+                    globalContext: prev.globalContext === 'Estándar' ? 'Compacto' : 'Estándar',
+                  })),
+              },
+            ]}
             zoomLevel={viewport.zoomLevel}
             setZoomLevel={viewport.setZoomLevel}
             triggerAutoFit={viewport.fitAndCenter}
@@ -360,7 +373,17 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
                   />
                   <SectionSwitch
                     checked={isSectionEnabled}
-                    onChange={setIsSectionEnabled}
+                    onChange={(checked) => {
+                      setIsSectionEnabled(checked);
+                      emitLidioMessage({
+                        kind: 'state',
+                        groupKey: '${input.id}-section-toggle',
+                        title: checked ? 'Sección visible' : 'Sección oculta',
+                        body: checked
+                          ? 'Se incluirá en el documento final sin perder datos.'
+                          : 'Queda oculta temporalmente; tus datos siguen guardados.',
+                      });
+                    }}
                     label="${input.title}"
                   />
                 </div>
@@ -562,7 +585,7 @@ registerDockStepProvider('${input.id}', () =>
     id: s.id,
     label: s.label,
     stepNumber: s.stepNumber,
-    isLarge: s.stepNumber <= 2,
+    isLarge: false,
     variant: s.role === 'preset' ? ('accent' as const) : undefined,
     role: s.role,
   })),
@@ -610,7 +633,7 @@ registerDockStepProvider('${input.id}', () =>
     title: '${input.title}',
     tagline: 'Creación rápida local paso a paso',
     description: 'Genera tu ${input.title} profesional y descárgalo listo para compartir o imprimir.',
-    bullets: ['Edición paso a paso en vivo', 'Exportación vectorial a PDF'],
+    bullets: ['Edición paso a paso en vivo', 'Exportación nítida lista para imprimir en PDF'],
     route: '${input.route}',
     cta: 'Crear ${input.title}',
   },`;
@@ -740,10 +763,18 @@ function runSelfTest(): void {
       !studioSrc.includes('VisibilityEyeToggle') ||
       !studioSrc.includes('ActionGrid') ||
       !studioSrc.includes('ManualOverrideBadge') ||
-      !studioSrc.includes('globalContextPill') ||
+      !studioSrc.includes('globalContextPills') ||
+      !studioSrc.includes('onCloseMobilePanel') ||
+      !studioSrc.includes('onOpenCreditsModal') ||
+      !studioSrc.includes('emitLidioMessage') ||
       !studioSrc.includes('role="preset"')
     ) {
-      throw new Error('Self-test falló: studio generado debe incluir los primitivos Cero Ruido, taxonomía de botones, píldora global y cascada.');
+      throw new Error('Self-test falló: studio generado debe incluir los primitivos Cero Ruido, 3 canales de ayuda, globalContextPills, móvil unificado y cascada.');
+    }
+    if (
+      !plan.registrationSnippets.dockProviderSnippet.includes('isLarge: false')
+    ) {
+      throw new Error('Self-test falló: dockProviderSnippet debe usar botones compactos uniformes (isLarge: false).');
     }
     if (
       !plan.registrationSnippets.documentTypeRegistryEntry.includes('ui:') ||

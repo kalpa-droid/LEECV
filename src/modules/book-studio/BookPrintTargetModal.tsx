@@ -80,7 +80,7 @@ export const BookPrintTargetModal: React.FC<BookPrintTargetModalProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-2 text-sm font-extrabold text-[var(--ui-text-primary)]">
                       <Icon className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                      <span>{profile.emoji} {profile.shortName}</span>
+                      <span>{profile.shortName}</span>
                     </span>
                     {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
                   </div>
@@ -108,7 +108,8 @@ export const BookPrintTargetModal: React.FC<BookPrintTargetModalProps> = ({
 
         {conflicts.length > 0 && (
           <div
-            className={`p-3 rounded-[${radius.control}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 space-y-2`}
+            className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 space-y-2"
+            style={{ borderRadius: radius.control }}
           >
             <div className="flex items-start gap-2 text-xs font-bold text-[var(--color-status-warning-text)]">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />

@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { BookMarked, ChevronLeft, ChevronRight, Palette, Check } from 'lucide-react';
+import { BookMarked, Ban, Check, FileText, Image, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, BackCoverConfig } from './domain/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { bookAssetManager } from './domain/bookAssetManager';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ActionGrid } from '../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
+import { Field } from '../../shared/core/ui/Field';
+import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
+import { LidioHelpTrigger } from '../../shared/core/ui/LidioHelpTrigger';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -27,8 +35,6 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
   const [imageError, setImageError] = useState<string | null>(null);
   const [thumbUri, setThumbUri] = useState<string | null>(null);
 
-  // El retiro delante de la contratapa solo tiene sentido si hay alguna
-  // contratapa (del PDF o personalizada). Sin contratapa el motor no inyecta.
   const hasBackCoverChosen = options.hasBackCover || Boolean(options.customBackCover);
 
   useEffect(() => {
@@ -51,7 +57,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       synopsis: '',
       publisher: '',
       isbn: '',
-      coverStyle: options.customCover?.coverStyle || 'monica-classic',
+      coverStyle: options.customCover?.coverStyle || options.coverStyle || 'monica-classic',
     }
   );
 
@@ -59,19 +65,22 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     setBackCoverType(type);
     if (type === 'source') {
       setOptions((prev) => ({ ...prev, hasBackCover: true, customBackCover: null }));
+      emitLidioMessage({ kind: 'state', groupKey: 'book-backcover-mode', title: 'Contratapa del PDF activada', body: 'La última página de tu PDF cierra el libro.' });
     } else if (type === 'custom') {
       const updated = { ...backCoverData, type: 'template' as const };
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: updated }));
+      emitLidioMessage({ kind: 'state', groupKey: 'book-backcover-mode', title: 'Contratapa diseñada activada', body: 'Podés agregar sinopsis, editorial e ISBN.' });
     } else if (type === 'upload') {
       const updated = { ...backCoverData, type: 'upload' as const };
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: updated }));
+      emitLidioMessage({ kind: 'state', groupKey: 'book-backcover-mode', title: 'Imagen de contratapa activada', body: 'Subí tu propia imagen de cierre.' });
     } else {
-      // Sin contratapa: borrar también la imagen local guardada, no dejar basura.
       if (options.customBackCover?.assetId) {
         bookAssetManager.remove(options.customBackCover.assetId);
       }
       setThumbUri(null);
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: null }));
+      emitLidioMessage({ kind: 'state', groupKey: 'book-backcover-mode', title: 'Sin contratapa especial', body: 'El libro termina en la última hoja de contenido.' });
     }
   };
 
@@ -92,7 +101,6 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     }
     try {
       const { assetId } = await bookAssetManager.putFile(file, 'backCover');
-      // Evitar duplicados huérfanos: la imagen anterior se borra.
       if (backCoverData.assetId && backCoverData.assetId !== assetId) {
         bookAssetManager.remove(backCoverData.assetId);
       }
@@ -107,67 +115,63 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
   };
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <BookMarked className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>{t.bookStudio.backCoverStep.title}</span>
-        </h2>
-        <p className="text-xs text-[var(--ui-text-secondary)]">
-          {t.bookStudio.backCoverStep.description}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <button
-          type="button"
-          onClick={() => handleBackCoverTypeChange('source')}
-          className={`${selectableCard.base} ${
-            backCoverType === 'source' ? selectableCard.selected : selectableCard.unselected
-          } text-xs font-bold text-center py-2.5 px-2`}
-        >
-          {t.bookStudio.backCoverStep.lastPdfPage}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleBackCoverTypeChange('custom')}
-          className={`${selectableCard.base} ${
-            backCoverType === 'custom' ? selectableCard.selected : selectableCard.unselected
-          } text-xs font-bold text-center py-2.5 px-2`}
-        >
-          {t.bookStudio.backCoverStep.customMode}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleBackCoverTypeChange('upload')}
-          className={`${selectableCard.base} ${
-            backCoverType === 'upload' ? selectableCard.selected : selectableCard.unselected
-          } text-xs font-bold text-center py-2.5 px-2`}
-        >
-          {t.bookStudio.backCoverStep.uploadMode}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleBackCoverTypeChange('none')}
-          className={`${selectableCard.base} ${
-            backCoverType === 'none' ? selectableCard.selected : selectableCard.unselected
-          } text-xs font-bold text-center py-2.5 px-2`}
-        >
-          {t.bookStudio.backCoverStep.noBackCoverMode}
-        </button>
-      </div>
+    <div className="space-y-5 text-[var(--ui-text-primary)]">
+      <PanelSection
+        icon={<BookMarked className="w-4 h-4" />}
+        title={t.bookStudio.backCoverStep.title}
+        helpTitle="Cierre visual del libro"
+        helpText={t.bookStudio.backCoverStep.description}
+      >
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            role="record"
+            icon={<FileText className="w-4 h-4" />}
+            label={t.bookStudio.backCoverStep.lastPdfPage}
+            helpText="Usa la última página del archivo subido como cierre."
+            helpGroupKey="book-backcover-source"
+            active={backCoverType === 'source'}
+            onClick={() => handleBackCoverTypeChange('source')}
+          />
+          <ActionTileButton
+            role="preset"
+            icon={<Palette className="w-4 h-4" />}
+            label={t.bookStudio.backCoverStep.customMode}
+            helpText="Crea una contratapa con reseña, editorial y diseño a tono."
+            helpGroupKey="book-backcover-custom"
+            active={backCoverType === 'custom'}
+            onClick={() => handleBackCoverTypeChange('custom')}
+          />
+          <ActionTileButton
+            role="io"
+            icon={<Image className="w-4 h-4" />}
+            label={t.bookStudio.backCoverStep.uploadMode}
+            helpText="Subí una imagen propia para el lado de atrás del libro."
+            helpGroupKey="book-backcover-upload"
+            active={backCoverType === 'upload'}
+            onClick={() => handleBackCoverTypeChange('upload')}
+          />
+          <ActionTileButton
+            role="record"
+            icon={<Ban className="w-4 h-4" />}
+            label={t.bookStudio.backCoverStep.noBackCoverMode}
+            helpText="No agrega contratapa al final del libro."
+            helpGroupKey="book-backcover-none"
+            active={backCoverType === 'none'}
+            onClick={() => handleBackCoverTypeChange('none')}
+          />
+        </ActionGrid>
+      </PanelSection>
 
       {backCoverType === 'upload' && (
-        <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-          <div className="space-y-1">
-            <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.uploadLabel}</label>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              {t.bookStudio.backCoverStep.uploadHint}
-            </p>
-          </div>
+        <PanelSection
+          icon={<Image className="w-4 h-4" />}
+          title={t.bookStudio.backCoverStep.uploadLabel}
+          helpTitle="Imagen de contratapa"
+          helpText={t.bookStudio.backCoverStep.uploadHint}
+        >
+          <ContextualGuideBox title="Qué imagen elegir">
+            Elegí una imagen vertical limpia. Si no coincide exacto con la proporción, probá &ldquo;Ajustar sin deformar&rdquo;.
+          </ContextualGuideBox>
 
           <input
             type="file"
@@ -182,10 +186,13 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
 
           {(backCoverData.imageUri || thumbUri) && (
             <div className="space-y-4">
-              <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
+              <div
+                className="relative w-full aspect-[1/1.41] max-w-[200px] mx-auto overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]"
+                style={{ borderRadius: radius.control }}
+              >
                 <img
                   src={(backCoverData.imageUri || thumbUri) as string}
-                  alt={t.bookStudio.backCoverStep.uploadPreviewAlt} 
+                  alt={t.bookStudio.backCoverStep.uploadPreviewAlt}
                   className={`w-full h-full ${
                     backCoverData.imageFit === 'stretch' ? '' :
                     backCoverData.imageFit === 'fit' ? 'object-contain' : 'object-cover'
@@ -233,108 +240,106 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
               </div>
             </div>
           )}
-        </div>
+        </PanelSection>
       )}
 
       {backCoverType === 'custom' && (
-        <div className={`space-y-5 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-          {/* Selector de Presets de Portada (mismo catálogo del CV y de la tapa) */}
-          <div className="space-y-2">
-            <label className={`${typeScale.fieldLabel} flex items-center gap-1.5`}>
-              <Palette className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-              {t.bookStudio.backCoverStep.presetHeading}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {COVER_PRESETS.map((preset) => {
-                const isSelected = (backCoverData.coverStyle || 'monica-classic') === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => updateBackCoverField('coverStyle', preset.id)}
-                    className={`${selectableCard.base} ${
-                      isSelected ? selectableCard.selected : selectableCard.unselected
-                    } flex items-center justify-between p-2.5 text-xs`}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <div
-                        className="w-4 h-4 rounded-full border border-black/20 shrink-0"
-                        style={{ backgroundColor: preset.badgeBg }}
-                      />
-                      <span className="truncate font-medium">{preset.name}</span>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-[var(--ui-text-secondary)]">
-              {t.bookStudio.backCoverStep.inheritStyleNote}
-            </p>
+        <PanelSection
+          icon={<Palette className="w-4 h-4" />}
+          title={t.bookStudio.backCoverStep.presetHeading}
+          helpTitle="Estilo visual de contratapa"
+          helpText={t.bookStudio.backCoverStep.inheritStyleNote}
+        >
+          <ContextualGuideBox title="Qué escribir atrás">
+            Escribí un resumen breve que invite a leer el libro. Editorial e ISBN son opcionales.
+          </ContextualGuideBox>
+
+          <div className="grid grid-cols-2 gap-2">
+            {COVER_PRESETS.map((preset) => {
+              const isSelected = (backCoverData.coverStyle || 'monica-classic') === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => updateBackCoverField('coverStyle', preset.id)}
+                  className={`${selectableCard.base} ${
+                    isSelected ? selectableCard.selected : selectableCard.unselected
+                  } flex items-center justify-between p-2.5 text-xs cursor-pointer`}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div
+                      className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                      style={{ backgroundColor: preset.badgeBg }}
+                    />
+                    <span className="truncate font-medium">{preset.name}</span>
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="space-y-3 pt-2">
-            <div>
-              <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.synopsisLabel}</label>
-              <textarea
-                rows={3}
-                value={backCoverData.synopsis || ''}
-                onChange={(e) => updateBackCoverField('synopsis', e.target.value)}
-                placeholder={t.bookStudio.backCoverStep.synopsisPlaceholder}
-                className={`${input.base} ${input.focus} resize-none`}
-              />
-            </div>
-
-            <div>
-              <label className={typeScale.fieldLabel}>{t.bookStudio.sharedBody.publisherLabel}</label>
-              <input
-                type="text"
-                value={backCoverData.publisher || ''}
-                onChange={(e) => updateBackCoverField('publisher', e.target.value)}
-                placeholder={t.bookStudio.sharedBody.publisherPlaceholder}
-                className={`${input.base} ${input.focus}`}
-              />
-            </div>
-
-            <div>
-              <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.isbnLabel}</label>
-              <input
-                type="text"
-                value={backCoverData.isbn || ''}
-                onChange={(e) => updateBackCoverField('isbn', e.target.value)}
-                placeholder={t.bookStudio.backCoverStep.isbnPlaceholder}
-                className={`${input.base} ${input.focus}`}
-              />
-            </div>
+          <div className="space-y-3 pt-1">
+            <Field
+              label={t.bookStudio.backCoverStep.synopsisLabel}
+              as="textarea"
+              rows={3}
+              value={backCoverData.synopsis || ''}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateBackCoverField('synopsis', e.target.value)}
+              placeholder={t.bookStudio.backCoverStep.synopsisPlaceholder}
+              className="resize-none"
+            />
+            <Field
+              label={t.bookStudio.sharedBody.publisherLabel}
+              value={backCoverData.publisher || ''}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateBackCoverField('publisher', e.target.value)}
+              placeholder={t.bookStudio.sharedBody.publisherPlaceholder}
+            />
+            <Field
+              label={t.bookStudio.backCoverStep.isbnLabel}
+              value={backCoverData.isbn || ''}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateBackCoverField('isbn', e.target.value)}
+              placeholder={t.bookStudio.backCoverStep.isbnPlaceholder}
+            />
           </div>
+        </PanelSection>
+      )}
+
+      {hasBackCoverChosen && (
+        <div
+          className="flex items-center justify-between gap-3 p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)]"
+          style={{ borderRadius: radius.control }}
+        >
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-bold text-xs text-[var(--ui-text-primary)] truncate">
+              {t.bookStudio.backCoverStep.blankInFrontLabel}
+            </span>
+            <LidioHelpTrigger
+              title={t.bookStudio.backCoverStep.blankInFrontLabel}
+              text={t.bookStudio.backCoverStep.blankInFrontHelper}
+              groupKey="book-backcover-retiro"
+            />
+          </div>
+          <SectionSwitch
+            checked={options.blankInFrontBackCover !== false}
+            onChange={(checked) => {
+              setOptions((prev) => ({ ...prev, blankInFrontBackCover: checked }));
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-backcover-retiro',
+                title: checked ? 'Hoja en blanco previa activada' : 'Hoja en blanco previa desactivada',
+                body: checked
+                  ? 'El reverso antes de la contratapa queda limpio.'
+                  : 'El contenido termina pegado al reverso de la contratapa.',
+              });
+            }}
+            label={t.bookStudio.backCoverStep.blankInFrontLabel}
+            helpText={t.bookStudio.backCoverStep.blankInFrontHelper}
+            size="sm"
+          />
         </div>
       )}
 
-      {/* Retiro de Contratapa y Hoja en Blanco Anterior (solo con contratapa: del PDF o personalizada) */}
-      {hasBackCoverChosen && (
-      <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          {t.bookStudio.backCoverStep.retiroHeading}
-        </h3>
-
-        <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
-          <div className="space-y-0.5 pr-4">
-            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">{t.bookStudio.backCoverStep.blankInFrontLabel}</span>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block">
-              {t.bookStudio.backCoverStep.blankInFrontHelper}
-            </span>
-          </div>
-          <input
-            type="checkbox"
-            checked={options.blankInFrontBackCover !== false}
-            onChange={(e) => setOptions((prev) => ({ ...prev, blankInFrontBackCover: e.target.checked }))}
-            className="w-4 h-4 accent-[var(--color-accent-base)] rounded focus:ring-0 cursor-pointer"
-          />
-        </label>
-      </div>
-      )}
-
-      {/* Navegación Bidireccional */}
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
         {onPrevStep ? (
           <button
@@ -361,5 +366,3 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     </div>
   );
 };
-
-

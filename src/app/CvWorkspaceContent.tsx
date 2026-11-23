@@ -1,10 +1,11 @@
-import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import StudioNavbar from '../shared/core/studio-host/StudioNavbar';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo } from 'react';
+import StudioNavbar, { type NavbarGlobalAction } from '../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../shared/core/studio-host/StudioDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 import { AppShell } from '../shared/core/ui/AppShell';
 import { OpenTab as OpenTabItem } from '../shared/core/documents/tabStore';
 import { hasCapability } from '../shared/core/capabilities/capabilityRegistry';
+import { PRODUCT_ICON_IDS } from '../shared/core/ui/iconCatalog';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { useExportEntitlement } from '../shared/core/entitlements/useExportEntitlement';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
@@ -104,7 +105,6 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
   onAtsLiveResultChange,
   modalsSlot,
 }) => {
-  const [mobileTabState, setMobileTabState] = useState<'editor' | 'preview'>('editor');
   const { showInfo } = useToast();
   const { consumeCreditIfNeeded } = useExportEntitlement();
   const { refreshEntitlements } = useEntitlements();
@@ -177,11 +177,40 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
     showInfo,
   ]);
 
+  const handleCloseMobilePanel = useCallback(() => {
+    setIsPanelOpen(false);
+    viewport.fitAndCenter();
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        setTimeout(viewport.fitAndCenter, 120);
+      });
+    }
+  }, [setIsPanelOpen, viewport]);
+
+  const globalActions: NavbarGlobalAction[] = useMemo(() => {
+    if (!hasCapability(activeDocType, 'experience')) return [];
+    return [
+      {
+        id: 'cover_letter_handoff',
+        label: 'Carta',
+        mobileLabel: 'Carta',
+        tooltip: 'Carta de Presentación (global)',
+        ariaLabel: 'Abrir Carta de Presentación',
+        iconId: PRODUCT_ICON_IDS.carta,
+        tone: 'secondary',
+        active: activeTab === 'carta' && isPanelOpen,
+        onClick: () => {
+          setActiveTab('carta');
+          setIsPanelOpen(true);
+        },
+      },
+    ];
+  }, [activeDocType, activeTab, isPanelOpen, setActiveTab, setIsPanelOpen]);
+
   return (
     <AppShell
       docType={activeDocType}
       isPanelOpen={isPanelOpen}
-      mobileTabState={mobileTabState}
       containerRef={viewport.containerRef}
       navbarSlot={
         <StudioNavbar
@@ -206,6 +235,7 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           onOpenAtsCheck={onOpenAtsLivePanel}
           atsScore={atsLiveScore}
           onOpenRegionFormat={onOpenRegionFormat}
+          globalActions={globalActions}
           onOpenPricing={onOpenPricing}
           onOpenCreditsModal={onOpenCreditsModal}
           onOpenShareAppModal={onOpenShareAppModal}
@@ -216,20 +246,8 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           triggerAutoFit={viewport.fitAndCenter}
           isAutoFitMode={viewport.isAutoFitMode}
           cycleUITheme={cycleUITheme}
-          mobileTabState={mobileTabState}
-          onToggleMobileTab={(tab) => {
-            setMobileTabState(tab);
-            if (tab === 'editor') {
-              setIsPanelOpen(true);
-            } else {
-              viewport.fitAndCenter();
-              if (typeof window !== 'undefined') {
-                requestAnimationFrame(() => {
-                  setTimeout(viewport.fitAndCenter, 120);
-                });
-              }
-            }
-          }}
+          isPanelOpen={isPanelOpen}
+          onCloseMobilePanel={handleCloseMobilePanel}
         />
       }
       dockSlot={
@@ -239,7 +257,6 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           activeTab={activeTab}
           setActiveTab={(tab) => {
             setActiveTab(tab);
-            setMobileTabState('editor');
             setIsPanelOpen(true);
           }}
           isPanelOpen={isPanelOpen}

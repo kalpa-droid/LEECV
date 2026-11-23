@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getPageSize, PAGE_SIZES } from '../src/shared/core/pdf-engine/layers/page/pageSizes';
+import { hasLeadingEmoji } from '../src/shared/core/ui/topBarActionRegistry';
 import {
   BOOK_PAPER_SPECS,
   BOOK_PRINT_PROFILES,
@@ -33,6 +34,10 @@ describe('Libro/Folleto — Perfil Global En casa vs Imprenta y Papel', () => {
     expect(BOOK_PRINT_PROFILES.home.defaults.unprintableMarginMm).toBe(5);
     expect(BOOK_PRINT_PROFILES.print_shop.defaults.unprintableMarginMm).toBe(0);
     expect(BOOK_PRINT_PROFILES.print_shop.defaults.destination).toBe('C');
+    expect(BOOK_PRINT_PROFILES.home.pillText).toBe('En casa');
+    expect(BOOK_PRINT_PROFILES.print_shop.pillText).toBe('Imprenta');
+    expect(hasLeadingEmoji(BOOK_PRINT_PROFILES.home.pillText)).toBe(false);
+    expect(hasLeadingEmoji(BOOK_PRINT_PROFILES.print_shop.pillText)).toBe(false);
   });
 
   it('mantiene las dimensiones de canvas heredadas para A4 y A3 y escala los formatos nuevos', () => {
