@@ -1,3 +1,33 @@
+## [2026-11-23] - PR #160 (V3.6.1): Gemini Pro Tier Routing, Pool Aislado `gemini_pro`, Header Auth y Rotación 429/401/403
+
+**Commit en `main`:** `8afd133f948ba14de6b4246018c2241af48a048b`
+
+**Resumen:**
+- **Contratos y Pool Aislado (`types.ts`, `keyRotation.ts`, `registry.ts`)**:
+  - Agregado `tier?: 'fast' | 'pro'` en `AiCompletionRequest`, métricas `healthyKeys` / `totalKeys` en `AiProviderPingResult`, pool `gemini_pro` (`GEMINI_PRO_API_KEYS` con fallback a `GEMINI_API_KEYS`), `getConfiguredKeyCount()`, y parámetro `excludeKeys?: Set<string>` en `getNextAvailableKey()` para evitar repetir la misma clave dentro de un mismo request.
+  - Exportado `AI_PROVIDER_PRO_ORDER = ['gemini', 'groq', 'openrouter']` manteniendo intacto `AI_PROVIDER_FALLBACK_ORDER` (`groq` primero) para cumplir `verify:ai-engine`.
+- **Cliente Gemini (`gemini.ts`)**:
+  - Movida la API key de la URL al header HTTP `x-goog-api-key`.
+  - Cascada Pro (`GEMINI_PRO_MODEL` default `gemini-2.5-pro` → Flash) vs Fast; extracción segura de texto filtrando partes `thought: true`; fallback ante `thinkingConfig` 400; lanzamiento inmediato en `429`/`401`/`403`/`API_KEY_INVALID`/`RESOURCE_EXHAUSTED` leyendo `retry-after` de forma segura; `ping()` multi-clave (hasta 5 claves con `Promise.allSettled`).
+- **Catálogo, Enrutado y Costos (`catalog.ts`, `ai-generate.ts`, `cv-import-api.ts`, `vercel.json`, `costCalculator.ts`)**:
+  - Clasificadas las tareas estructurales/visión con `tier: 'pro'` y `defaultMaxTokens` (2048–4000), techo `8192` tokens en Pro, rotación ante `401`/`403` (pausa 1h), telemetría `endpoint: ai-generate:${taskId}`, `maxDuration: 60` en `vercel.json`, y tarifas actualizadas de Gemini y Groq.
+- **Verificación:** Nuevos tests en `tests/keyRotation.test.ts` y `tests/aiProviderMediaResolution.test.ts`, versión `V3.6.1`, `npm run check-all` en verde local y en GitHub Actions.
+
+---
+
+## [2026-11-23] - PR #159 (V3.6.0): Rediseño FacturLee + Fix PDF, BookStudio Botón Único, Modal Canónico IA, EditorLee Zero-Loss/Columnas/Tablas/Fuentes APA y Resiliencia de Respaldo
+
+**Commit en `main`:** `c6757f7`
+
+**Resumen:**
+- **FacturLee:** Apertura directa en Ítems y precios, TopBar con 3 píldoras globales (`Tu negocio`, `Cliente`, `Tipo y N°`) y 2 acciones (`Nuevo`, `Guardar`), cascada 3 niveles Cliente ↔ Comprobante (`voucherCascadeEngine.ts`), talonario auto-incremental `puntoVenta|tipo|letra`, buscador `>= 3` letras (`SearchFilterBar`), ítems compactos en 2 líneas, historial con reimpresión sin edición en emitidas/pagadas, y fix definitivo del solapamiento footer/totales en `InvoicePdfDocument.tsx`.
+- **Book Studio:** Botón único de exportación sin duplicados ni doble cobro, limpieza de barras duplicadas en pasos y Dock compacto.
+- **Modal Canónico IA:** `StructuredImportReviewModal.tsx` y `ImportReviewDiffModal.tsx` con tokens reales, diferenciación visual escalares vs registros y fix de `handleReclassify`.
+- **EditorLee:** Registro de `EDITORIAL_PRESETS` en `presetRegistry`, importación `.docx` cero-pérdida (`docxClientExtractor.ts` + `docxChartRenderer.ts` + `EditorialImportReviewModal.tsx`), motor de 2 columnas/imágenes/tablas (`editorialLayoutEngines.ts` + `EditorialPdfDocument.tsx`), y catálogo de fuentes universitarias + Windows + carga manual (`academicFontCatalog.ts`, `localFontStore.ts`).
+- **Resiliencia de respaldo:** Flush antes de recargar el Service Worker (`sw.js`, `updateEngine.ts`), fix `canSaveLocal` y semáforo `backupHealth` en `StudioNavbar.tsx`, ref-counting en `localAssetStore.ts`, `storageResilienceEngine.ts`, y actualización de `docs/APP_BLUEPRINT.md`.
+
+---
+
 ## [2026-11-23] - PR #157 (V3.5.0): Libro Folleto y EditorLEE — Modo Automático, Orientación y Foliado IA, Separadores de Capítulos y Detector de Tipo de Obra
 
 **Commit en `main`:** `716d5e534513249cc5f91fe066b3501141bb5461`
