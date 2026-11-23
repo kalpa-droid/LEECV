@@ -1,3 +1,24 @@
+## [2026-11-22] - PR #155 (V3.4.0): TopBar de 4 Zonas, Tema en Preferencias, Docks Compactos y Estándar Cero Ruido en CV, EditorLee y Libro/Folleto
+
+**Commit en `main`:** `6f9dc8f7278f4f70a7c55e77a517d8ed0a5c5a22`
+
+**Resumen:**
+- **TopBar de 4 Zonas, Tema Global y Móvil (`StudioNavbar.tsx`, `AppShell.tsx`, `StudioHost.tsx`, `appContract.ts`, `topBarActionRegistry.ts`)**:
+  - Quitado `ThemeToggleButton` de la barra superior en estudios y reubicado el selector de los 4 temas (`UI_THEME_CYCLE`) dentro del menú **Cuenta & Preferencias** (junto a Créditos, Compartir y Privacidad).
+  - Eliminado el botón móvil `"Editar"` inútil de la barra superior, unificando el intercambio editor/vista previa en móvil vía `isPanelOpen` y un botón único `"Ver"` (`onCloseMobilePanel`).
+  - Implementado presupuesto declarativo `TOPBAR_BUDGET` (`globalContextPills` máx. 3 con 1 modal = 1 eje, `globalActions` máx. 2) con sanitización anti emoji+ícono (`stripLeadingEmoji`) y delegación completa en `StudioHost.tsx`.
+- **CV Builder (`cvDockProvider.ts`, `CvWorkspaceContent.tsx`)**:
+  - Igualado `diseno` (**Estilo & Color**) a `isLarge: false` (`2×2` uniforme con tipografía, hoja y portada); reordenado el Dock con `importar_datos` + `vacante` al principio y `nueva_seccion` (`+`) al final (`groupBreakBefore: true`), moviendo `carta` a `globalActions` en barra superior.
+- **EditorLee (`EditorLeeStudioContent.tsx`, `EditorialGlobalNormModal.tsx`, `editorialNormEngine.ts`, `editorialDockEngine.ts`, `editorialStepSequence.ts`, paneles)**:
+  - Desdoblado el modal global ruidoso en **3 píldoras independientes en barra superior** (`Tipo de obra`, `Norma visual`, `Estilo de citas`), eliminando la duplicación Modal ↔ Panel y Panel ↔ Panel en `EditorialPresetInicioPanel`, `EditorialDesignAndMetaPanels` y `EditorialBibliographyPanel`.
+  - Dock convertido a botones núcleo compactos (`isLarge: false`) en 2 columnas manteniendo badges para capítulos y apartados (`i`, `ii`, `1`, `2`, `Cl`, `A`).
+- **Libro / Folleto (`bookPrintProfileEngine.ts`, `BookPrintTargetModal.tsx`, `BookPaperSizeModal.tsx`, `BookStudioContent.tsx` y pasos `BookSourceTypeStep`..`BookPreviewExportStep`)**:
+  - Eliminada la doble casita (`pillText` limpio e íconos únicos `printHome` / `printShop` / `disenoHoja`), añadidas 2 píldoras globales en TopBar (`En casa / Imprenta` + `Hoja (...)`) sin repetir selectores en Paso 1 (`1.b`) ni en Paso 6, y aplicados los 3 canales de ayuda Cero Ruido (`?`, `ContextualGuideBox`, `emitLidioMessage({ kind: 'state' })` + `SectionSwitch`).
+- **Fábrica de Apps Nativas y Guardrails (`scripts/new-app.ts`, `scripts/verify-app-contract.ts`, `docs/APP_BLUEPRINT.md`, `docs/ARQUITECTURA_PLATAFORMA.md`, `AGENTS.md`, `version.ts` V3.4.0)**:
+  - Formalizadas las reglas de TopBar, 1-eje-1-modal, anti-duplicación, anti emoji+ícono y Dock compacto de 2 columnas en generador, auditoría de contrato, guías y suite de tests (`npm run check-all` en verde local y en GitHub Actions).
+
+---
+
 ## [2026-11-22] - PR B (V3.3.0): EditorLee — Píldora Global de Normas Separadas, Cascada Anti-Pisado y Citas Automáticas en Línea
 
 **Resumen:**
