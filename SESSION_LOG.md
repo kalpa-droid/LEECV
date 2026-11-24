@@ -1,3 +1,24 @@
+## [2026-11-24] - PR #162 (V3.7.0): Libro Folleto — Separadores de Capítulos, Color y Cuentagotas, Guillotina en Casa, Paridad/Foliado y Portal Global de Modales
+
+**Commit en `main`:** `577d6cce92317fe8a9f732c0ad2e78de9a0f7ebe`
+
+**Resumen:**
+- **Portal Global de Modales (`Modal.tsx`, `LightboxModal.tsx`, `CreditsModal.tsx`, `CoverLetterOnboardingModal.tsx`, `RetentionOfferModal.tsx`)**:
+  - Montaje vía `createPortal(..., document.body)` con `zIndex.modal` (`9999`), `overflow-y-auto` en el backdrop y `max-h-[calc(100dvh-2rem)]` para evitar que la barra superior (`StudioNavbar`) o el contenedor `z-20` del panel recorten ventanas emergentes en cualquier app.
+- **Tapa, Contratapa y Selector de Color + Cuentagotas (`BookCoverStep.tsx`, `BookBackCoverStep.tsx`, `BookCoverColorPickerGrid.tsx`, `bookColorUtils.ts`)**:
+  - Etiquetas actualizadas a **`Crear Tapa`** y **`Crear Contratapa`**, con las perillas **`Hoja detrás`** y **`Hoja delante`** movidas a `headerRight` del encabezado del panel junto a su globito de ayuda `?`.
+  - Botón *"Canon Clásico"* reemplazado visualmente por **`Elegir color`** (manteniendo `monica-classic` intacto para CV y EditorLEE), con `<input type="color">`, cuentagotas (`EyeDropper` con fallback) y selector de texto claro/oscuro por contraste WCAG.
+- **Paso 5. Separadores (`BookDividersStep.tsx`, `BookSectionDividerModal.tsx`, `bookStepSequence.ts`, `appRegistry.ts`, `bookDividerCanvas.ts`, `impositionMath.ts`)**:
+  - Secuencia ampliada a 8 pasos ubicando **`5. Separadores`** (`Bookmark`) antes de **`6. Encuentro un número`**.
+  - Corrección matemática de paridad con `countInsertedPagesBeforePdfPage` y `countBlanksBehindCoverWithOffset`, más soporte de `blank` y tokens `divider:` dentro de `hasSplitIds` (modo fotocopia).
+- **Paso 6, Paso 7 (`Armado y Guías`), Guillotina en Casa y Conteo (`BookFoliadoStep.tsx`, `BookImpositionStep.tsx`, `BookPreviewExportStep.tsx`, `bookSeparateCover.ts`, `bookPageCount.ts`, `bookPrintProfileEngine.ts`)**:
+  - Paso 6 opcional: no ejecuta IA ni agrega blancos si no se elige calibración; ofrece confirmación en 1 clic sin IA cuando hay separadores con hoja detrás.
+  - Paso 7 adaptado a configuración global: en **En casa** muestra destinos A y B (`tapa_y_contratapa_guillotina.pdf` con Contratapa a la izquierda y Tapa a la derecha) y oculta grosor de lomo/*creep*; en **Imprenta** mantiene A, B y C (`Contratapa | Lomo | Tapa`).
+  - Extracción opcional de 1ª y última página del PDF al separar tapas sin tapa/contratapa creada (`extractPdfCoversWhenSeparate`), desglose en vivo (`computeBookPageBreakdown`), modo `at-least-one` para el blanco antes de contratapa y selector manual `paddingPlacement`.
+- **Verificación:** `tests/i18n/bookStudio.test.ts`, `tests/book-engine/bookDividersAndParity.test.ts`, `tests/modalPortal.test.tsx`, versión `V3.7.0` y `npm run check-all` en verde local, en GitHub Actions y Preview Deploy de Vercel antes del merge.
+
+---
+
 ## [2026-11-23] - PR #157 (V3.5.0): Libro Folleto y EditorLEE — Modo Automático, Orientación y Foliado IA, Separadores de Capítulos y Detector de Tipo de Obra
 
 **Commit en `main`:** `716d5e534513249cc5f91fe066b3501141bb5461`
