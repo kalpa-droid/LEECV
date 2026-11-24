@@ -49,15 +49,37 @@ export async function ensureAcademicOrCustomFontRegistered(family: string): Prom
   if (spec) {
     try {
       const styleItalic = 'italic' as const;
-      const fonts: Array<{ src: string; fontWeight?: 'normal' | 'bold'; fontStyle?: 'normal' | 'italic' }> = [
-        { src: spec.ttfUrls.regular, fontWeight: 'normal', fontStyle: 'normal' },
-      ];
-      if (spec.ttfUrls.bold) fonts.push({ src: spec.ttfUrls.bold, fontWeight: 'bold', fontStyle: 'normal' });
-      if (spec.ttfUrls.italic) fonts.push({ src: spec.ttfUrls.italic, fontWeight: 'normal', fontStyle: styleItalic });
-      if (spec.ttfUrls.boldItalic) fonts.push({ src: spec.ttfUrls.boldItalic, fontWeight: 'bold', fontStyle: styleItalic });
+      const canUseLocalOrigin =
+        typeof window !== 'undefined' &&
+        /^https?:/i.test(window.location?.origin || '');
+      const selectedUrls = canUseLocalOrigin && spec.localTtfUrls ? spec.localTtfUrls : spec.ttfUrls;
+      const toSrc = (rawUrl: string): string =>
+        canUseLocalOrigin && rawUrl.startsWith('/')
+          ? new URL(rawUrl, window.location.origin).href
+          : rawUrl;
 
-      Font.register({ family: spec.family, fonts });
+      const buildEntries = () => {
+        const fonts: Array<{ src: string; fontWeight?: 'normal' | 'bold'; fontStyle?: 'normal' | 'italic' }> = [
+          { src: toSrc(selectedUrls.regular), fontWeight: 'normal', fontStyle: 'normal' },
+        ];
+        if (selectedUrls.bold) {
+          fonts.push({ src: toSrc(selectedUrls.bold), fontWeight: 'bold', fontStyle: 'normal' });
+        }
+        if (selectedUrls.italic) {
+          fonts.push({ src: toSrc(selectedUrls.italic), fontWeight: 'normal', fontStyle: styleItalic });
+        }
+        if (selectedUrls.boldItalic) {
+          fonts.push({ src: toSrc(selectedUrls.boldItalic), fontWeight: 'bold', fontStyle: styleItalic });
+        }
+        return fonts;
+      };
+
+      Font.register({ family: spec.family, fonts: buildEntries() });
       registerDynamicFontFamily(spec.family);
+      if (spec.openEquivalentName && spec.openEquivalentName !== spec.family) {
+        Font.register({ family: spec.openEquivalentName, fonts: buildEntries() });
+        registerDynamicFontFamily(spec.openEquivalentName);
+      }
       return true;
     } catch {
       return false;

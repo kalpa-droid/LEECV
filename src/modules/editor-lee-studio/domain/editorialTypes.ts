@@ -29,12 +29,16 @@ export type EditorialRecordType =
   | 'subtitle'         // Subtítulo / Apartado H2 o H3
   | 'paragraph'        // Párrafo narrativo
   | 'quote'            // Cita o epígrafe con atribución
-  | 'callout'          // Recuadro destacado
+  | 'callout'          // Recuadro destacado / Caja didáctica
   | 'list'             // Viñetas o lista numerada
   | 'table'            // Tabla con encabezados
   | 'image'            // Foto con verificación DPI // plain-language:allow — verificación de resolución de imagen
   | 'bibliography_item'// Referencia bibliográfica
-  | 'qr_or_break';     // QR o salto de página
+  | 'qr_or_break'      // QR o salto de página
+  | 'poem'             // Poema o estrofas conservando saltos de verso
+  | 'figure_placeholder'// Espacio reservado para figura o esquema aún no insertado
+  | 'footnote_list'    // Notas al pie agrupadas al cierre del apartado
+  | 'epigraph';        // Epígrafe de apertura con atribución editorial
 
 /** Variantes de recuadro destacado (callout). */
 export type EditorialCalloutVariant =
@@ -44,7 +48,9 @@ export type EditorialCalloutVariant =
   | 'testimonio'
   | 'clave'
   | 'documento'
-  | 'consigna';
+  | 'consigna'
+  | 'caja'
+  | 'resguardo';
 
 /** Modos de carátula/portada. */
 export type EditorialCoverMode =
@@ -149,6 +155,16 @@ export interface EditorialDesignConfig {
   coverPaletteKey?: string;
   /** Configuración global de carátulas separadoras por capítulo/sección (desactivadas por defecto). */
   sectionDividers?: EditorialSectionDividerConfig;
+  /** Modo de encabezado corriente en cuerpo del libro ('none' | 'book_title' | 'chapter_title'). */
+  headerMode?: 'none' | 'book_title' | 'chapter_title';
+  /** Modo de pie/folio ('folio_only' | 'book_and_folio'). */
+  footerMode?: 'folio_only' | 'book_and_folio';
+  /** Numeración romana en minúsculas (i, ii, iii...) para páginas preliminares. */
+  preliminaryRomanNumerals?: boolean;
+  /** Evita líneas sueltas de una sola palabra al cierre de párrafo mediante espacio duro (\u00A0). */
+  preventRunts?: boolean;
+  /** Bibliografía con resumen/comentario anotado debajo de cada referencia. */
+  annotatedBibliography?: boolean;
 }
 
 /** Configuración global de carátulas separadoras por capítulo o sección. */
@@ -182,16 +198,26 @@ export interface EditorialRecord {
   content: string;                   // Contenido principal (párrafo, texto, etc.)
   // Campos específicos por tipo (solo los relevantes para ese tipo)
   subtitleLevel?: number;            // 2 o 3 para subtitle
-  quoteAttribution?: string;         // quote
+  quoteAttribution?: string;         // quote / epigraph
   calloutVariant?: EditorialCalloutVariant; // callout
+  calloutTitle?: string;             // callout: encabezado explícito (ej. CAJA 1 · Concepto clave)
+  calloutItems?: string[];           // callout: viñetas o ítems internos estructurados
   listStyle?: 'bullet' | 'numbered'; // list
   tableHeaders?: string[];           // table
   tableRows?: string[][];            // table
   tableCaption?: string;             // table (título/epígrafe)
+  tableHasHeaderRow?: boolean;       // table: false para fichas clave-valor sin encabezado de columna
   tableStylePreset?: 'apa' | 'grid' | 'striped' | 'minimal';
   tableColWidthsPct?: number[];
   tableColAlignments?: ('left' | 'center' | 'right')[];
   tableFontSizePt?: number;
+  figureNumber?: string;             // figure_placeholder (ej. "Figura 1")
+  figureCaption?: string;            // figure_placeholder
+  figureHint?: string;               // figure_placeholder
+  footnotes?: { number: number; text: string }[]; // footnote_list / párrafo anotado
+  preserveLineBreaks?: boolean;      // poem / bloques con saltos significativos
+  keepTogether?: boolean;            // wrap={false} cuando el bloque entra completo en página
+  sourceOrigin?: 'docx' | 'md' | 'txt' | 'pdf_imported' | 'manual';
   imagePath?: string;                // image (ruta o data URI)
   imageDpi?: number;                 // image (calculado)
   imageCaption?: string;             // image (epígrafe)
@@ -218,6 +244,7 @@ export interface EditorialRecord {
   bibDoiOrUrl?: string;              // bibliography_item
   bibAccessDate?: string;            // bibliography_item (ej. 2026 nov 22 para Vancouver web)
   bibOrderNumber?: number;           // bibliography_item (orden secuencial [1] Vancouver)
+  bibAnnotation?: string;            // bibliography_item (resumen/anotación editorial comentada)
   qrCode?: string;                   // qr_or_break (URL del QR)
   isBreak?: boolean;                 // qr_or_break (saltar página)
 }
@@ -240,6 +267,17 @@ export interface EditorialSection {
   startNewPage: boolean;              // ¿Empezar en página nueva?
   position: number;                   // Orden relativo
   records: EditorialRecord[];
+  /** Volanta editorial previa al título principal (ej. "BLOQUE I · CAPÍTULO 1"). */
+  kickerLabel?: string;
+  /** Control de página maestra aplicable a esta sección ('auto' | 'clean' | 'preliminary' | 'body'). */
+  masterPageMode?: 'auto' | 'clean' | 'preliminary' | 'body';
+  /** Sobreescritura puntual de encabezado corriente para esta sección. */
+  runningHeaderText?: string;
+  /** Epígrafe de apertura en portada o carátula de capítulo. */
+  epigraphText?: string;
+  epigraphAuthor?: string;
+  /** Alias alternativo de columnas por sección (1 o 2). */
+  columnCount?: 1 | 2;
   /** Carátula o portadilla separadora opcional para esta sección/capítulo. */
   sectionCover?: EditorialSectionCoverOverride;
   /** Diseño de columnas específico de esta sección (1 o 2 columnas). */

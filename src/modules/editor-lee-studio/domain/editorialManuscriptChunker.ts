@@ -35,6 +35,10 @@ const VALID_RECORD_TYPES = new Set([
   'image',
   'bibliography_item',
   'qr_or_break',
+  'poem',
+  'figure_placeholder',
+  'footnote_list',
+  'epigraph',
 ]);
 
 function normalizeTitleAscii(text: string): string {
@@ -161,18 +165,43 @@ export function countSectionRecordsChars(sections: StructuredChunkSectionInput[]
   return total;
 }
 
+function isOrnamentBlockText(text?: string): boolean {
+  const clean = (text || '').trim();
+  if (!clean || clean.length > 14) return false;
+  return /^[\u25C6\u25C7*•·~\-—\s]+$/.test(clean);
+}
+
+function isKickerHeadingCandidate(title: string): boolean {
+  const norm = normalizeTitleAscii(title);
+  if (/^(?:bloque|parte|unidad|modulo|libro|seccion|anexo)\b/.test(norm)) return true;
+  return title.length <= 42 && title === title.toUpperCase() && /[A-ZÁÉÍÓÚÜÑ]/.test(title) && !title.includes(':');
+}
+
+function looksLikeNumberedSubsection(title: string): boolean {
+  return /^(?:\d+\.\d+|[A-Za-z]\.)\s+/.test((title || '').trim());
+}
+
 /**
  * Construye secciones editoriales directamente desde bloques OOXML reales de Word
  * cuando el archivo ya tiene estructura (Headings, tablas, imágenes, gráficos),
  * garantizando 100% de conservación sin truncar jamás.
+ *
+ * REGLA H1/H2:
+ * - Si el manuscrito usa Heading 1, SOLO Heading 1 abre secciones nuevas (Heading 2/3 pasan a `subtitle`).
+ * - Si Heading 1 + (opcional ◆) + Heading 2 actúan como portadilla de capítulo/bloque, los fusiona en una
+ *   sola sección con `kickerLabel` + `title`.
  */
 export function buildSectionsFromDocxRichBlocks(
   blocks: DocxExtractedRichBlock[],
 ): EditorialSection[] {
   if (!Array.isArray(blocks) || blocks.length === 0) return [];
 
+  const hasLevel1 = blocks.some((b) => b.kind === 'heading' && b.level === 1);
+  const sectionBreakLevel = hasLevel1 ? 1 : 2;
+
   const sections: EditorialSection[] = [];
   let currentTitle = 'Cuerpo principal';
+  let currentKickerLabel: string | undefined;
   let currentRecords: EditorialRecord[] = [];
   let counter = 0;
 
@@ -183,6 +212,7 @@ export function buildSectionsFromDocxRichBlocks(
     sections.push({
       id: secId,
       title: currentTitle,
+      ...(currentKickerLabel ? { kickerLabel: currentKickerLabel } : {}),
       sectionKey,
       category: category as EditorialSectionKind,
       visible: true,
@@ -192,14 +222,46 @@ export function buildSectionsFromDocxRichBlocks(
       records: currentRecords.map((r, idx) => ({ ...r, id: makeRecordId(secId, idx) })),
     });
     currentRecords = [];
+    currentKickerLabel = undefined;
   };
 
-  for (const block of blocks) {
-    if (block.kind === 'heading' && (block.level === 1 || block.level === 2) && block.text) {
+  for (let idx = 0; idx < blocks.length; idx++) {
+    const block = blocks[idx];
+
+    if (block.kind === 'heading' && (block.level || 1) <= sectionBreakLevel && block.text) {
       if (currentRecords.length > 0) {
         flushSection();
       }
-      currentTitle = block.text.trim();
+
+      const h1Text = block.text.trim();
+      const next = blocks[idx + 1];
+      const next2 = blocks[idx + 2];
+
+      // Fusión portadilla: Heading 1 + ◆ + Heading (1 o 2) -> kickerLabel + title
+      if (next && isOrnamentBlockText(next.text) && next2?.kind === 'heading' && next2.text) {
+        currentKickerLabel = h1Text;
+        currentTitle = next2.text.trim();
+        idx += 2;
+        continue;
+      }
+
+      // Fusión directa kicker: BLOQUE/PARTE (H1) + Título descriptivo (H2 no numerado)
+      if (
+        block.level === 1 &&
+        next?.kind === 'heading' &&
+        next.level === 2 &&
+        next.text &&
+        isKickerHeadingCandidate(h1Text) &&
+        !looksLikeNumberedSubsection(next.text)
+      ) {
+        currentKickerLabel = h1Text;
+        currentTitle = next.text.trim();
+        idx += 1;
+        continue;
+      }
+
+      currentTitle = h1Text;
+      currentKickerLabel = undefined;
       continue;
     }
 
@@ -207,7 +269,7 @@ export function buildSectionsFromDocxRichBlocks(
       currentRecords.push({
         id: `tmp_${counter++}`,
         type: 'subtitle',
-        subtitleLevel: 2,
+        subtitleLevel: Math.min(3, Math.max(2, block.level ?? 2)),
         content: block.text.trim(),
       });
       continue;
@@ -220,6 +282,8 @@ export function buildSectionsFromDocxRichBlocks(
         content: block.text || 'Tabla importada de Word',
         tableHeaders: block.tableHeaders || [],
         tableRows: block.tableRows || [],
+        ...(block.tableHasHeaderRow === false ? { tableHasHeaderRow: false } : {}),
+        ...(block.tableCaption ? { tableCaption: block.tableCaption } : {}),
       });
       continue;
     }
@@ -235,10 +299,70 @@ export function buildSectionsFromDocxRichBlocks(
       continue;
     }
 
+    if (block.kind === 'callout' && (block.text || block.calloutTitle || block.calloutItems?.length)) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'callout',
+        content: (block.text || '').trim(),
+        ...(block.calloutTitle ? { calloutTitle: block.calloutTitle } : {}),
+        ...(block.calloutItems?.length ? { calloutItems: block.calloutItems } : {}),
+        ...(block.calloutVariant ? { calloutVariant: block.calloutVariant } : {}),
+        ...(block.keepTogether !== undefined ? { keepTogether: block.keepTogether } : {}),
+        preserveLineBreaks: true,
+      });
+      continue;
+    }
+
+    if (block.kind === 'poem' && block.text?.trim()) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'poem',
+        content: block.text.trim(),
+        preserveLineBreaks: true,
+        ...(block.keepTogether !== undefined ? { keepTogether: block.keepTogether } : {}),
+      });
+      continue;
+    }
+
+    if (block.kind === 'figure_placeholder') {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'figure_placeholder',
+        content: (block.text || block.figureCaption || 'Figura pendiente').trim(),
+        ...(block.figureNumber ? { figureNumber: block.figureNumber } : {}),
+        ...(block.figureCaption ? { figureCaption: block.figureCaption } : {}),
+        ...(block.figureHint ? { figureHint: block.figureHint } : {}),
+        keepTogether: true,
+      });
+      continue;
+    }
+
+    if (block.kind === 'footnote_list' && block.footnotes?.length) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'footnote_list',
+        content: (block.text || block.footnotes.map((f) => `[${f.number}] ${f.text}`).join('\n')).trim(),
+        footnotes: block.footnotes,
+        preserveLineBreaks: true,
+      });
+      continue;
+    }
+
+    if (block.kind === 'epigraph' && block.text?.trim()) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'epigraph',
+        content: block.text.trim(),
+        preserveLineBreaks: true,
+      });
+      continue;
+    }
+
     if (block.text && block.text.trim()) {
       currentRecords.push({
         id: `tmp_${counter++}`,
-        type: block.kind === 'list' ? 'list' : block.kind === 'callout' ? 'callout' : 'paragraph',
+        type: block.kind === 'list' ? 'list' : 'paragraph',
+        ...(block.kind === 'list' && block.listStyle ? { listStyle: block.listStyle } : {}),
         content: block.text.trim(),
       });
     }

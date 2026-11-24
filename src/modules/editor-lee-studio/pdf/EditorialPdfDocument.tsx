@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, View, Text, Image, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 import { getPageSize } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import {
   EditorialSection,
@@ -9,29 +9,23 @@ import {
   EditorialDesignConfig,
   EditorialTocConfig,
   EditorialManifestRules,
+  EditorialLegalFields,
+  EditorialMetadata,
 } from '../domain/editorialTypes';
 import {
   EditorialPreset,
   getEditorialPreset,
   DEFAULT_EDITORIAL_PRESET,
 } from '../domain/editorialPresetCatalog';
-import {
-  EditorialLegalFields,
-  EditorialMetadata,
-} from '../domain/editorialTypes';
 import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdfCategoryRegistry';
-import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
+import { renderEditorialPdfWithExactToc } from './editorialTwoPassRenderer';
 import {
   partitionRecordsIntoColumnBands,
   splitTextAroundImage,
-  computeOptimalTableLayout,
 } from '../domain/editorialLayoutEngines';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { EditorialPdfCoverPage, EditorialSectionDividerPage } from './EditorialPdfCovers';
-import {
-  countEditorialSectionCoverPages,
-  resolveEditorialSectionCoverState,
-} from '../domain/sanitizeEditorialData';
+import { resolveEditorialSectionCoverState } from '../domain/sanitizeEditorialData';
 import { resolveSectionBadgeLabel } from '../domain/editorialDockEngine';
 import {
   collectBibliographyFromSections,
@@ -41,11 +35,31 @@ import {
   resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import {
+  sanitizeEditorialText,
+  stripTrailingHeaderPunctuation,
+} from '../domain/editorialTypographyEngine';
+import {
+  formatEditorialDisplayPageNumber,
+  formatTocAnchorToken,
+  isEditorialPreliminarySection,
+  toLowerRoman,
+} from '../domain/editorialTocResolver';
+import {
+  EditorialCalloutBlock,
+  EditorialEpigraphBlock,
+  EditorialFigurePlaceholderBlock,
+  EditorialFootnoteListBlock,
+  EditorialPoemBlock,
+  EditorialRichText,
+  EditorialTableBlock,
+  resolveEditorialPdfFontStyles,
+} from './EditorialBlockPrimitives';
 
-// Tipos auxiliares para el render PDF
 interface SectionRenderModel {
   id: string;
   title: string;
+  raw: EditorialSection;
   records: EditorialRecord[];
 }
 
@@ -72,32 +86,7 @@ interface EditorialRenderModel {
   manifestRules: EditorialManifestRules;
 }
 
-/**
- * Documento PDF nativo para EditorLee usando @react-pdf/renderer.
- *
- * Lo que se ve en pantalla (VectorDocViewer) es exactamente el mismo PDF
- * que se descarga: cero posibilidad de que preview y descarga difieran.
- *
- * El visor VectorDocViewer usa los mismos props (zoomLevel, preset) que
- * FacturLee y CV, por lo que la forma de zoom y gestos es idéntica.
- */
-function toPdfPageSize(pageSizeId: string): 'A4' | 'A5' | 'LETTER' | [number, number] {
-  if (pageSizeId === 'a4') return 'A4';
-  if (pageSizeId === 'a5') return 'A5';
-  if (pageSizeId === 'carta') return 'LETTER';
-  if (pageSizeId === 'legal') return 'LETTER'; // fallback
-  const def = getPageSize(pageSizeId);
-  return [def.widthPt, def.heightPt];
-}
-
-function formatTextoLiso(text: string): string {
-  return text
-    .replace(/\s+/g, ' ')
-    .replace(/\n+/g, ' ')
-    .trim();
-}
-
-interface EditorialDocumentDesign extends EditorialDesignConfig {
+export interface EditorialDocumentDesign extends EditorialDesignConfig {
   pageSizeId?: string;
   marginTop?: number;
   marginBottom?: number;
@@ -106,10 +95,7 @@ interface EditorialDocumentDesign extends EditorialDesignConfig {
   gutter?: number;
 }
 
-const AnchorMarker = ({ id, active }: { id: string; active?: boolean }) =>
-  active ? <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{id}</Text> : null;
-
-export const EditorialPdfDocument: React.FC<{
+export interface EditorialPdfDocumentProps {
   data: {
     metadata: EditorialMetadata;
     design: EditorialDocumentDesign;
@@ -121,17 +107,75 @@ export const EditorialPdfDocument: React.FC<{
   };
   preset: EditorialPresetId;
   interactiveAnchors?: boolean;
-}> = ({ data, preset, interactiveAnchors = false }) => {
+  /** Mapa pre-resuelto `{ tocAnchorId -> folioVisible }` de la pasada 1. */
+  resolvedTocMap?: Record<string, string>;
+  /** Página física 1-indexada donde comienza el cuerpo principal (reinicio arábigo `1`). */
+  bodyStartPage?: number;
+  /** Emite tokens `__TOC_ID:<id>__` invisibles para el escaneo con pdfjs-dist. */
+  emitTocAnchors?: boolean;
+}
+
+function toPdfPageSize(pageSizeId: string): 'A4' | 'A5' | 'LETTER' | [number, number] {
+  if (pageSizeId === 'a4') return 'A4';
+  if (pageSizeId === 'a5') return 'A5';
+  if (pageSizeId === 'carta' || pageSizeId === 'legal') return 'LETTER';
+  const def = getPageSize(pageSizeId);
+  return [def.widthPt, def.heightPt];
+}
+
+const AnchorMarker = ({ id, active }: { id: string; active?: boolean }) =>
+  active ? <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{id}</Text> : null;
+
+const TocMarker = ({ id, emit }: { id: string; emit?: boolean }) =>
+  emit ? (
+    <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001, lineHeight: 1 }}>
+      {formatTocAnchorToken(id)}
+    </Text>
+  ) : null;
+
+type MasterPageMode = 'clean' | 'preliminary' | 'body';
+
+function resolveMasterPageMode(section: EditorialSection): MasterPageMode {
+  if (section.masterPageMode && section.masterPageMode !== 'auto') {
+    return section.masterPageMode;
+  }
+  if (section.sectionKey === 'portadilla' || section.sectionKey === 'dedicatoria') {
+    return 'clean';
+  }
+  if (isEditorialPreliminarySection(section)) {
+    return 'preliminary';
+  }
+  return 'body';
+}
+
+/**
+ * Motor PDF Editorial Blindado de EditorLee (PR 1 — V3.8.0).
+ */
+export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
+  data,
+  preset,
+  interactiveAnchors = false,
+  resolvedTocMap,
+  bodyStartPage = 1,
+  emitTocAnchors = false,
+}) => {
   const pdfPreset = getEditorialPreset(preset) || DEFAULT_EDITORIAL_PRESET;
   const rawDesign: EditorialDocumentDesign = (data?.design || {}) as EditorialDocumentDesign;
   const resolvedPageSizeId = rawDesign.pageSizeId || rawDesign.pageSize || pdfPreset.pageSize || 'a4';
-  const resolvedFontSize = Number(rawDesign.typography?.fontSize) > 0 ? Number(rawDesign.typography.fontSize) : pdfPreset.typography.fontSize;
-  const resolvedLineHeight = Number(rawDesign.typography?.lineHeight) > 0 ? Number(rawDesign.typography.lineHeight) : pdfPreset.typography.lineHeight;
+  const resolvedFontSize =
+    Number(rawDesign.typography?.fontSize) > 0
+      ? Number(rawDesign.typography.fontSize)
+      : pdfPreset.typography.fontSize;
+  const resolvedLineHeight =
+    Number(rawDesign.typography?.lineHeight) > 0
+      ? Number(rawDesign.typography.lineHeight)
+      : pdfPreset.typography.lineHeight;
   const rawFontFamily = rawDesign.typography?.fontFamily || pdfPreset.typography.fontFamily;
 
-  const baseFont = sanitizeFontFamily(rawFontFamily, false, false);
-  const boldFont = sanitizeFontFamily(rawFontFamily, true, false);
-  const italicFont = sanitizeFontFamily(rawFontFamily, false, true);
+  const { styles: fontStyles, isUnicodeFont } = resolveEditorialPdfFontStyles(rawFontFamily);
+  const baseFont = fontStyles.regular.fontFamily;
+  const boldFont = fontStyles.bold.fontFamily;
+  const italicFont = fontStyles.italic.fontFamily;
 
   const activeBibStyle = normalizeBibliographyStyle(
     rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
@@ -139,25 +183,36 @@ export const EditorialPdfDocument: React.FC<{
   const effectiveStructuralNorm =
     rawDesign.structuralNormId || (rawDesign.normId === 'vancouver' ? 'apa7' : rawDesign.normId);
 
+  const usePrelimRoman = rawDesign.preliminaryRomanNumerals !== false;
+  const preventRunts = rawDesign.preventRunts !== false;
+  const headerMode = rawDesign.headerMode || 'book_title';
+  const footerMode = rawDesign.footerMode || 'folio_only';
+
   const visibleSections = (data?.sections || []).filter((s) => s.visible !== false);
   const syncedVisibleSections = syncSectionsBibliographyOrder(visibleSections, activeBibStyle);
   const { map: bibMap } = collectBibliographyFromSections(syncedVisibleSections);
   const appearanceMap = computeCitationAppearanceOrder(syncedVisibleSections);
-  const formatPdfBody = (rawText: string) =>
-    formatTextoLiso(resolveInlineCitationsInText(rawText, bibMap, activeBibStyle, appearanceMap));
+
+  const resolveRecordText = (rawText: string) =>
+    resolveInlineCitationsInText(rawText, bibMap, activeBibStyle, appearanceMap);
+
+  const cleanBookTitle = stripTrailingHeaderPunctuation(
+    sanitizeEditorialText(data?.metadata?.title || 'Mi obra', { targetFontIsUnicode: isUnicodeFont }),
+  ) || 'Mi obra';
 
   const model: EditorialRenderModel = {
-    title: data?.metadata?.title || 'Mi obra',
+    title: cleanBookTitle,
     preset: pdfPreset,
     design: rawDesign,
     sections: syncedVisibleSections.map((s) => ({
       id: s.id,
       title: s.title,
+      raw: s,
       records: Array.isArray(s.records) ? s.records : [],
     })),
     cover: data?.cover || {
       mode: pdfPreset.coverMode || 'libro',
-      title: data?.metadata?.title || 'Mi obra',
+      title: cleanBookTitle,
     },
     tocConfig: data?.tocConfig || { enabled: false, title: 'Índice', showSubtitles: true, position: 'tras-caratula' },
     manifestRules: data?.manifestRules || {
@@ -171,17 +226,24 @@ export const EditorialPdfDocument: React.FC<{
   };
 
   const MM_TO_PT = 2.83465;
-  const marginTopPt = Math.max(20, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * MM_TO_PT);
-  const marginBottomPt = Math.max(28, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * MM_TO_PT);
-  const marginLeftPt = Math.max(24, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * MM_TO_PT);
-  const marginRightPt = Math.max(24, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * MM_TO_PT);
+  const marginTopPt = Math.max(36, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * MM_TO_PT);
+  const marginBottomPt = Math.max(38, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * MM_TO_PT);
+  const marginLeftPt = Math.max(32, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * MM_TO_PT);
+  const marginRightPt = Math.max(32, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * MM_TO_PT);
   const resolvedPageSize = toPdfPageSize(resolvedPageSizeId);
   const pageWidthPt = resolvedPageSizeId === 'a5' ? 419.53 : resolvedPageSizeId === 'carta' ? 612 : 595.28;
   const usableWidthPt = Math.max(220, pageWidthPt - marginLeftPt - marginRightPt);
 
+  const isAcademicNormIndent =
+    effectiveStructuralNorm === 'apa7' ||
+    effectiveStructuralNorm === 'chicago' ||
+    effectiveStructuralNorm === 'mla';
+  const paragraphIndentPt = rawDesign.firstLineIndent ? (isAcademicNormIndent ? 36 : 22) : 0;
+  const hangingIndentPt = isAcademicNormIndent ? 36 : 24;
+
   const styles = StyleSheet.create({
     page: {
-      fontFamily: baseFont,
+      ...fontStyles.regular,
       backgroundColor: '#FFFFFF',
       color: '#111827',
       paddingTop: marginTopPt,
@@ -190,168 +252,121 @@ export const EditorialPdfDocument: React.FC<{
       paddingRight: marginRightPt,
       fontSize: resolvedFontSize,
     },
-    coverPage: {
-      fontFamily: baseFont,
-      backgroundColor: '#FFFFFF',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100%',
-      padding: 40,
-      textAlign: 'center',
-    },
-    coverTitle: {
-      fontSize: 28,
-      fontFamily: boldFont,
-      marginBottom: 12,
-      color: '#111827',
-    },
-    coverSubtitle: {
-      fontSize: 15,
-      fontFamily: italicFont,
-      color: '#4B5563',
-      marginBottom: 20,
-    },
-    coverAuthor: {
-      fontSize: 13,
-      fontFamily: baseFont,
-      color: '#374151',
-      marginBottom: 8,
-    },
-    coverMetaNote: {
-      fontSize: 10,
-      fontFamily: baseFont,
-      color: '#6B7280',
-      marginTop: 6,
+    kickerLabel: {
+      ...fontStyles.bold,
+      fontSize: 9.5,
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
+      color: '#475569',
+      marginBottom: 4,
     },
     sectionTitle: {
       fontSize: 18,
-      fontFamily: boldFont,
+      ...fontStyles.bold,
+      marginTop: 6,
+      marginBottom: 8,
+      color: '#0F172A',
+      lineHeight: 1.22,
+    },
+    subtitle: {
+      ...fontStyles.bold,
+      fontSize: Math.round(resolvedFontSize * 1.18),
+      color: '#1E293B',
       marginTop: 12,
-      marginBottom: 10,
-      color: '#111827',
+      marginBottom: 5,
+      lineHeight: 1.28,
     },
     bodyText: {
-      fontFamily: baseFont,
+      ...fontStyles.regular,
       fontSize: resolvedFontSize,
       lineHeight: resolvedLineHeight,
-      marginBottom: effectiveStructuralNorm === 'apa7' ? 0 : 10,
-      textIndent: rawDesign.firstLineIndent ? 18 : 0,
+      marginBottom: effectiveStructuralNorm === 'apa7' ? 2 : 9,
+      textIndent: paragraphIndentPt,
+      color: '#111827',
+    },
+    quoteWrap: {
+      borderLeftWidth: 2.5,
+      borderLeftColor: '#94A3B8',
+      backgroundColor: '#F8FAFC',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      marginLeft: isAcademicNormIndent ? 36 : 16,
+      marginVertical: 9,
     },
     bibItemWrap: {
       marginBottom: effectiveStructuralNorm === 'apa7' ? 6 : 8,
     },
     bibText: {
-      fontFamily: baseFont,
+      ...fontStyles.regular,
       fontSize: resolvedFontSize,
       lineHeight: resolvedLineHeight,
+      color: '#111827',
     },
     sectionDivider: {
       borderTopWidth: 1,
-      borderTopColor: '#E5E7EB',
-      marginVertical: 14,
+      borderTopColor: '#E2E8F0',
+      marginTop: 6,
+      marginBottom: 14,
     },
-    footer: {
+    runningHeader: {
       position: 'absolute',
-      bottom: 14,
+      top: Math.max(14, marginTopPt - 22),
       left: marginLeftPt,
       right: marginRightPt,
-      borderTopWidth: 0.6,
-      borderTopColor: '#D1D5DB',
-      paddingTop: 4,
+      borderBottomWidth: 0.4,
+      borderBottomColor: '#E2E8F0',
+      paddingBottom: 3,
+      fontSize: 8.5,
+      ...fontStyles.italic,
+      color: '#64748B',
+      textAlign: 'right',
+    },
+    footerClean: {
+      position: 'absolute',
+      bottom: 16,
+      left: marginLeftPt,
+      right: marginRightPt,
       fontSize: 9,
-      fontFamily: baseFont,
-      color: '#6B7280',
+      ...fontStyles.regular,
+      color: '#64748B',
       textAlign: 'center',
     },
-    headerEven: {
-      position: 'absolute',
-      top: 16,
-      left: marginLeftPt,
-      right: marginRightPt,
-      fontSize: 9,
-      fontFamily: baseFont,
-      color: '#6B7280',
-    },
-    headerOdd: {
-      position: 'absolute',
-      top: 16,
-      left: marginLeftPt,
-      right: marginRightPt,
-      fontSize: 9,
-      fontFamily: baseFont,
-      color: '#6B7280',
-    },
-    table: {
-      marginTop: 8,
-      marginBottom: 10,
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
-      borderColor: '#374151',
-    },
-    tableHeader: {
-      flexDirection: 'row',
-      backgroundColor: '#3F51B5',
-      paddingVertical: 4,
-      paddingHorizontal: 5,
-    },
-    tableRow: {
-      flexDirection: 'row',
-      paddingVertical: 3.5,
-      paddingHorizontal: 5,
-      borderTopWidth: 0.4,
-      borderTopColor: '#D1D5DB',
-    },
-    callout: {
-      borderWidth: 1,
-      borderColor: '#FBBF24',
-      backgroundColor: '#FEF3C7',
-      padding: 8,
-      margin: 8,
-    },
-    calloutTitle: {
-      fontSize: 10,
-      fontFamily: boldFont,
-      marginBottom: 4,
-    },
     listItem: {
-      marginBottom: 4,
-    },
-    listBullet: {
-      marginLeft: 12,
-      marginBottom: 2,
+      marginBottom: 6,
+      paddingLeft: 10,
     },
     imageCaption: {
       fontSize: 9,
-      fontFamily: italicFont,
-      color: '#6B7280',
+      ...fontStyles.italic,
+      color: '#475569',
       textAlign: 'center',
       marginTop: 4,
     },
     qrCode: {
-      width: 40,
-      height: 40,
-    },
-    metadataField: {
-      marginBottom: 6,
-    },
-    metadataLabel: {
-      fontSize: 9,
-      color: '#6B7280',
-      marginRight: 4,
-    },
-    metadataValue: {
-      fontSize: 9,
+      width: 44,
+      height: 44,
     },
   });
 
   const showCover = model.cover.mode && model.cover.mode !== 'sin-caratula';
-  const coverTitleText = data?.metadata?.title || model.cover.title || model.title;
-  const coverSubtitleText = data?.metadata?.subtitle || model.cover.subtitle;
-  const coverAuthorText = data?.metadata?.author || model.cover.author;
-  const coverEditorialText = data?.metadata?.editorial || model.cover.editor;
+  const coverTitleText = sanitizeEditorialText(
+    data?.metadata?.title || model.cover.title || model.title,
+    { targetFontIsUnicode: isUnicodeFont },
+  );
+  const coverSubtitleText = sanitizeEditorialText(
+    data?.metadata?.subtitle || model.cover.subtitle || '',
+    { targetFontIsUnicode: isUnicodeFont },
+  );
+  const coverAuthorText = sanitizeEditorialText(
+    data?.metadata?.author || model.cover.author || '',
+    { targetFontIsUnicode: isUnicodeFont },
+  );
+  const coverEditorialText = sanitizeEditorialText(
+    data?.metadata?.editorial || model.cover.editor || '',
+    { targetFontIsUnicode: isUnicodeFont },
+  );
 
-  // Generar páginas de cubierta adaptadas (desde COVER_PRESETS_CATALOG + paletas armónicas)
+  // Portada (Master Page: clean — sin encabezados ni folio)
   const coverPage = showCover ? (
     <EditorialPdfCoverPage
       pageSize={resolvedPageSize}
@@ -386,58 +401,474 @@ export const EditorialPdfDocument: React.FC<{
     />
   ) : null;
 
-  const showToc = Boolean(model.tocConfig?.enabled && model.sections.length > 0);
-  const tocPageNumberOffset = (showCover ? 1 : 0) + (showToc ? 1 : 0);
+  const tocListedSections = model.sections.filter(
+    (s) => s.raw.includeInToc !== false && s.raw.sectionKey !== 'indice',
+  );
+  const showToc = Boolean(model.tocConfig?.enabled && tocListedSections.length > 0);
 
-  // Calcular el desplazamiento acumulado de páginas incluyendo carátulas de capítulos
-  const sectionStartPageNumbers: number[] = [];
-  let runningPageCursor = tocPageNumberOffset + 1;
-  for (let i = 0; i < syncedVisibleSections.length; i++) {
-    const extraDividerPages = countEditorialSectionCoverPages(
-      syncedVisibleSections[i],
-      rawDesign,
-      model.cover,
-    );
-    sectionStartPageNumbers.push(runningPageCursor);
-    runningPageCursor += extraDividerPages + 1;
-  }
-
-  // Generar página de índice automático si está habilitado
   const tocPage = showToc ? (
     <Page key="toc" size={resolvedPageSize} style={styles.page}>
       <AnchorMarker id="ANCHOR_START:editorial_toc" active={interactiveAnchors} />
-      <Text style={{ fontSize: 18, fontFamily: boldFont, marginBottom: 16 }}>
-        {model.tocConfig?.title || 'Índice Automático'}
+      <Text
+        minPresenceAhead={56}
+        style={[fontStyles.bold, { fontSize: 18, color: '#0F172A', marginBottom: 14 }]}
+      >
+        {sanitizeEditorialText(model.tocConfig?.title || 'Índice General', {
+          targetFontIsUnicode: isUnicodeFont,
+        })}
       </Text>
-      {model.sections.map((section, si) => (
-        <React.Fragment key={`sec-${section.id}`}>
-          <Text style={{ fontSize: 13, fontFamily: boldFont, marginBottom: 6 }}>
-            {section.title || `Sección ${si + 1}`} — Pág. {sectionStartPageNumbers[si] ?? tocPageNumberOffset + si + 1}
-          </Text>
-          {model.tocConfig.showSubtitles !== false &&
-            section.records
-              .filter((r) => r.type === 'subtitle')
-              .map((record, ri) => (
-                <Text
-                  key={`rec-${section.id}-${ri}`}
-                  style={{ fontSize: 11, fontFamily: baseFont, color: '#4B5563', marginLeft: 14, marginBottom: 4 }}
+      <View style={styles.sectionDivider} />
+
+      {tocListedSections.map((section, si) => {
+        const pageLabel = resolvedTocMap?.[section.id] || String(si + (showCover ? 3 : 2));
+        const subtitleRecords =
+          model.tocConfig.showSubtitles !== false
+            ? section.records.filter((r) => r.type === 'subtitle' && (r.content || '').trim())
+            : [];
+
+        return (
+          <React.Fragment key={`toc-sec-${section.id}`}>
+            <View
+              wrap={false}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-end',
+                marginTop: si > 0 ? 5 : 2,
+                marginBottom: 4,
+              }}
+            >
+              <Text style={[fontStyles.bold, { fontSize: 11, color: '#0F172A' }]}>
+                {stripTrailingHeaderPunctuation(
+                  sanitizeEditorialText(section.title || `Sección ${si + 1}`, {
+                    targetFontIsUnicode: isUnicodeFont,
+                  }),
+                )}
+              </Text>
+              <View
+                style={{
+                  flexGrow: 1,
+                  borderBottomWidth: 0.6,
+                  borderBottomStyle: 'dotted',
+                  borderBottomColor: '#CBD5E1',
+                  marginHorizontal: 8,
+                  marginBottom: 2.5,
+                }}
+              />
+              <Text
+                style={[
+                  fontStyles.bold,
+                  { fontSize: 10.5, color: '#334155', minWidth: 20, textAlign: 'right' },
+                ]}
+              >
+                {pageLabel}
+              </Text>
+            </View>
+
+            {subtitleRecords.map((subRec, ri) => {
+              const subAnchorId = `${section.id}-${subRec.id}`;
+              const subPageLabel = resolvedTocMap?.[subAnchorId] || pageLabel;
+              return (
+                <View
+                  key={`toc-sub-${subRec.id}-${ri}`}
+                  wrap={false}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-end',
+                    marginLeft: 16,
+                    marginBottom: 3,
+                  }}
                 >
-                  {record.content || record.title || 'Apartado'}
-                </Text>
-              ))}
-        </React.Fragment>
-      ))}
+                  <Text style={[fontStyles.regular, { fontSize: 9.8, color: '#475569' }]}>
+                    {stripTrailingHeaderPunctuation(
+                      sanitizeEditorialText(subRec.content || 'Apartado', {
+                        targetFontIsUnicode: isUnicodeFont,
+                      }),
+                    )}
+                  </Text>
+                  <View
+                    style={{
+                      flexGrow: 1,
+                      borderBottomWidth: 0.5,
+                      borderBottomStyle: 'dotted',
+                      borderBottomColor: '#E2E8F0',
+                      marginHorizontal: 8,
+                      marginBottom: 2.5,
+                    }}
+                  />
+                  <Text
+                    style={[
+                      fontStyles.regular,
+                      { fontSize: 9.5, color: '#475569', minWidth: 18, textAlign: 'right' },
+                    ]}
+                  >
+                    {subPageLabel}
+                  </Text>
+                </View>
+              );
+            })}
+          </React.Fragment>
+        );
+      })}
+
+      {rawDesign.pageNumbers !== false && (
+        <Text
+          fixed
+          style={styles.footerClean}
+          render={({ pageNumber }) =>
+            usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber)
+          }
+        />
+      )}
       <AnchorMarker id="ANCHOR_END:editorial_toc" active={interactiveAnchors} />
     </Page>
   ) : null;
 
   const badgeCounters = { prelim: 0, body: 0, annex: 0 };
 
-  // Generar páginas de sección (y sus carátulas separadoras si están activas)
+  const renderRecordsList = (
+    records: EditorialRecord[],
+    sectionId: string,
+    sectionRecordsForBib: EditorialRecord[],
+    sectionCols: 1 | 2,
+    colUsableWidthPt: number,
+  ): React.ReactElement[] => {
+    const elements: React.ReactElement[] = [];
+
+    for (let idx = 0; idx < records.length; idx++) {
+      const record = records[idx];
+      const key = `${sectionId}_${record.id || idx}_${idx}`;
+
+      // Envoltura de texto junto a imagen (`wrap-left` / `wrap-right`) consumiendo el párrafo contiguo
+      if (
+        record.type === 'image' &&
+        (record.imageLayoutMode === 'wrap-left' || record.imageLayoutMode === 'wrap-right') &&
+        records[idx + 1]?.type === 'paragraph'
+      ) {
+        const nextPara = records[idx + 1];
+        const imgPct = record.imageWidthPct ?? 42;
+        const wrapped = splitTextAroundImage(resolveRecordText(nextPara.content || ''), {
+          usableWidthPt: colUsableWidthPt,
+          imageWidthPct: imgPct,
+          gapPt: 14,
+          fontSizePt: resolvedFontSize,
+          lineHeight: resolvedLineHeight,
+        });
+        const imgWidthPt = Math.max(80, Math.round((colUsableWidthPt * imgPct) / 100));
+        const isLeft = record.imageLayoutMode === 'wrap-left';
+
+        elements.push(
+          <React.Fragment key={key}>
+            <View
+              wrap={false}
+              style={{
+                flexDirection: isLeft ? 'row' : 'row-reverse',
+                gap: 12,
+                alignItems: 'flex-start',
+                marginVertical: 8,
+              }}
+            >
+              <View style={{ width: imgWidthPt }}>
+                {record.imagePath ? (
+                  <Image style={{ width: '100%', objectFit: 'contain' }} src={record.imagePath} />
+                ) : null}
+                {record.imageCaption ? (
+                  <Text style={styles.imageCaption}>
+                    {sanitizeEditorialText(record.imageCaption, { targetFontIsUnicode: isUnicodeFont })}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={{ flex: 1 }}>
+                <EditorialRichText
+                  text={wrapped.sideText}
+                  fontStyles={fontStyles}
+                  isUnicodeFont={isUnicodeFont}
+                  preventRunts={preventRunts}
+                  style={styles.bodyText}
+                />
+              </View>
+            </View>
+            {wrapped.belowText ? (
+              <EditorialRichText
+                text={wrapped.belowText}
+                fontStyles={fontStyles}
+                isUnicodeFont={isUnicodeFont}
+                preventRunts={preventRunts}
+                style={styles.bodyText}
+              />
+            ) : null}
+          </React.Fragment>,
+        );
+        idx++;
+        continue;
+      }
+
+      switch (record.type) {
+        case 'paragraph':
+          elements.push(
+            <View key={key} style={{ marginBottom: 1 }}>
+              <EditorialRichText
+                text={resolveRecordText(record.content || '')}
+                fontStyles={fontStyles}
+                isUnicodeFont={isUnicodeFont}
+                preventRunts={preventRunts}
+                style={styles.bodyText}
+              />
+            </View>,
+          );
+          break;
+
+        case 'subtitle':
+          elements.push(
+            <View key={key} minPresenceAhead={52}>
+              <TocMarker id={`${sectionId}-${record.id}`} emit={emitTocAnchors} />
+              <Text
+                minPresenceAhead={48}
+                style={[
+                  styles.subtitle,
+                  record.subtitleLevel === 3
+                    ? { fontSize: Math.round(resolvedFontSize * 1.06), color: '#334155' }
+                    : {},
+                ]}
+              >
+                {stripTrailingHeaderPunctuation(
+                  sanitizeEditorialText(resolveRecordText(record.content || ''), {
+                    targetFontIsUnicode: isUnicodeFont,
+                  }),
+                )}
+              </Text>
+            </View>,
+          );
+          break;
+
+        case 'quote':
+          elements.push(
+            <View key={key} style={styles.quoteWrap}>
+              <EditorialRichText
+                text={resolveRecordText(record.content || '')}
+                fontStyles={fontStyles}
+                isUnicodeFont={isUnicodeFont}
+                preserveLineBreaks={Boolean(record.preserveLineBreaks)}
+                style={[
+                  fontStyles.italic,
+                  { fontSize: resolvedFontSize, lineHeight: resolvedLineHeight, color: '#1E293B' },
+                ]}
+              />
+              {record.quoteAttribution ? (
+                <Text
+                  style={[
+                    fontStyles.regular,
+                    { fontSize: 9, color: '#475569', marginTop: 4, textAlign: 'right' },
+                  ]}
+                >
+                  — {sanitizeEditorialText(record.quoteAttribution, { targetFontIsUnicode: isUnicodeFont })}
+                </Text>
+              ) : null}
+            </View>,
+          );
+          break;
+
+        case 'epigraph':
+          elements.push(
+            <EditorialEpigraphBlock
+              key={key}
+              record={record}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+              baseFontSize={resolvedFontSize}
+            />,
+          );
+          break;
+
+        case 'callout':
+          elements.push(
+            <EditorialCalloutBlock
+              key={key}
+              record={{ ...record, content: resolveRecordText(record.content || '') }}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+              baseFontSize={resolvedFontSize}
+              lineHeight={resolvedLineHeight}
+            />,
+          );
+          break;
+
+        case 'poem':
+          elements.push(
+            <EditorialPoemBlock
+              key={key}
+              record={record}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+              baseFontSize={resolvedFontSize}
+              lineHeight={resolvedLineHeight}
+            />,
+          );
+          break;
+
+        case 'figure_placeholder':
+          elements.push(
+            <EditorialFigurePlaceholderBlock
+              key={key}
+              record={record}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+            />,
+          );
+          break;
+
+        case 'footnote_list':
+          elements.push(
+            <EditorialFootnoteListBlock
+              key={key}
+              record={record}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+            />,
+          );
+          break;
+
+        case 'list': {
+          const lines = String(record.content || '')
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean);
+          elements.push(
+            <View key={key} style={styles.listItem}>
+              {lines.map((line, li) => {
+                const alreadyNumbered = /^(?:\d+[.)]\s|•\s)/.test(line);
+                const prefix = alreadyNumbered
+                  ? ''
+                  : record.listStyle === 'numbered'
+                    ? `${li + 1}. `
+                    : '• ';
+                return (
+                  <View key={`li-${li}`} style={{ marginBottom: 3 }}>
+                    <EditorialRichText
+                      text={`${prefix}${resolveRecordText(line)}`}
+                      fontStyles={fontStyles}
+                      isUnicodeFont={isUnicodeFont}
+                      style={[
+                        fontStyles.regular,
+                        { fontSize: resolvedFontSize, lineHeight: resolvedLineHeight },
+                      ]}
+                    />
+                  </View>
+                );
+              })}
+            </View>,
+          );
+          break;
+        }
+
+        case 'table':
+          elements.push(
+            <EditorialTableBlock
+              key={key}
+              record={record}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+              baseFontSize={resolvedFontSize}
+              sectionColumns={sectionCols}
+            />,
+          );
+          break;
+
+        case 'image':
+          elements.push(
+            <View key={key} wrap={false} style={{ alignItems: 'center', marginVertical: 10 }}>
+              {record.imagePath ? (
+                <Image
+                  style={{ maxWidth: Math.min(380, colUsableWidthPt), maxHeight: 260, objectFit: 'contain' }}
+                  src={record.imagePath}
+                />
+              ) : null}
+              {record.imageCaption ? (
+                <Text style={styles.imageCaption}>
+                  {sanitizeEditorialText(record.imageCaption, { targetFontIsUnicode: isUnicodeFont })}
+                </Text>
+              ) : null}
+            </View>,
+          );
+          break;
+
+        case 'bibliography_item': {
+          const globalBibIdx = sectionRecordsForBib
+            .slice(0, sectionRecordsForBib.indexOf(record))
+            .filter((r) => r.type === 'bibliography_item').length;
+          const cite = formatEditorialCitation(
+            record,
+            rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
+            Math.max(0, globalBibIdx),
+          );
+          const useHanging =
+            cite.usesHangingIndent && rawDesign.bibliographyHangingIndent !== false;
+          elements.push(
+            <View
+              key={key}
+              wrap={false}
+              style={{ ...styles.bibItemWrap, paddingLeft: useHanging ? hangingIndentPt : 0 }}
+            >
+              <Text
+                orphans={2}
+                widows={2}
+                style={{ ...styles.bibText, textIndent: useHanging ? -hangingIndentPt : 0 }}
+              >
+                {sanitizeEditorialText(cite.prefixText, { targetFontIsUnicode: isUnicodeFont })}
+                {cite.italicSegment ? (
+                  <Text style={fontStyles.italic}>
+                    {sanitizeEditorialText(cite.italicSegment, { targetFontIsUnicode: isUnicodeFont })}
+                  </Text>
+                ) : null}
+                {cite.suffixText
+                  ? ` ${sanitizeEditorialText(cite.suffixText, { targetFontIsUnicode: isUnicodeFont })}`
+                  : ''}
+              </Text>
+              {rawDesign.annotatedBibliography && record.bibAnnotation ? (
+                <Text
+                  style={[
+                    fontStyles.italic,
+                    { fontSize: Math.max(8.5, resolvedFontSize - 1.5), color: '#475569', marginTop: 2 },
+                  ]}
+                >
+                  {sanitizeEditorialText(record.bibAnnotation, { targetFontIsUnicode: isUnicodeFont })}
+                </Text>
+              ) : null}
+            </View>,
+          );
+          break;
+        }
+
+        case 'qr_or_break':
+          if (record.isBreak) {
+            elements.push(<Text key={key} break />);
+          } else if (record.qrCode) {
+            elements.push(<Image key={key} style={styles.qrCode} src={record.qrCode} />);
+          }
+          break;
+
+        default:
+          elements.push(
+            <EditorialRichText
+              key={key}
+              text={resolveRecordText(record.content || '')}
+              fontStyles={fontStyles}
+              isUnicodeFont={isUnicodeFont}
+              preventRunts={preventRunts}
+              style={styles.bodyText}
+            />,
+          );
+          break;
+      }
+    }
+
+    return elements;
+  };
+
   const sectionPages = model.sections.flatMap((section, secIndex) => {
     const rawSec = syncedVisibleSections[secIndex];
     const { badgeLabel } = resolveSectionBadgeLabel(rawSec || (section as any), badgeCounters);
     const secCoverState = resolveEditorialSectionCoverState(rawSec, rawDesign, model.cover);
+    const masterMode = resolveMasterPageMode(rawSec);
     const isBibSection =
       rawSec?.sectionKey === 'bibliografia' ||
       section.records.some((r) => r.type === 'bibliography_item');
@@ -447,6 +878,7 @@ export const EditorialPdfDocument: React.FC<{
     if (secCoverState.enabled) {
       const autoKicker =
         secCoverState.kicker ||
+        rawSec?.kickerLabel ||
         (rawSec?.sectionKey === 'unidad'
           ? `UNIDAD ${badgeLabel}`
           : rawSec?.category === 'cierre'
@@ -472,6 +904,9 @@ export const EditorialPdfDocument: React.FC<{
           kicker={autoKicker}
           title={section.title || `Sección ${secIndex + 1}`}
           subtitle={secCoverState.subtitle}
+          epigraphText={rawSec?.epigraphText}
+          epigraphAuthor={rawSec?.epigraphAuthor}
+          tocMarker={<TocMarker id={section.id} emit={emitTocAnchors} />}
           baseFont={baseFont}
           boldFont={boldFont}
           italicFont={italicFont}
@@ -487,156 +922,154 @@ export const EditorialPdfDocument: React.FC<{
       }
     }
 
-    pagesForThisSection.push(
-    <Page key={section.id} size={resolvedPageSize} style={styles.page}>
-      <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
-      {isBibSection && <AnchorMarker id="ANCHOR_START:editorial_bibliografia" active={interactiveAnchors} />}
-      {secIndex === 0 && <AnchorMarker id="ANCHOR_START:editorial_secciones" active={interactiveAnchors} />}
-      {secIndex === model.sections.length - 1 && (
-        <>
-          <AnchorMarker id="ANCHOR_START:editorial_diseño" active={interactiveAnchors} />
-          <AnchorMarker id="ANCHOR_START:editorial_metadata" active={interactiveAnchors} />
-        </>
-      )}
-      <Text
-        style={[
-          styles.sectionTitle,
-          effectiveStructuralNorm === 'apa7' ? { textAlign: 'center', fontSize: resolvedFontSize } : {},
-        ]}
-      >
-        {formatTextoLiso(section.title || `Sección ${secIndex + 1}`)}
-      </Text>
-      {section.records.length > 0 && (
-        <View style={styles.sectionDivider} />
-      )}
-      {section.records.map((record, recIndex) => {
-        switch (record.type) {
-          case 'paragraph': return (
-            <Text key={recIndex} style={styles.bodyText}>{formatPdfBody(record.content || '')}</Text>
-          );
-          case 'subtitle': return (
-            <Text key={recIndex} style={{ ...styles.bodyText, textIndent: 0, fontFamily: boldFont, fontSize: Math.round(resolvedFontSize * 1.25) }}>
-              {formatPdfBody(record.content || '')}
-            </Text>
-          );
-          case 'quote': return (
-            <View key={recIndex} style={styles.callout}>
-              <Text style={{ ...styles.calloutTitle, fontFamily: italicFont }}>{formatPdfBody(record.content || '')}</Text>
-              {record.quoteAttribution && <Text style={{ fontSize: 9, fontFamily: baseFont, color: '#6B7280' }}>— {formatPdfBody(record.quoteAttribution)}</Text>}
-            </View>
-          );
-          case 'callout': return (
-            <View key={recIndex} style={styles.callout}>
-              <Text style={styles.calloutTitle}>{formatPdfBody(record.content || '')}</Text>
-            </View>
-          );
-          case 'list': return (
-            <View key={recIndex} style={styles.listItem}>
-              {String(record.content || '').split('\n').filter(Boolean).map((line, li) => (
-                <Text key={li} style={styles.listBullet}>• {formatPdfBody(line)}</Text>
-              ))}
-            </View>
-          );
-          case 'table': {
-            const headers = record.tableHeaders || [];
-            const rows = record.tableRows || [];
-            return (
-              <View key={recIndex} style={styles.table}>
-                <View style={styles.tableHeader}>
-                  {headers.map((h, hi) => (
-                    <Text key={hi} style={{ ...styles.tableHeader, marginRight: 8 }}>{h}</Text>
-                  ))}
-                </View>
-                {rows.map((row, ri) => (
-                  <View key={ri} style={styles.tableRow}>
-                    {row.map((cell, ci) => (
-                      <Text key={ci} style={styles.tableRow}>{cell}</Text>
-                    ))}
-                  </View>
-                ))}
-              </View>
+    const sectionCols: 1 | 2 = rawSec?.columnCount === 2 || rawSec?.columns === 2 ? 2 : 1;
+    const cleanSectionTitle = stripTrailingHeaderPunctuation(
+      sanitizeEditorialText(section.title || `Sección ${secIndex + 1}`, {
+        targetFontIsUnicode: isUnicodeFont,
+      }),
+    );
+
+    const runningHeaderLabel =
+      headerMode === 'none'
+        ? ''
+        : headerMode === 'chapter_title'
+          ? stripTrailingHeaderPunctuation(
+              sanitizeEditorialText(rawSec?.runningHeaderText || cleanSectionTitle, {
+                targetFontIsUnicode: isUnicodeFont,
+              }),
+            )
+          : stripTrailingHeaderPunctuation(
+              sanitizeEditorialText(rawSec?.runningHeaderText || cleanBookTitle, {
+                targetFontIsUnicode: isUnicodeFont,
+              }),
             );
-          }
-          case 'image': {
-            const imgSrc = record.imagePath || '';
-            const caption = record.imageCaption || '';
-            return (
-              <View key={recIndex} style={{ textAlign: 'center', margin: 8 }}>
-                {imgSrc && <Image style={{ maxWidth: 360, maxHeight: 260, objectFit: 'contain', alignSelf: 'center' }} src={imgSrc} />}
-                {caption && <Text style={styles.imageCaption}>{formatTextoLiso(caption)}</Text>}
-              </View>
-            );
-          }
-          case 'bibliography_item': {
-            const bibIndex = section.records
-              .slice(0, recIndex)
-              .filter((r) => r.type === 'bibliography_item').length;
-            const cite = formatEditorialCitation(
-              record,
-              rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
-              bibIndex,
-            );
-            const useHanging =
-              cite.usesHangingIndent && rawDesign.bibliographyHangingIndent !== false;
+
+    const colGapPt = (rawSec?.columnGapMm ?? 6) * MM_TO_PT;
+    const twoColWidthPt = Math.max(120, (usableWidthPt - colGapPt) / 2);
+
+    const sectionContentNodes: React.ReactElement[] =
+      sectionCols === 2
+        ? partitionRecordsIntoColumnBands(section.records, {
+            columns: 2,
+            usableWidthPt,
+            columnGapPt: colGapPt,
+            fontSizePt: resolvedFontSize,
+            lineHeight: resolvedLineHeight,
+            spanHeadingsFullWidth: rawSec?.spanHeadingsFullWidth !== false,
+          }).map((band, bi) => {
+            if (band.kind === 'full') {
+              return (
+                <React.Fragment key={`band-f-${bi}`}>
+                  {renderRecordsList([band.record], section.id, section.records, 2, usableWidthPt)}
+                </React.Fragment>
+              );
+            }
             return (
               <View
-                key={recIndex}
-                style={{
-                  ...styles.bibItemWrap,
-                  paddingLeft: useHanging ? 18 : 0,
-                }}
+                key={`band-2c-${bi}`}
+                style={{ flexDirection: 'row', gap: colGapPt, alignItems: 'flex-start' }}
               >
-                <Text
-                  style={{
-                    ...styles.bibText,
-                    textIndent: useHanging ? -18 : 0,
-                  }}
-                >
-                  {cite.prefixText}
-                  {cite.italicSegment ? (
-                    <Text style={{ fontFamily: italicFont }}>{cite.italicSegment}</Text>
-                  ) : null}
-                  {cite.suffixText ? ` ${cite.suffixText}` : ''}
-                </Text>
+                <View style={{ width: twoColWidthPt }}>
+                  {renderRecordsList(band.left, section.id, section.records, 2, twoColWidthPt)}
+                </View>
+                <View style={{ width: twoColWidthPt }}>
+                  {renderRecordsList(band.right, section.id, section.records, 2, twoColWidthPt)}
+                </View>
               </View>
             );
-          }
-          case 'qr_or_break': {
-            if (record.isBreak) return <Text key={recIndex} break />;
-            if (record.qrCode) return (
-              <Image key={recIndex} style={styles.qrCode} src={record.qrCode} />
-            );
-            return <Text key={recIndex} style={{ opacity: 0 }} />;
-          }
-          default: return <Text key={recIndex} style={styles.bodyText}>{formatPdfBody(record.content || '')}</Text>;
-        }
-      })}
-      {rawDesign.pageNumbers !== false && (
+          })
+        : renderRecordsList(section.records, section.id, section.records, 1, usableWidthPt);
+
+    pagesForThisSection.push(
+      <Page key={section.id} size={resolvedPageSize} style={styles.page}>
+        <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
+        {!secCoverState.enabled && <TocMarker id={section.id} emit={emitTocAnchors} />}
+        {isBibSection && <AnchorMarker id="ANCHOR_START:editorial_bibliografia" active={interactiveAnchors} />}
+        {secIndex === 0 && <AnchorMarker id="ANCHOR_START:editorial_secciones" active={interactiveAnchors} />}
+        {secIndex === model.sections.length - 1 && (
+          <>
+            <AnchorMarker id="ANCHOR_START:editorial_diseño" active={interactiveAnchors} />
+            <AnchorMarker id="ANCHOR_START:editorial_metadata" active={interactiveAnchors} />
+          </>
+        )}
+
+        {masterMode === 'body' && runningHeaderLabel ? (
+          <Text fixed style={styles.runningHeader}>
+            {runningHeaderLabel}
+          </Text>
+        ) : null}
+
+        {rawSec?.kickerLabel ? (
+          <Text minPresenceAhead={72} style={styles.kickerLabel}>
+            {sanitizeEditorialText(rawSec.kickerLabel, { targetFontIsUnicode: isUnicodeFont })}
+          </Text>
+        ) : null}
+
         <Text
-          fixed
-          style={styles.footer}
-          render={({ pageNumber, totalPages }) =>
-            `${model.title} · Página ${pageNumber} de ${totalPages}`
-          }
-        />
-      )}
-      <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
-      {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}
-      {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
-    </Page>,
+          minPresenceAhead={56}
+          style={[
+            styles.sectionTitle,
+            effectiveStructuralNorm === 'apa7'
+              ? { textAlign: 'center', fontSize: Math.max(resolvedFontSize + 2, 14) }
+              : {},
+          ]}
+        >
+          {cleanSectionTitle}
+        </Text>
+
+        {rawSec?.epigraphText && !secCoverState.enabled ? (
+          <EditorialEpigraphBlock
+            record={{
+              id: `${section.id}_epigraph`,
+              type: 'epigraph',
+              content: rawSec.epigraphText,
+              quoteAttribution: rawSec.epigraphAuthor,
+            }}
+            fontStyles={fontStyles}
+            isUnicodeFont={isUnicodeFont}
+            baseFontSize={resolvedFontSize}
+          />
+        ) : null}
+
+        {section.records.length > 0 && <View style={styles.sectionDivider} />}
+
+        {sectionContentNodes}
+
+        {rawDesign.pageNumbers !== false && masterMode !== 'clean' && (
+          <Text
+            fixed
+            style={styles.footerClean}
+            render={({ pageNumber }) => {
+              if (masterMode === 'preliminary') {
+                return usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber);
+              }
+              const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
+              return footerMode === 'book_and_folio' ? `${cleanBookTitle} · ${folio}` : folio;
+            }}
+          />
+        )}
+
+        <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
+        {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}
+        {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
+      </Page>,
     );
+
     return pagesForThisSection;
   });
 
-  const fallbackEmptyPage = !coverPage && !tocPage && sectionPages.length === 0 ? (
-    <Page size={resolvedPageSize} style={styles.page}>
-      <Text style={styles.sectionTitle}>{formatTextoLiso(model.title)}</Text>
-      <Text style={styles.bodyText}>Agregá secciones o activá la carátula desde el panel lateral para comenzar tu publicación.</Text>
-    </Page>
-  ) : null;
+  const fallbackEmptyPage =
+    !coverPage && !tocPage && sectionPages.length === 0 ? (
+      <Page size={resolvedPageSize} style={styles.page}>
+        <Text style={styles.sectionTitle}>{cleanBookTitle}</Text>
+        <Text style={styles.bodyText}>
+          Agregá secciones o activá la carátula desde el panel lateral para comenzar tu publicación.
+        </Text>
+      </Page>
+    ) : null;
 
   return (
-    <Document title={model.title} author={coverAuthorText || 'EditorLee'} creator="LEECV" producer="LEECV">
+    <Document title={cleanBookTitle} author={coverAuthorText || 'EditorLee'} creator="LEECV" producer="LEECV">
       {coverPage}
       {tocPage}
       {sectionPages}
@@ -650,15 +1083,13 @@ export default EditorialPdfDocument;
 registerPdfCategoryExporter('editorial', async (cvData, preset) => {
   const draft = cvData?.draft || cvData;
   if (!draft) return false;
-  const docElement = React.createElement(EditorialPdfDocument, {
-    data: draft,
-    preset: preset.id as any,
+  const result = await renderEditorialPdfWithExactToc(draft, preset.id as any, {
     interactiveAnchors: false,
+    DocumentComponent: EditorialPdfDocument,
   });
-  const blob = await pdf(docElement as any).toBlob();
   const safeTitle = (draft.metadata?.title || 'Publicacion-Editorial')
     .replace(/[^a-zA-Z0-9_\-]/g, '_')
     .slice(0, 50);
-  downloadBlob(blob, `${safeTitle}.pdf`);
+  downloadBlob(result.blob, `${safeTitle}.pdf`);
   return true;
 });

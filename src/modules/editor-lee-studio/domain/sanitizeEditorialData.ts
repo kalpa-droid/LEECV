@@ -195,11 +195,29 @@ const DEFAULT_MANIFEST_RULES = {
 
 function sanitizeRecord(raw: unknown, sectionId: string, index: number): Record<string, any> | null {
   if (!isPlainObject(raw)) return null;
+  const sanitizedFootnotes = Array.isArray(raw.footnotes)
+    ? raw.footnotes
+        .filter((f: unknown): f is Record<string, any> => isPlainObject(f) && typeof f.text === 'string')
+        .map((f, fIdx) => ({
+          number: typeof f.number === 'number' && Number.isFinite(f.number) ? f.number : fIdx + 1,
+          text: f.text,
+        }))
+    : undefined;
+  const sanitizedCalloutItems = Array.isArray(raw.calloutItems)
+    ? raw.calloutItems.filter((item: unknown): item is string => typeof item === 'string')
+    : undefined;
+
   return {
     ...raw,
     id: typeof raw.id === 'string' && raw.id ? raw.id : `${sectionId}_rec_${index}`,
     type: typeof raw.type === 'string' && raw.type ? raw.type : 'paragraph',
     content: typeof raw.content === 'string' ? raw.content : '',
+    ...(typeof raw.calloutTitle === 'string' ? { calloutTitle: raw.calloutTitle } : {}),
+    ...(sanitizedCalloutItems ? { calloutItems: sanitizedCalloutItems } : {}),
+    ...(sanitizedFootnotes ? { footnotes: sanitizedFootnotes } : {}),
+    ...(typeof raw.preserveLineBreaks === 'boolean' ? { preserveLineBreaks: raw.preserveLineBreaks } : {}),
+    ...(typeof raw.keepTogether === 'boolean' ? { keepTogether: raw.keepTogether } : {}),
+    ...(typeof raw.tableHasHeaderRow === 'boolean' ? { tableHasHeaderRow: raw.tableHasHeaderRow } : {}),
   };
 }
 
@@ -211,6 +229,7 @@ function sanitizeSection(raw: unknown, index: number): Record<string, any> | nul
         .map((record: unknown, recIndex: number) => sanitizeRecord(record, id, recIndex))
         .filter((record): record is Record<string, any> => record !== null)
     : [];
+  const validMasterModes = new Set(['auto', 'clean', 'preliminary', 'body']);
   return {
     ...raw,
     id,
@@ -227,6 +246,14 @@ function sanitizeSection(raw: unknown, index: number): Record<string, any> | nul
     includeInToc: raw.includeInToc !== false,
     startNewPage: raw.startNewPage !== false,
     position: typeof raw.position === 'number' && Number.isFinite(raw.position) ? raw.position : index,
+    ...(typeof raw.kickerLabel === 'string' ? { kickerLabel: raw.kickerLabel } : {}),
+    ...(typeof raw.masterPageMode === 'string' && validMasterModes.has(raw.masterPageMode)
+      ? { masterPageMode: raw.masterPageMode }
+      : {}),
+    ...(typeof raw.runningHeaderText === 'string' ? { runningHeaderText: raw.runningHeaderText } : {}),
+    ...(typeof raw.epigraphText === 'string' ? { epigraphText: raw.epigraphText } : {}),
+    ...(typeof raw.epigraphAuthor === 'string' ? { epigraphAuthor: raw.epigraphAuthor } : {}),
+    ...(raw.columnCount === 1 || raw.columnCount === 2 ? { columnCount: raw.columnCount } : {}),
     records,
   };
 }
