@@ -1,3 +1,21 @@
+## [2026-11-24] - PR #166 (V3.9.0): EditorLEE Motor Editorial Pro PR 2 (Fases 6–8) — 12 Formatos, 4 Normas Estructurales Exactas, 7 Estilos Bibliográficos, Preflight y Controles en Estudio
+
+**Commit en `main`:** `cc0371fae3055090616c37b9313a6051108c977c`
+
+**Resumen:**
+- **Catálogo de 12 Formatos en 3 Grupos y Paridad PDF (`editorialTypes.ts`, `editorialPresetCatalog.ts`, `editorialPresetDetector.ts`, `pdf/editorialPresets.ts`)**:
+  - Publicados los 12 formatos principales agrupados en `literario`, `academico` y `practico` (con 3 alias heredados retrocompatibles `tp-secundaria`, `cientifico-vancouver` y `trabajo-practico-monografia-tesis`) y paridad 1-a-1 con el registro PDF (`pageCategory: 'editorial'`).
+- **4 Normas Estructurales Exactas y 7 Estilos Bibliográficos (`editorialNormEngine.ts`, `editorialCitationFormatter.ts`, `EditorialPdfDocument.tsx`)**:
+  - Implementado `resolveEditorialNormMetrics()` con márgenes exactos de `25.4 mm` (1 pulgada), desplazamiento inicial `36 pt`, `0 pt` entre párrafos y sangría francesa `36 pt` para APA 7 / Chicago / MLA; citas en bloque Chicago en `1.0`; folios arriba a la derecha en APA 7 / MLA y bloque inicial MLA; y novela literaria con `14 pt` más supresión del primer párrafo tras encabezado.
+  - Completados los 7 estilos de referencia (`apa7`, `vancouver`, `ieee`, `harvard`, `chicago`, `mla`, `tradicional`) con cursiva en todos, columna numérica tabulada (`1.` / `[1]`) en Vancouver e IEEE y soporte de `bibAnnotation` (bibliografía comentada).
+- **Auditoría Previa a Exportar (`editorialPreflightEngine.ts`, `EditorialPreflightModal.tsx`, `EditorLeeStudioContent.tsx`)**:
+  - Nuevo motor puro `runEditorialPreflight` + `autoCleanEditorialPunctuation` conectado antes de `consumeCreditIfNeeded()`, detectando títulos vacíos/genéricos (`"Mi obra"`), secciones vacías, placeholders de figura, baja nitidez y comas/espacios reparables en 1 clic sin gastar créditos si hay errores bloqueantes.
+- **Controles UI y Versionado (`EditorialGlobalNormModal.tsx`, `EditorialPresetInicioPanel.tsx`, `EditorialSectionFocusPanel.tsx`, `EditorialDesignAndMetaPanels.tsx`, `EditorialBibliographyPanel.tsx`, `version.ts`)**:
+  - Selector agrupado en 3 familias, editores completos (`kickerLabel`, `masterPageMode`, `poem`, `callout`, `epigraph`, `figure_placeholder` convertible a `image`), controles globales (`preliminaryRomanNumerals`, `preventRunts`, `annotatedBibliography`, `headerMode`, `footerMode`), notas comentadas `bibAnnotation` y bump a `V3.9.0`.
+- **Verificación:** `tests/editorial/editorialNormEngine.test.ts` (`7/7`), `tests/editorial/editorialPreflightEngine.test.ts` (`4/4`), `npm run typecheck` y `npm run check-all` en `0` errores en local, GitHub Actions (`2m3s`) y Vercel Preview antes del merge.
+
+---
+
 ## [2026-11-24] - PR #164 (V3.8.0): EditorLEE Motor Editorial Pro PR 1 (Fases 1–5) — Tipografía Unicode TTF, Extractor OOXML v2, Índice Exacto en 2 Pasadas y Bloques PDF Blindados
 
 **Commit en `main`:** `66c91e60496f1a87ef188de7243c37122dfd2131`
