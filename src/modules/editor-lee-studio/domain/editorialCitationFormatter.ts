@@ -23,6 +23,9 @@ export type CanonicalCitationStyle = Exclude<EditorialBibliographyStyle, 'apa'>;
 export interface FormattedCitationParts {
   style: CanonicalCitationStyle;
   citationNumber?: number;
+  citationMarkerLabel?: string;
+  citationBodyWithoutNumber?: string;
+  usesTabulatedNumberIndent?: boolean;
   prefixText: string;
   italicSegment?: string;
   suffixText: string;
@@ -142,7 +145,23 @@ export function formatEditorialCitation(
       const volIssue = volume ? (issue ? `${volume}(${issue})` : volume) : '';
       const yearVol = [year, volIssue].filter(Boolean).join(';');
       const withPages = pages ? `${yearVol}:${pages}` : yearVol;
-      sourceTail = `${journal.replace(/\.+$/, '')}. ${withPages ? `${withPages}.` : ''}`;
+      sourceTail = `${withPages ? `. ${withPages}.` : '.'}`;
+      const prefixBody = `${authorPart}${titleClean}`;
+      const italicJournal = journal.replace(/\.+$/, '');
+      const fullBody = `${prefixBody}${italicJournal}${sourceTail}`.replace(/\s+/g, ' ').trim();
+      const linkTail = doiOrUrl ? ` Disponible en: ${doiOrUrl}` : '';
+      return {
+        style: 'vancouver',
+        citationNumber: num,
+        citationMarkerLabel: `${num}.`,
+        citationBodyWithoutNumber: `${fullBody}${linkTail}`.trim(),
+        usesTabulatedNumberIndent: true,
+        prefixText: `${num}. ${prefixBody}`,
+        italicSegment: italicJournal,
+        suffixText: `${sourceTail}${linkTail}`.trim(),
+        fullText: `${num}. ${fullBody}${linkTail}`.replace(/\s+/g, ' ').trim(),
+        usesHangingIndent: true,
+      };
     } else if (isOnline) {
       const citDate = accessDate ? ` [citado ${accessDate}]` : '';
       sourceTail = `${pubLabel ? `${pubLabel}. ` : ''}${year ? `${year}` : ''}${citDate}.`;
@@ -152,17 +171,24 @@ export function formatEditorialCitation(
     }
 
     const linkTail = doiOrUrl ? ` Disponible en: ${doiOrUrl}` : '';
-    const prefixText = `${num}. ${authorPart}${titleClean}`;
-    const italicSegment = '';
-    const suffixText = `${sourceTail}${linkTail}`.trim();
+    const prefixBody = `${authorPart}`;
+    const italicTitle = !journal && title ? title.replace(/\.+$/, '') : '';
+    const tailText = `${!italicTitle ? titleClean : `. `}${sourceTail}${linkTail}`.trim();
+    const prefixText = `${num}. ${prefixBody}`;
+    const bodyWithoutNumber = `${prefixBody}${italicTitle || ''}${italicTitle ? `. ${sourceTail}${linkTail}` : `${titleClean}${sourceTail}${linkTail}`}`
+      .replace(/\s+/g, ' ')
+      .trim();
 
     return {
       style: 'vancouver',
       citationNumber: num,
-      prefixText,
-      italicSegment,
-      suffixText,
-      fullText: `${prefixText}${suffixText}`.replace(/\s+/g, ' ').trim(),
+      citationMarkerLabel: `${num}.`,
+      citationBodyWithoutNumber: bodyWithoutNumber,
+      usesTabulatedNumberIndent: true,
+      prefixText: italicTitle ? prefixText : `${num}. ${authorPart}${titleClean}`,
+      italicSegment: italicTitle,
+      suffixText: italicTitle ? `. ${sourceTail}${linkTail}`.replace(/\s+/g, ' ').trim() : `${sourceTail}${linkTail}`.trim(),
+      fullText: `${num}. ${authorPart}${titleClean}${sourceTail}${linkTail}`.replace(/\s+/g, ' ').trim(),
       usesHangingIndent: true,
     };
   }
@@ -240,9 +266,13 @@ export function formatEditorialCitation(
       .join(' ')
       .trim();
     const prefixText = `[${num}] ${authorPart}${quotedTitle}`;
+    const bodyWithoutNumber = `${authorPart}${quotedTitle}${venueItalic}${tail}`.replace(/\s+/g, ' ').trim();
     return {
       style: 'ieee',
       citationNumber: num,
+      citationMarkerLabel: `[${num}]`,
+      citationBodyWithoutNumber: bodyWithoutNumber,
+      usesTabulatedNumberIndent: true,
       prefixText,
       italicSegment: venueItalic,
       suffixText: tail,
@@ -316,11 +346,17 @@ export function formatEditorialCitation(
     };
   }
 
-  // Tradicional
+  // Tradicional (emite cursiva real en título o publicación)
+  const prefixTrad = [author, year ? `(${year})` : '']
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  const italicTrad = title ? `"${title}"` : '';
+  const suffixTrad = [journal || editorial, doiOrUrl].filter(Boolean).join('. ').trim();
   const fullText = [
     author,
     year ? `(${year})` : '',
-    title ? `"${title}"` : '',
+    italicTrad,
     journal || editorial,
     doiOrUrl,
   ]
@@ -331,8 +367,9 @@ export function formatEditorialCitation(
 
   return {
     style: 'tradicional',
-    prefixText: fullText,
-    suffixText: '',
+    prefixText: prefixTrad ? `${prefixTrad}. ` : '',
+    italicSegment: italicTrad,
+    suffixText: suffixTrad ? `. ${suffixTrad}` : '',
     fullText,
     usesHangingIndent: false,
   };

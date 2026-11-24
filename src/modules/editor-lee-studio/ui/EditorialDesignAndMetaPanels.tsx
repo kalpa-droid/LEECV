@@ -73,6 +73,16 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
     });
   };
 
+  const updateDesignOption = (key: string, val: any) => {
+    updateDraft((prev) => ({
+      ...prev,
+      design: {
+        ...(prev?.design || {}),
+        [key]: val,
+      },
+    }));
+  };
+
   const renderFieldOverrideBadge = (field: keyof EditorialDesignDefaultsFlat) => (
     <ManualOverrideBadge
       isOverridden={isManuallyOverridden(design, field)}
@@ -341,6 +351,98 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
               onChange={(next) => updateDesignField('pageNumbers', next)}
               label="Numeración de páginas"
             />
+          </div>
+
+          <div
+            className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold">Numeración romana en preliminares (i, ii, iii)</span>
+              <LidioHelpTrigger
+                size="xs"
+                title="Numeración de páginas preliminares"
+                text="Usa números romanos en prólogo, dedicatoria o índice y reinicia en 1 desde el primer capítulo."
+              />
+            </div>
+            <SectionSwitch
+              size="sm"
+              checked={design.preliminaryRomanNumerals !== false}
+              onChange={(next) => updateDesignOption('preliminaryRomanNumerals', next)}
+              label="Numeración romana en preliminares"
+            />
+          </div>
+
+          <div
+            className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold">Evitar palabras sueltas al cierre</span>
+              <LidioHelpTrigger
+                size="xs"
+                title="Cierre editorial prolijo"
+                text="Une las últimas palabras de cada párrafo para evitar que quede una sola palabra huérfana en la última línea."
+              />
+            </div>
+            <SectionSwitch
+              size="sm"
+              checked={design.preventRunts !== false}
+              onChange={(next) => updateDesignOption('preventRunts', next)}
+              label="Evitar palabras sueltas"
+            />
+          </div>
+
+          <div
+            className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold">Bibliografía comentada (resumen debajo)</span>
+              <LidioHelpTrigger
+                size="xs"
+                title="Bibliografía anotada"
+                text="Muestra debajo de cada referencia su breve nota o resumen desplazado hacia la derecha según la norma."
+              />
+            </div>
+            <SectionSwitch
+              size="sm"
+              checked={Boolean(design.annotatedBibliography)}
+              onChange={(next) => updateDesignOption('annotatedBibliography', next)}
+              label="Bibliografía comentada"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <div>
+              <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                Encabezado superior de página
+              </label>
+              <select
+                value={design.headerMode || 'book_title'}
+                onChange={(e) => updateDesignOption('headerMode', e.target.value)}
+                className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                style={{ borderRadius: radius.control }}
+              >
+                <option value="book_title">Título de la obra</option>
+                <option value="chapter_title">Título del capítulo actual</option>
+                <option value="none">Sin encabezado superior</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                Pie de página (folio)
+              </label>
+              <select
+                value={design.footerMode || 'folio_only'}
+                onChange={(e) => updateDesignOption('footerMode', e.target.value)}
+                className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                style={{ borderRadius: radius.control }}
+              >
+                <option value="folio_only">Solo número de página</option>
+                <option value="book_and_folio">Título de la obra y número</option>
+              </select>
+            </div>
           </div>
         </div>
       </PanelSection>

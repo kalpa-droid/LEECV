@@ -63,6 +63,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   const [bibIssue, setBibIssue] = useState('');
   const [bibPages, setBibPages] = useState('');
   const [bibDoiOrUrl, setBibDoiOrUrl] = useState('');
+  const [bibAnnotation, setBibAnnotation] = useState('');
   const [rawNotes, setRawNotes] = useState('');
   const [pendingAiCitations, setPendingAiCitations] = useState<EditorialRecord[] | null>(null);
 
@@ -171,6 +172,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
       bibIssue: bibIssue.trim(),
       bibPages: bibPages.trim(),
       bibDoiOrUrl: bibDoiOrUrl.trim(),
+      ...(bibAnnotation.trim() ? { bibAnnotation: bibAnnotation.trim() } : {}),
       bibOrderNumber: bibRecords.length + 1,
     };
     ensureAndMutateBibRecords((recs) => sortBibliographyRecords([...recs, newRec], activeStyle));
@@ -183,6 +185,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     setBibIssue('');
     setBibPages('');
     setBibDoiOrUrl('');
+    setBibAnnotation('');
     notify.success('Fuente agregada y ordenada según la norma.');
   };
 
@@ -425,6 +428,15 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
           placeholder="https://doi.org/..."
         />
 
+        <Field
+          as="textarea"
+          rows={2}
+          label="Nota o resumen comentado (opcional)"
+          value={bibAnnotation}
+          onChange={(e: any) => setBibAnnotation(e.target.value)}
+          placeholder="Para bibliografía anotada: síntesis breve o relevancia de esta fuente..."
+        />
+
         <button
           type="button"
           onClick={handleAddCitation}
@@ -463,11 +475,22 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
                   key={rec.id}
                   className="p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-start justify-between gap-2"
                 >
-                  <p className="text-xs leading-relaxed text-[var(--ui-text-primary)]">
-                    {formatted.prefixText}
-                    {formatted.italicSegment && <em>{formatted.italicSegment}</em>}
-                    {formatted.suffixText ? ` ${formatted.suffixText}` : ''}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs leading-relaxed text-[var(--ui-text-primary)]">
+                      {formatted.prefixText}
+                      {formatted.italicSegment && <em>{formatted.italicSegment}</em>}
+                      {formatted.suffixText
+                        ? /^[.,;:)\]]/.test(formatted.suffixText)
+                          ? formatted.suffixText
+                          : ` ${formatted.suffixText}`
+                        : ''}
+                    </p>
+                    {rec.bibAnnotation && (
+                      <p className="mt-1 pl-3 border-l-2 border-[var(--ui-border)] text-[11px] text-[var(--ui-text-secondary)] italic">
+                        {rec.bibAnnotation}
+                      </p>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveRecord(rec.id)}

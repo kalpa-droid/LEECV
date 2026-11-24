@@ -202,6 +202,19 @@ export function detectEditorialPresetHeuristic(
  * Evalúa el texto recién importado (combinando heurística local e IA) y devuelve
  * una recomendación SOLO si el tipo de obra detectado difiere del `currentPresetId` activo.
  */
+const SAME_FAMILY_PRESETS: Record<string, ReadonlySet<string>> = {
+  literary: new Set(['libro-ensayo-novela', 'novela-literaria', 'ensayo-editorial']),
+  scientific: new Set(['articulo-academico', 'cientifico-vancouver']),
+  thesis: new Set(['tesis-apa7', 'monografia-terciaria', 'trabajo-practico-monografia-tesis']),
+  practical: new Set(['manual-apunte-guia', 'apunte-estudio', 'guia-practica']),
+  report: new Set(['informe-proyecto', 'proyecto-tecnico']),
+};
+
+function isSamePresetFamily(a: string, b: string): boolean {
+  if (a === b) return true;
+  return Object.values(SAME_FAMILY_PRESETS).some((group) => group.has(a) && group.has(b));
+}
+
 export async function detectEditorialPresetForText(params: {
   fullText: string;
   currentPresetId: EditorialPresetId;
@@ -240,7 +253,7 @@ export async function detectEditorialPresetForText(params: {
 
       const d = aiRes.data;
       if (d && d.recommendedPresetId && d.confidence !== 'low') {
-        if (d.recommendedPresetId === currentPresetId) {
+        if (isSamePresetFamily(d.recommendedPresetId, currentPresetId)) {
           return null;
         }
         const presetMeta = getEditorialPreset(d.recommendedPresetId);
@@ -261,7 +274,7 @@ export async function detectEditorialPresetForText(params: {
     }
   }
 
-  if (heuristic.confidence !== 'low' && heuristic.presetId !== currentPresetId) {
+  if (heuristic.confidence !== 'low' && !isSamePresetFamily(heuristic.presetId, currentPresetId)) {
     const presetMeta = getEditorialPreset(heuristic.presetId);
     return {
       currentPresetId,

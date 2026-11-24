@@ -57,7 +57,11 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   paragraph: 'Párrafo',
   subtitle: 'Subtítulo',
   quote: 'Cita destacada',
-  callout: 'Recuadro',
+  callout: 'Recuadro didáctico',
+  poem: 'Poema / Versos',
+  figure_placeholder: 'Espacio de figura',
+  epigraph: 'Epígrafe',
+  footnote_list: 'Notas al pie',
   list: 'Lista',
   image: 'Imagen',
   table: 'Tabla',
@@ -254,6 +258,11 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
       content: '',
       quoteAttribution: '',
       subtitleLevel: 2,
+      ...(type === 'poem' ? { preserveLineBreaks: true } : {}),
+      ...(type === 'callout' ? { calloutVariant: 'nota' as const, calloutTitle: '', calloutItems: [] } : {}),
+      ...(type === 'figure_placeholder'
+        ? { figureNumber: 'Figura 1', figureCaption: '', figureHint: '', keepTogether: true }
+        : {}),
     };
     updateDraft((prev) => ({
       ...prev,
@@ -390,6 +399,26 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
           value={section.title || ''}
           onChange={(e: any) => updateSectionProp('title', e.target.value)}
         />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Field
+            label="Volanta / Cintillo previo (opcional)"
+            value={section.kickerLabel || ''}
+            onChange={(e: any) => updateSectionProp('kickerLabel', e.target.value)}
+            placeholder="Ej: PARTE I · CAPÍTULO 1"
+          />
+          <Field
+            as="select"
+            label="Encabezado y pie en esta parte"
+            value={section.masterPageMode || 'auto'}
+            onChange={(e: any) => updateSectionProp('masterPageMode', e.target.value)}
+          >
+            <option value="auto">Automático según ubicación</option>
+            <option value="clean">Página limpia (sin encabezado ni pie)</option>
+            <option value="preliminary">Preliminar (numeración romana i, ii)</option>
+            <option value="body">Cuerpo normal (encabezado y folio)</option>
+          </Field>
+        </div>
 
         <div className="grid grid-cols-3 gap-2 pt-1">
           <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
@@ -768,24 +797,132 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                       </button>
                     </div>
                   </div>
+                ) : isEditing && rec.type === 'figure_placeholder' ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Field
+                        label="Etiqueta de figura"
+                        value={rec.figureNumber || ''}
+                        onChange={(e: any) => updateRecord(rec.id, { figureNumber: e.target.value })}
+                        placeholder="Ej: Figura 1"
+                      />
+                      <Field
+                        label="Epígrafe o pie"
+                        value={rec.figureCaption || ''}
+                        onChange={(e: any) =>
+                          updateRecord(rec.id, { figureCaption: e.target.value, content: e.target.value })
+                        }
+                        placeholder="Descripción breve de la figura"
+                      />
+                    </div>
+                    <Field
+                      as="textarea"
+                      rows={2}
+                      label="Indicación para diseño"
+                      value={rec.figureHint || ''}
+                      onChange={(e: any) => updateRecord(rec.id, { figureHint: e.target.value })}
+                      placeholder="Ej: Insertar mapa conceptual o esquema..."
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] cursor-pointer">
+                      <span>Subir imagen real y convertir…</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const picked = e.target.files?.[0];
+                          e.currentTarget.value = '';
+                          if (!picked) return;
+                          const encoded = await encodeImageFileWithinBudget(picked);
+                          const caption = rec.figureCaption || rec.content || '';
+                          updateRecord(rec.id, {
+                            type: 'image',
+                            imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
+                            imageCaption: caption,
+                            content: caption,
+                          });
+                          notify.success('Espacio convertido en imagen real.');
+                        }}
+                      />
+                    </label>
+                  </div>
                 ) : isEditing ? (
                   <div className="space-y-2">
+                    {rec.type === 'callout' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="sm:col-span-2">
+                          <Field
+                            label="Título del recuadro"
+                            value={rec.calloutTitle || ''}
+                            onChange={(e: any) => updateRecord(rec.id, { calloutTitle: e.target.value })}
+                            placeholder="Ej: CAJA 1 · Concepto clave"
+                          />
+                        </div>
+                        <Field
+                          as="select"
+                          label="Estilo"
+                          value={rec.calloutVariant || 'nota'}
+                          onChange={(e: any) => updateRecord(rec.id, { calloutVariant: e.target.value as any })}
+                        >
+                          <option value="nota">Nota editorial</option>
+                          <option value="caja">Caja didáctica</option>
+                          <option value="clave">Idea clave</option>
+                          <option value="definicion">Definición</option>
+                          <option value="importante">Destacado / Importante</option>
+                          <option value="resguardo">Resguardo / Ética</option>
+                          <option value="consigna">Actividad o consigna</option>
+                          <option value="documento">Fuente documental</option>
+                          <option value="testimonio">Testimonio</option>
+                        </Field>
+                      </div>
+                    )}
                     <Field
                       as={rec.type === 'subtitle' ? 'input' : 'textarea'}
-                      rows={rec.type === 'subtitle' ? undefined : 4}
+                      rows={rec.type === 'subtitle' ? undefined : rec.type === 'poem' ? 8 : 4}
+                      label={
+                        rec.type === 'poem'
+                          ? 'Versos (cada salto de línea se respeta exacto)'
+                          : rec.type === 'callout'
+                            ? 'Texto principal del recuadro'
+                            : undefined
+                      }
                       value={rec.content || ''}
-                      onChange={(e: any) => updateRecord(rec.id, { content: e.target.value })}
+                      onChange={(e: any) =>
+                        updateRecord(rec.id, {
+                          content: e.target.value,
+                          ...(rec.type === 'poem' ? { preserveLineBreaks: true } : {}),
+                        })
+                      }
                       placeholder={
                         rec.type === 'subtitle'
                           ? 'Subtítulo del apartado...'
                           : rec.type === 'list'
                             ? 'Un ítem por línea...'
-                            : 'Escribí o pegá el contenido aquí...'
+                            : rec.type === 'poem'
+                              ? 'Escribí cada verso en su línea...'
+                              : 'Escribí o pegá el contenido aquí...'
                       }
                     />
-                    {rec.type === 'quote' && (
+                    {rec.type === 'callout' && (
                       <Field
-                        label="Autor o referencia de la cita"
+                        as="textarea"
+                        rows={3}
+                        label="Puntos o viñetas del recuadro (una por línea)"
+                        value={(rec.calloutItems || []).join('\n')}
+                        onChange={(e: any) =>
+                          updateRecord(rec.id, {
+                            calloutItems: String(e.target.value || '')
+                              .split(/\r?\n/)
+                              .map((line) => line.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                        placeholder="Primera idea clave&#10;Segunda idea clave"
+                      />
+                    )}
+                    {(rec.type === 'quote' || rec.type === 'epigraph') && (
+                      <Field
+                        label={rec.type === 'epigraph' ? 'Autor del epígrafe' : 'Autor o referencia de la cita'}
                         value={rec.quoteAttribution || ''}
                         onChange={(e: any) =>
                           updateRecord(rec.id, { quoteAttribution: e.target.value })
@@ -990,10 +1127,20 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                 ) : (
                   <p
                     onClick={() => setEditingRecordId(rec.id)}
-                    className="text-xs leading-relaxed text-[var(--ui-text-primary)] line-clamp-4 cursor-pointer hover:opacity-80"
+                    className={`text-xs leading-relaxed text-[var(--ui-text-primary)] cursor-pointer hover:opacity-80 ${
+                      rec.type === 'poem' ? 'whitespace-pre-line italic' : 'line-clamp-4'
+                    }`}
                   >
-                    {resolveInlineCitationsInText(rec.content || '', bibMap, activeBibStyle, appearanceOrderMap) ||
-                      'Bloque vacío (tocá el lápiz para escribir)'}
+                    {rec.type === 'figure_placeholder'
+                      ? `${rec.figureNumber || 'Figura'}: ${rec.figureCaption || rec.figureHint || rec.content || 'Espacio reservado (tocá para editar o subir imagen)'}`
+                      : resolveInlineCitationsInText(
+                          rec.type === 'callout' && rec.calloutTitle
+                            ? `${rec.calloutTitle} — ${rec.content || ''}`
+                            : rec.content || '',
+                          bibMap,
+                          activeBibStyle,
+                          appearanceOrderMap,
+                        ) || 'Elemento vacío (tocá el lápiz para escribir)'}
                   </p>
                 )}
 
@@ -1043,9 +1190,12 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             { type: 'subtitle', label: '+ Subtítulo' },
             { type: 'quote', label: '+ Cita' },
             { type: 'callout', label: '+ Recuadro' },
+            { type: 'poem', label: '+ Poema' },
+            { type: 'epigraph', label: '+ Epígrafe' },
             { type: 'list', label: '+ Lista' },
             { type: 'table', label: '+ Tabla' },
             { type: 'image', label: '+ Imagen' },
+            { type: 'figure_placeholder', label: '+ Espacio figura' },
           ] as const).map((btn) => (
             <button
               key={btn.type}

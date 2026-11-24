@@ -85,15 +85,15 @@ export const EDITORIAL_STRUCTURAL_NORMS: Record<EditorialStructuralNormId, Edito
     id: 'apa7',
     shortLabel: 'APA 7',
     label: 'Normas APA 7.ª ed. (Estructura académica universal)',
-    summary: 'Márgenes parejos de 25 mm (1 pulgada), interlineado doble (2.0), inicio de párrafo desplazado y 12 pt claros.',
+    summary: 'Márgenes parejos de 1 pulgada (25.4 mm), interlineado doble (2.0), sin espacio extra entre párrafos, inicio desplazado (36 pt) y 12 pt claros.',
     compatibilityHint:
       'También es la base visual estándar cuando usás citas estilo Vancouver, IEEE o Harvard.',
     designDefaults: {
       pageSizeId: 'a4',
-      marginTop: 25,
-      marginBottom: 25,
-      marginRight: 25,
-      gutter: 25,
+      marginTop: 25.4,
+      marginBottom: 25.4,
+      marginRight: 25.4,
+      gutter: 25.4,
       fontFamily: 'Times-Roman',
       fontSize: 12,
       lineHeight: 2.0,
@@ -105,15 +105,15 @@ export const EDITORIAL_STRUCTURAL_NORMS: Record<EditorialStructuralNormId, Edito
     id: 'chicago',
     shortLabel: 'Chicago',
     label: 'Chicago / Turabian (Estética editorial estricta)',
-    summary: 'Márgenes de 25 mm, letra serif clásica 12 pt, doble espacio 2.0 e inicio de párrafo desplazado.',
+    summary: 'Márgenes de 1 pulgada (25.4 mm), letra serif clásica 12 pt, doble espacio 2.0 en cuerpo, citas simples (1.0) e inicio de párrafo desplazado.',
     compatibilityHint: 'Posee reglas visuales estrictas; se aconseja combinarlo con citas estilo Chicago.',
     strictCitationStyle: 'chicago',
     designDefaults: {
       pageSizeId: 'carta',
-      marginTop: 25,
-      marginBottom: 25,
-      marginRight: 25,
-      gutter: 25,
+      marginTop: 25.4,
+      marginBottom: 25.4,
+      marginRight: 25.4,
+      gutter: 25.4,
       fontFamily: 'Times-Roman',
       fontSize: 12,
       lineHeight: 2.0,
@@ -125,15 +125,15 @@ export const EDITORIAL_STRUCTURAL_NORMS: Record<EditorialStructuralNormId, Edito
     id: 'mla',
     shortLabel: 'MLA 9',
     label: 'MLA 9.ª ed. (Humanidades, Lengua y Literatura)',
-    summary: 'Márgenes de 25 mm, doble espacio 2.0 en todo el documento, Times 12 pt y sección "Obras citadas".',
+    summary: 'Márgenes de 1 pulgada (25.4 mm), doble espacio 2.0 en todo el documento, Times 12 pt, encabezado Apellido Página y sección "Obras citadas".',
     compatibilityHint: 'Posee estética propia estricta; suele ir siempre junto al sistema de citas MLA.',
     strictCitationStyle: 'mla',
     designDefaults: {
       pageSizeId: 'carta',
-      marginTop: 25,
-      marginBottom: 25,
-      marginRight: 25,
-      gutter: 25,
+      marginTop: 25.4,
+      marginBottom: 25.4,
+      marginRight: 25.4,
+      gutter: 25.4,
       fontFamily: 'Times-Roman',
       fontSize: 12,
       lineHeight: 2.0,
@@ -487,5 +487,169 @@ export function formatEditorialGlobalPills(draft: any): EditorialThreePillLabels
     normTooltip: `Norma visual de página: ${normSpec.label}. Tocá para ajustar márgenes e interlineado globales.`,
     bibShort: `Citas: ${bibShort}`,
     bibTooltip: `Estilo bibliográfico: ${bibGuide.label}. Tocá para cambiar el formato de citas.`,
+  };
+}
+
+export interface EditorialNormLayoutMetrics {
+  structuralNormId: EditorialStructuralNormId;
+  presetId: EditorialPresetId;
+  marginsMm: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    gutter: number;
+  };
+  firstLineIndentPt: number;
+  suppressFirstParagraphIndent: boolean;
+  hangingIndentPt: number;
+  paragraphSpacingAfterPt: number;
+  bodyAlignment: 'left';
+  blockQuoteLineHeight: number;
+  bibliographyLineHeight: number;
+  bibliographyEntryGapPt: number;
+  bibliographyHeading: 'Referencias' | 'Bibliografía' | 'Obras citadas';
+  bibliographyHeadingCentered: boolean;
+  pageNumberPlacement: 'top-right' | 'bottom-center';
+  mlaAuthorSurnameHeader: boolean;
+}
+
+const LITERARY_SUPPRESS_FIRST_PARA_PRESETS = new Set<string>([
+  'libro-ensayo-novela',
+  'novela-literaria',
+  'ensayo-editorial',
+]);
+
+/**
+ * Resuelve las métricas exactas de composición para PDF y pruebas unitarias
+ * según las normas APA 7, Chicago 17, MLA 9 y el formato literario ("Según obra").
+ */
+export function resolveEditorialNormMetrics(draft: any): EditorialNormLayoutMetrics {
+  const rawDesign = draft?.design || {};
+  const presetId = (rawDesign.presetId || DEFAULT_EDITORIAL_PRESET.id) as EditorialPresetId;
+  const preset = getEditorialPreset(presetId) || DEFAULT_EDITORIAL_PRESET;
+  const structuralNormId = resolveStructuralNormFromDraft(draft);
+  const bibStyle = normalizeBibliographyStyle(rawDesign.bibliographyStyle || rawDesign.normId || preset.bibliographyStyle);
+
+  const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNormId];
+  const baseDefaults =
+    structuralNormId === 'libre' ? preset.margins : normSpec.designDefaults;
+
+  const isAcademicStrict =
+    structuralNormId === 'apa7' ||
+    structuralNormId === 'chicago' ||
+    structuralNormId === 'mla';
+
+  const marginsMm = {
+    top: typeof rawDesign.marginTop === 'number'
+      ? rawDesign.marginTop
+      : isAcademicStrict
+        ? 25.4
+        : baseDefaults instanceof Object && 'marginTop' in baseDefaults
+          ? baseDefaults.marginTop
+          : preset.margins.top,
+    bottom: typeof rawDesign.marginBottom === 'number'
+      ? rawDesign.marginBottom
+      : isAcademicStrict
+        ? 25.4
+        : preset.margins.bottom,
+    left: typeof rawDesign.marginLeft === 'number'
+      ? rawDesign.marginLeft
+      : isAcademicStrict
+        ? 25.4
+        : preset.margins.left,
+    right: typeof rawDesign.marginRight === 'number'
+      ? rawDesign.marginRight
+      : isAcademicStrict
+        ? 25.4
+        : preset.margins.right,
+    gutter: typeof rawDesign.gutter === 'number'
+      ? rawDesign.gutter
+      : isAcademicStrict
+        ? 25.4
+        : preset.margins.gutter,
+  };
+
+  const wantIndent =
+    typeof rawDesign.firstLineIndent === 'boolean'
+      ? rawDesign.firstLineIndent
+      : structuralNormId !== 'libre'
+        ? true
+        : preset.firstLineIndent;
+
+  const firstLineIndentPt = !wantIndent
+    ? 0
+    : isAcademicStrict
+      ? 36
+      : presetId === 'novela-literaria'
+        ? 14
+        : 22;
+
+  const suppressFirstParagraphIndent =
+    structuralNormId === 'libre' && LITERARY_SUPPRESS_FIRST_PARA_PRESETS.has(presetId);
+
+  const bodyLineHeight =
+    Number(rawDesign.typography?.lineHeight) > 0
+      ? Number(rawDesign.typography.lineHeight)
+      : structuralNormId !== 'libre'
+        ? EDITORIAL_STRUCTURAL_NORMS[structuralNormId].designDefaults.lineHeight
+        : preset.typography.lineHeight;
+
+  const hangingIndentPt =
+    structuralNormId === 'apa7' ||
+    structuralNormId === 'chicago' ||
+    structuralNormId === 'mla' ||
+    bibStyle === 'apa7' ||
+    bibStyle === 'chicago' ||
+    bibStyle === 'mla' ||
+    bibStyle === 'harvard'
+      ? 36
+      : 24;
+
+  const paragraphSpacingAfterPt = isAcademicStrict
+    ? 0
+    : presetId === 'novela-literaria'
+      ? 6
+      : 9;
+
+  const blockQuoteLineHeight = structuralNormId === 'chicago' ? 1.0 : bodyLineHeight;
+  const bibliographyLineHeight =
+    structuralNormId === 'chicago'
+      ? 1.0
+      : structuralNormId === 'apa7' || structuralNormId === 'mla'
+        ? 2.0
+        : bodyLineHeight;
+
+  const bibliographyEntryGapPt =
+    structuralNormId === 'chicago' ? 10 : isAcademicStrict ? 6 : 8;
+
+  const bibliographyHeading: EditorialNormLayoutMetrics['bibliographyHeading'] =
+    structuralNormId === 'apa7' || bibStyle === 'apa7'
+      ? 'Referencias'
+      : structuralNormId === 'mla' || bibStyle === 'mla'
+        ? 'Obras citadas'
+        : 'Bibliografía';
+
+  const pageNumberPlacement: EditorialNormLayoutMetrics['pageNumberPlacement'] =
+    structuralNormId === 'apa7' || structuralNormId === 'mla'
+      ? 'top-right'
+      : 'bottom-center';
+
+  return {
+    structuralNormId,
+    presetId,
+    marginsMm,
+    firstLineIndentPt,
+    suppressFirstParagraphIndent,
+    hangingIndentPt,
+    paragraphSpacingAfterPt,
+    bodyAlignment: 'left',
+    blockQuoteLineHeight,
+    bibliographyLineHeight,
+    bibliographyEntryGapPt,
+    bibliographyHeading,
+    bibliographyHeadingCentered: structuralNormId === 'apa7' || structuralNormId === 'mla',
+    pageNumberPlacement,
+    mlaAuthorSurnameHeader: structuralNormId === 'mla',
   };
 }

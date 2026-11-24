@@ -25,7 +25,7 @@ describe('EditorLee V3.1 — Presets Académicos/Literarios y Formateador APA 7 
     const apaPreset = getEditorialPreset('tesis-apa7');
     expect(apaPreset?.normId).toBe('apa7');
     expect(apaPreset?.typography.lineHeight).toBe(2.0);
-    expect(apaPreset?.margins.top).toBe(25);
+    expect(apaPreset?.margins.top).toBe(25.4);
     expect(apaPreset?.firstLineIndent).toBe(true);
     expect(apaPreset?.defaultSections).toEqual([
       'resumen',
