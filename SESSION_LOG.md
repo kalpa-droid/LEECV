@@ -1,3 +1,24 @@
+## [2026-11-24] - PR #164 (V3.8.0): EditorLEE Motor Editorial Pro PR 1 (Fases 1–5) — Tipografía Unicode TTF, Extractor OOXML v2, Índice Exacto en 2 Pasadas y Bloques PDF Blindados
+
+**Commit en `main`:** `66c91e60496f1a87ef188de7243c37122dfd2131`
+
+**Resumen:**
+- **Modelo y Sanitizador (`editorialTypes.ts`, `sanitizeEditorialData.ts`)**:
+  - Agregados tipos retrocompatibles `poem`, `figure_placeholder`, `footnote_list` y `epigraph`; propiedades `calloutTitle`, `calloutItems`, variantes `caja`/`resguardo`, `footnotes`, `tableHasHeaderRow`, `preserveLineBreaks`, `keepTogether` y `bibAnnotation`; además de `kickerLabel`, `masterPageMode`, `runningHeaderText`, `epigraphText`/`epigraphAuthor`, `headerMode`, `footerMode`, `preliminaryRomanNumerals`, `preventRunts` y `annotatedBibliography`.
+- **Fuentes Unicode Locales y Motor Tipográfico Puro (`public/fonts/editorial/`, `academicFontCatalog.ts`, `pdfFontRegistry.ts`, `editorialTypographyEngine.ts`)**:
+  - Incorporadas las 8 fuentes estáticas TTF completas (`Tinos` y `Arimo` en 4 pesos, 3 209–3 240 glifos c/u) servidas desde `/fonts/editorial/*.ttf` con fallback CDN para eliminar corrupción de glifos (`—`, `–`, `©`, `«`, `»`, `·`, `•`, signos matemáticos y griegos).
+  - Implementados `sanitizeEditorialText()` (preserva `\u00A0` y versos en `preserveLineBreaks`), `stripTrailingHeaderPunctuation()` (`"Mi obra." -> "Mi obra"`), `preventParagraphRunts()`, `parseInlineRichRuns()` (`**bold**`, `*italic*`, `***bi***`, `◆`, `[^N]`) y `detectUnsafeWinAnsiChars()`.
+- **Extractor OOXML v2, Chunker, Importador y API (`docxClientExtractor.ts`, `editorialManuscriptChunker.ts`, `editorialUniversalImporter.ts`, `api/editorial-doc-api.ts`)**:
+  - Conservación de negritas/cursivas `<w:b/>`/`<w:i/>`, `<w:br/>`, exclusión de `<w:del>`, lectura de `word/footnotes.xml`, omisión de índices manuales (`ÍNDICE GENERAL`) además de `TOC*`, conversión de tablas de 1 columna y bloques `CAJA N` sombreados en `callout` estructurados intactos, tablas clave-valor (`tableHasHeaderRow: false`), fusión de versos en `poem` y detección de `figure_placeholder`.
+  - Fusión de portadillas `Heading 1 + ◆ + Heading 2` en una única sección (`kickerLabel` + `title`) dejando `Heading 2+` internos como `subtitle`; guardia de retención IA al `98%`, advertencia clara al importar PDF y actualización de `api/editorial-doc-api.ts` (`mammoth.convertToHtml` + `export-docx`).
+- **Índice Dinámico Exacto en 2 Pasadas (`editorialTocResolver.ts`, `editorialTwoPassRenderer.ts`, `VectorDocViewer.tsx`, `EditorLeeStudioContent.tsx`)**:
+  - Reemplazada la estimación fija por marcadores `__TOC_ID:<id>__` escaneados con `pdfjs-dist` (`MAX_TOC_PASSES = 2` más convergencia acotada), folios romanos en preliminares (`ii, iii...`) y reinicio arábigo en `1` al iniciar el cuerpo.
+- **Bloques PDF Blindados (`EditorialBlockPrimitives.tsx`, `EditorialPdfCovers.tsx`, `EditorialPdfDocument.tsx`)**:
+  - `EditorialDiamondSvg` vectorial para `◆` (sin `◆ -> Æ`), `EditorialTableBlock` con `computeOptimalTableLayout` + encabezados `fixed` + filas `wrap={false}`, `EditorialCalloutBlock`, `EditorialPoemBlock`, `EditorialFigurePlaceholderBlock`, `EditorialEpigraphBlock`, `EditorialFootnoteListBlock`, bandas de 2 columnas (`partitionRecordsIntoColumnBands`), texto alrededor de imágenes (`splitTextAroundImage`), `minPresenceAhead={56}`, `orphans={2} widows={2}`, sangría de `36 pt` y 3 Páginas Maestras (`clean`, `preliminary`, `body`).
+- **Verificación:** Suites `tests/editorial/{editorialTypographyEngine,docxClientExtractor,editorialTocResolver}.test.ts` (`29/29` editoriales en verde), versión `V3.8.0` y `npm run check-all` con `0` errores en local, GitHub Actions (`1m41s`) y Vercel Preview antes del merge.
+
+---
+
 ## [2026-11-24] - PR #162 (V3.7.0): Libro Folleto — Separadores de Capítulos, Color y Cuentagotas, Guillotina en Casa, Paridad/Foliado y Portal Global de Modales
 
 **Commit en `main`:** `577d6cce92317fe8a9f732c0ad2e78de9a0f7ebe`
