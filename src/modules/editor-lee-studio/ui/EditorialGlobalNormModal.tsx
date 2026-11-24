@@ -5,7 +5,11 @@ import { button, radius, selectableCard } from '../../../shared/core/uiDesignSys
 import { GlobalApplyMode } from '../../../shared/core/presets/configCascadeEngine';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { PRODUCT_ICON_IDS, UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
-import { EDITORIAL_PRESET_CATALOG, getEditorialPreset } from '../domain/editorialPresetCatalog';
+import {
+  EDITORIAL_PRESET_GROUPS,
+  EDITORIAL_PRIMARY_PRESETS,
+  getEditorialPreset,
+} from '../domain/editorialPresetCatalog';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
   CanonicalCitationStyle,
@@ -190,31 +194,61 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {EDITORIAL_PRESET_CATALOG.map((preset) => {
-                const selected = selectedPresetId === preset.id;
+            <div className="space-y-3 max-h-[54vh] overflow-y-auto pr-1">
+              {EDITORIAL_PRESET_GROUPS.map((group) => {
+                const groupPresets = EDITORIAL_PRIMARY_PRESETS.filter((p) => p.group === group.id);
+                if (groupPresets.length === 0) return null;
                 return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPresetCard(preset.id)}
-                    aria-pressed={selected}
-                    className={`${selectableCard.base} ${
-                      selected ? selectableCard.selected : selectableCard.unselected
-                    } p-2.5 text-left cursor-pointer`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
-                        {preset.shortLabel}
+                  <div key={group.id} className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wide text-[var(--ui-text-primary)]">
+                        {group.title}
                       </span>
-                      {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
+                      <span className="text-[10px] text-[var(--ui-text-secondary)] truncate">
+                        {group.subtitle}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block">
-                      {preset.audienceTag}
-                    </span>
-                  </button>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {groupPresets.map((preset) => {
+                        const selected = selectedPresetId === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleSelectPresetCard(preset.id)}
+                            aria-pressed={selected}
+                            className={`${selectableCard.base} ${
+                              selected ? selectableCard.selected : selectableCard.unselected
+                            } p-2.5 text-left cursor-pointer`}
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+                                {preset.shortLabel}
+                              </span>
+                              {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
+                            </div>
+                            <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block truncate">
+                              {preset.audienceTag}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
+              {(() => {
+                const activeObj = getEditorialPreset(selectedPresetId);
+                if (!activeObj?.isLegacyAlias) return null;
+                return (
+                  <div
+                    className="p-2 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] text-[var(--ui-text-secondary)]"
+                    style={{ borderRadius: radius.control }}
+                  >
+                    Plantilla heredada activa: <strong className="text-[var(--ui-text-primary)]">{activeObj.label}</strong>. Podés mantenerla o elegir una de las 12 opciones actuales arriba.
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

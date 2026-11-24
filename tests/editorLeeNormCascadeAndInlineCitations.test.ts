@@ -75,7 +75,7 @@ describe('EditorLee V3.3 — Normas Separadas, Cascada Anti-Pisado y Citas en L�
 
     expect(preserved.design.structuralNormId).toBe('apa7');
     expect(preserved.design.bibliographyStyle).toBe('ieee');
-    expect(preserved.design.marginTop).toBe(25);
+    expect(preserved.design.marginTop).toBe(25.4);
     expect(preserved.design.typography.lineHeight).toBe(1.8); // ajuste fino preservado
     expect(preserved.design.manualOverrides.lineHeight).toBe(true);
     expect(formatEditorialPillLabel(preserved).shortLabel).toBe('APA 7 · IEEE');

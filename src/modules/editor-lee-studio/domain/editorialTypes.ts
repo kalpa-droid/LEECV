@@ -6,16 +6,25 @@
  * Es testeable en Node.js sin DOM.
  */
 
+/** Agrupación visual de formatos en el Selector de Inicio de EditorLee. */
+export type EditorialPresetGroup = 'literario' | 'academico' | 'practico';
+
 /** Identificador único de un preset de documento editorial. */
 export type EditorialPresetId =
   | 'libro-ensayo-novela'
+  | 'novela-literaria'
+  | 'ensayo-editorial'
   | 'trabajo-practico-monografia-tesis'
   | 'tp-secundaria'
   | 'monografia-terciaria'
   | 'tesis-apa7'
   | 'cientifico-vancouver'
+  | 'articulo-academico'
   | 'manual-apunte-guia'
+  | 'apunte-estudio'
+  | 'guia-practica'
   | 'informe-proyecto'
+  | 'proyecto-tecnico'
   | 'documento-libre';
 
 /** Identificador único de una sección editorial. */

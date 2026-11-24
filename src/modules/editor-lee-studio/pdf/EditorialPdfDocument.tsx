@@ -28,13 +28,14 @@ import { EditorialPdfCoverPage, EditorialSectionDividerPage } from './EditorialP
 import { resolveEditorialSectionCoverState } from '../domain/sanitizeEditorialData';
 import { resolveSectionBadgeLabel } from '../domain/editorialDockEngine';
 import {
+  normalizeBibliographyStyle,
   collectBibliographyFromSections,
   computeCitationAppearanceOrder,
   formatEditorialCitation,
-  normalizeBibliographyStyle,
   resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import { resolveEditorialNormMetrics } from '../domain/editorialNormEngine';
 import {
   sanitizeEditorialText,
   stripTrailingHeaderPunctuation,
@@ -180,8 +181,8 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   const activeBibStyle = normalizeBibliographyStyle(
     rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
   );
-  const effectiveStructuralNorm =
-    rawDesign.structuralNormId || (rawDesign.normId === 'vancouver' ? 'apa7' : rawDesign.normId);
+  const normMetrics = resolveEditorialNormMetrics({ ...data, design: rawDesign });
+  const effectiveStructuralNorm = normMetrics.structuralNormId;
 
   const usePrelimRoman = rawDesign.preliminaryRomanNumerals !== false;
   const preventRunts = rawDesign.preventRunts !== false;
@@ -226,20 +227,16 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   };
 
   const MM_TO_PT = 2.83465;
-  const marginTopPt = Math.max(36, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * MM_TO_PT);
-  const marginBottomPt = Math.max(38, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * MM_TO_PT);
-  const marginLeftPt = Math.max(32, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * MM_TO_PT);
-  const marginRightPt = Math.max(32, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * MM_TO_PT);
+  const marginTopPt = Math.max(36, normMetrics.marginsMm.top * MM_TO_PT);
+  const marginBottomPt = Math.max(38, normMetrics.marginsMm.bottom * MM_TO_PT);
+  const marginLeftPt = Math.max(32, (rawDesign.gutter ?? normMetrics.marginsMm.gutter ?? normMetrics.marginsMm.left) * MM_TO_PT);
+  const marginRightPt = Math.max(32, normMetrics.marginsMm.right * MM_TO_PT);
   const resolvedPageSize = toPdfPageSize(resolvedPageSizeId);
   const pageWidthPt = resolvedPageSizeId === 'a5' ? 419.53 : resolvedPageSizeId === 'carta' ? 612 : 595.28;
   const usableWidthPt = Math.max(220, pageWidthPt - marginLeftPt - marginRightPt);
 
-  const isAcademicNormIndent =
-    effectiveStructuralNorm === 'apa7' ||
-    effectiveStructuralNorm === 'chicago' ||
-    effectiveStructuralNorm === 'mla';
-  const paragraphIndentPt = rawDesign.firstLineIndent ? (isAcademicNormIndent ? 36 : 22) : 0;
-  const hangingIndentPt = isAcademicNormIndent ? 36 : 24;
+  const paragraphIndentPt = normMetrics.firstLineIndentPt;
+  const hangingIndentPt = normMetrics.hangingIndentPt;
 
   const styles = StyleSheet.create({
     page: {
@@ -280,8 +277,9 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       ...fontStyles.regular,
       fontSize: resolvedFontSize,
       lineHeight: resolvedLineHeight,
-      marginBottom: effectiveStructuralNorm === 'apa7' ? 2 : 9,
+      marginBottom: normMetrics.paragraphSpacingAfterPt,
       textIndent: paragraphIndentPt,
+      textAlign: normMetrics.bodyAlignment,
       color: '#111827',
     },
     quoteWrap: {
@@ -290,16 +288,16 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       backgroundColor: '#F8FAFC',
       paddingVertical: 8,
       paddingHorizontal: 12,
-      marginLeft: isAcademicNormIndent ? 36 : 16,
+      marginLeft: effectiveStructuralNorm !== 'libre' ? 36 : 16,
       marginVertical: 9,
     },
     bibItemWrap: {
-      marginBottom: effectiveStructuralNorm === 'apa7' ? 6 : 8,
+      marginBottom: normMetrics.bibliographyEntryGapPt,
     },
     bibText: {
       ...fontStyles.regular,
       fontSize: resolvedFontSize,
-      lineHeight: resolvedLineHeight,
+      lineHeight: normMetrics.bibliographyLineHeight,
       color: '#111827',
     },
     sectionDivider: {
@@ -603,19 +601,31 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       }
 
       switch (record.type) {
-        case 'paragraph':
+        case 'paragraph': {
+          const prevType = idx > 0 ? records[idx - 1]?.type : undefined;
+          const suppressIndentHere =
+            normMetrics.suppressFirstParagraphIndent &&
+            (idx === 0 ||
+              prevType === 'subtitle' ||
+              prevType === 'epigraph' ||
+              prevType === 'qr_or_break');
           elements.push(
-            <View key={key} style={{ marginBottom: 1 }}>
+            <View key={key} style={{ marginBottom: 0 }}>
               <EditorialRichText
                 text={resolveRecordText(record.content || '')}
                 fontStyles={fontStyles}
                 isUnicodeFont={isUnicodeFont}
                 preventRunts={preventRunts}
-                style={styles.bodyText}
+                style={
+                  suppressIndentHere
+                    ? { ...styles.bodyText, textIndent: 0 }
+                    : styles.bodyText
+                }
               />
             </View>,
           );
           break;
+        }
 
         case 'subtitle':
           elements.push(
@@ -650,7 +660,11 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
                 preserveLineBreaks={Boolean(record.preserveLineBreaks)}
                 style={[
                   fontStyles.italic,
-                  { fontSize: resolvedFontSize, lineHeight: resolvedLineHeight, color: '#1E293B' },
+                  {
+                    fontSize: resolvedFontSize,
+                    lineHeight: normMetrics.blockQuoteLineHeight,
+                    color: '#1E293B',
+                  },
                 ]}
               />
               {record.quoteAttribution ? (
@@ -802,6 +816,64 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           );
           const useHanging =
             cite.usesHangingIndent && rawDesign.bibliographyHangingIndent !== false;
+          const suffixSep =
+            cite.suffixText && /^[.,;:)\]]/.test(cite.suffixText) ? '' : ' ';
+
+          if (cite.usesTabulatedNumberIndent && cite.citationMarkerLabel) {
+            const strippedPrefix = cite.prefixText.startsWith(`${cite.citationMarkerLabel} `)
+              ? cite.prefixText.slice(cite.citationMarkerLabel.length + 1)
+              : cite.prefixText;
+            elements.push(
+              <View key={key} wrap={false} style={styles.bibItemWrap}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                  <Text
+                    style={[
+                      fontStyles.bold,
+                      {
+                        width: 26,
+                        fontSize: resolvedFontSize,
+                        lineHeight: normMetrics.bibliographyLineHeight,
+                        color: '#111827',
+                      },
+                    ]}
+                  >
+                    {cite.citationMarkerLabel}
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text orphans={2} widows={2} style={styles.bibText}>
+                      {sanitizeEditorialText(strippedPrefix, { targetFontIsUnicode: isUnicodeFont })}
+                      {cite.italicSegment ? (
+                        <Text style={fontStyles.italic}>
+                          {sanitizeEditorialText(cite.italicSegment, { targetFontIsUnicode: isUnicodeFont })}
+                        </Text>
+                      ) : null}
+                      {cite.suffixText
+                        ? `${suffixSep}${sanitizeEditorialText(cite.suffixText, { targetFontIsUnicode: isUnicodeFont })}`
+                        : ''}
+                    </Text>
+                  </View>
+                </View>
+                {rawDesign.annotatedBibliography && record.bibAnnotation ? (
+                  <Text
+                    style={[
+                      fontStyles.italic,
+                      {
+                        fontSize: Math.max(8.5, resolvedFontSize - 1.5),
+                        color: '#475569',
+                        marginTop: 2,
+                        marginLeft: 36,
+                        lineHeight: Math.min(1.45, normMetrics.bibliographyLineHeight),
+                      },
+                    ]}
+                  >
+                    {sanitizeEditorialText(record.bibAnnotation, { targetFontIsUnicode: isUnicodeFont })}
+                  </Text>
+                ) : null}
+              </View>,
+            );
+            break;
+          }
+
           elements.push(
             <View
               key={key}
@@ -820,14 +892,20 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
                   </Text>
                 ) : null}
                 {cite.suffixText
-                  ? ` ${sanitizeEditorialText(cite.suffixText, { targetFontIsUnicode: isUnicodeFont })}`
+                  ? `${suffixSep}${sanitizeEditorialText(cite.suffixText, { targetFontIsUnicode: isUnicodeFont })}`
                   : ''}
               </Text>
               {rawDesign.annotatedBibliography && record.bibAnnotation ? (
                 <Text
                   style={[
                     fontStyles.italic,
-                    { fontSize: Math.max(8.5, resolvedFontSize - 1.5), color: '#475569', marginTop: 2 },
+                    {
+                      fontSize: Math.max(8.5, resolvedFontSize - 1.5),
+                      color: '#475569',
+                      marginTop: 2,
+                      marginLeft: 36,
+                      lineHeight: Math.min(1.45, normMetrics.bibliographyLineHeight),
+                    },
                   ]}
                 >
                   {sanitizeEditorialText(record.bibAnnotation, { targetFontIsUnicode: isUnicodeFont })}
@@ -993,10 +1071,45 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           </>
         )}
 
-        {masterMode === 'body' && runningHeaderLabel ? (
+        {masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && rawDesign.pageNumbers !== false ? (
+          <Text
+            fixed
+            style={[styles.runningHeader, { textAlign: 'right', borderBottomWidth: 0 }]}
+            render={({ pageNumber }) => {
+              const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
+              const authorSurname = coverAuthorText
+                ? coverAuthorText.includes(',')
+                  ? coverAuthorText.split(',')[0].trim()
+                  : coverAuthorText.trim().split(/\s+/).slice(-1)[0]
+                : '';
+              return normMetrics.mlaAuthorSurnameHeader && authorSurname
+                ? `${authorSurname} ${folio}`
+                : folio;
+            }}
+          />
+        ) : masterMode === 'body' && runningHeaderLabel ? (
           <Text fixed style={styles.runningHeader}>
             {runningHeaderLabel}
           </Text>
+        ) : null}
+
+        {normMetrics.structuralNormId === 'mla' && !showCover && secIndex === 0 && (coverAuthorText || data?.legalFields?.docente || data?.legalFields?.catedra) ? (
+          <View style={{ marginBottom: 14 }}>
+            {coverAuthorText ? <Text style={[styles.bodyText, { textIndent: 0 }]}>{coverAuthorText}</Text> : null}
+            {data?.legalFields?.docente ? (
+              <Text style={[styles.bodyText, { textIndent: 0 }]}>
+                {sanitizeEditorialText(data.legalFields.docente, { targetFontIsUnicode: isUnicodeFont })}
+              </Text>
+            ) : null}
+            {data?.legalFields?.catedra ? (
+              <Text style={[styles.bodyText, { textIndent: 0 }]}>
+                {sanitizeEditorialText(data.legalFields.catedra, { targetFontIsUnicode: isUnicodeFont })}
+              </Text>
+            ) : null}
+            {data?.metadata?.year ? (
+              <Text style={[styles.bodyText, { textIndent: 0 }]}>{String(data.metadata.year)}</Text>
+            ) : null}
+          </View>
         ) : null}
 
         {rawSec?.kickerLabel ? (
@@ -1009,12 +1122,14 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           minPresenceAhead={56}
           style={[
             styles.sectionTitle,
-            effectiveStructuralNorm === 'apa7'
+            (effectiveStructuralNorm === 'apa7' || (isBibSection && normMetrics.bibliographyHeadingCentered))
               ? { textAlign: 'center', fontSize: Math.max(resolvedFontSize + 2, 14) }
               : {},
           ]}
         >
-          {cleanSectionTitle}
+          {isBibSection && /^(?:bibliografía|bibliografia|referencias|obras citadas)$/i.test(cleanSectionTitle)
+            ? normMetrics.bibliographyHeading
+            : cleanSectionTitle}
         </Text>
 
         {rawSec?.epigraphText && !secCoverState.enabled ? (
@@ -1035,7 +1150,9 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
 
         {sectionContentNodes}
 
-        {rawDesign.pageNumbers !== false && masterMode !== 'clean' && (
+        {rawDesign.pageNumbers !== false &&
+          masterMode !== 'clean' &&
+          !(masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && footerMode === 'folio_only') && (
           <Text
             fixed
             style={styles.footerClean}

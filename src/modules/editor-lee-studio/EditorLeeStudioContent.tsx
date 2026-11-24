@@ -57,6 +57,13 @@ import {
   EditorialHistorialPanel,
 } from './ui/EditorialDesignAndMetaPanels';
 import { EditorialImportAiPanel } from './panels/EditorialImportAiPanel';
+import {
+  autoCleanEditorialPunctuation,
+  EditorialPreflightIssue,
+  EditorialPreflightReport,
+  runEditorialPreflight,
+} from './domain/editorialPreflightEngine';
+import { EditorialPreflightModal } from './ui/EditorialPreflightModal';
 import type { EditorialSection } from './domain/editorialTypes';
 
 export interface EditorLeeStudioContentProps {
@@ -172,6 +179,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+  const [preflightReport, setPreflightReport] = useState<EditorialPreflightReport | null>(null);
+  const [isPreflightOpen, setIsPreflightOpen] = useState<boolean>(false);
   const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
 
   const { showSuccess, showError, showInfo } = useToast();
@@ -357,29 +366,74 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     );
   }, [draft, editorialId, showSuccess, showError]);
 
-  const handleExportPDF = useCallback(async () => {
-    if (!draft) return;
-    const allowed = await consumeCreditIfNeeded();
-    if (!allowed) {
-      setIsCheckoutOpen(true);
-      return;
-    }
+  const handleExportPDF = useCallback(
+    async (options?: { skipPreflight?: boolean } | unknown) => {
+      if (!draft) return;
+      const skipPreflight = Boolean(
+        options &&
+          typeof options === 'object' &&
+          'skipPreflight' in options &&
+          (options as { skipPreflight?: boolean }).skipPreflight === true,
+      );
 
-    setIsExporting(true);
-    await withErrorHandling(
-      async () => {
-        const ok = await exportDocumentToPDF({ draft, preset }, getEditorialPdfPreset(preset) as any);
-        if (!ok) throw new Error('pdf_sin_documento');
-        showSuccess('Documento exportado en PDF.');
-      },
-      {
-        context: 'Exportación EditorLee',
-        errorMessage: 'No pudimos generar el PDF del documento.',
-        notify: (msg) => showError(msg),
-      },
-    );
-    setIsExporting(false);
-  }, [draft, preset, consumeCreditIfNeeded, showSuccess, showError]);
+      if (!skipPreflight) {
+        const report = runEditorialPreflight(draft);
+        if (!report.ok) {
+          setPreflightReport(report);
+          setIsPreflightOpen(true);
+          return;
+        }
+      }
+
+      const allowed = await consumeCreditIfNeeded();
+      if (!allowed) {
+        setIsCheckoutOpen(true);
+        return;
+      }
+
+      setIsExporting(true);
+      await withErrorHandling(
+        async () => {
+          const ok = await exportDocumentToPDF({ draft, preset }, getEditorialPdfPreset(preset) as any);
+          if (!ok) throw new Error('pdf_sin_documento');
+          showSuccess('Documento exportado en PDF.');
+        },
+        {
+          context: 'Exportación EditorLee',
+          errorMessage: 'No pudimos generar el PDF del documento.',
+          notify: (msg) => showError(msg),
+        },
+      );
+      setIsExporting(false);
+    },
+    [draft, preset, consumeCreditIfNeeded, showSuccess, showError],
+  );
+
+  const handleGoToPreflightIssue = useCallback(
+    (issue: EditorialPreflightIssue) => {
+      setIsPreflightOpen(false);
+      if (issue.code === 'default_or_empty_title') {
+        setActiveStepTab('editorial_metadata');
+        setIsPanelOpen(true);
+        return;
+      }
+      if (issue.sectionId) {
+        setActiveStepTab(issue.sectionId);
+        setIsPanelOpen(true);
+        focusSectionInPreview(issue.sectionId);
+      }
+    },
+    [focusSectionInPreview],
+  );
+
+  const handleAutoCleanFromPreflight = useCallback(() => {
+    if (!draft) return;
+    const cleaned = autoCleanEditorialPunctuation(draft);
+    setDraft(cleaned);
+    const updatedReport = runEditorialPreflight(cleaned);
+    setPreflightReport(updatedReport);
+    showSuccess('Espacios y comas corregidos en tu manuscrito.');
+  }, [draft, showSuccess]);
 
   const handleSaveToDisk = useCallback(
     async (forceSaveAs: boolean = false) => {
@@ -774,7 +828,18 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         onClose={() => setIsCheckoutOpen(false)}
         onConfirm={() => {
           setIsCheckoutOpen(false);
-          void handleExportPDF();
+          void handleExportPDF({ skipPreflight: true });
+        }}
+      />
+      <EditorialPreflightModal
+        isOpen={isPreflightOpen}
+        report={preflightReport}
+        onClose={() => setIsPreflightOpen(false)}
+        onGoToIssue={handleGoToPreflightIssue}
+        onAutoCleanPunctuation={handleAutoCleanFromPreflight}
+        onExportAnyway={() => {
+          setIsPreflightOpen(false);
+          void handleExportPDF({ skipPreflight: true });
         }}
       />
       <EditorialGlobalNormModal

@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 8,
+  minor: 9,
   patch: 0,
-  label: 'V3.8.0',
+  label: 'V3.9.0',
   lastUpdated: '2026-11-24',
   lastAgent: '@antigravity',
-  stage: 'feat(editor-lee): V3.8.0 — Motor Editorial Pro PR 1: fuentes TTF Unicode locales (Tinos/Arimo), extractor OOXML v2 sin pérdidas (tablas, CAJA N, poemas, notas, fusión H1+H2), índice dinámico exacto en 2 pasadas con preliminares romanos y bloques PDF blindados.',
+  stage: 'feat(editor-lee): V3.9.0 — Motor Editorial Pro PR 2: 12 formatos en 3 grupos, normas APA 7/Chicago/MLA exactas (25.4 mm y 36 pt), 7 estilos bibliográficos con cursivas y tabulación IEEE/Vancouver, auditor preflight antes de exportar y controles editoriales completos en estudio.',
 } as const;

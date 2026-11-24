@@ -7,7 +7,7 @@ import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { getBoundNativeFileName } from '../../../shared/core/storage/nativeFileDocumentService';
-import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from '../domain/editorialPresetCatalog';
+import { DEFAULT_EDITORIAL_PRESET, EDITORIAL_PRESET_GROUPS, getEditorialPreset } from '../domain/editorialPresetCatalog';
 
 export interface EditorialPresetInicioPanelProps {
   draft: any;
@@ -54,6 +54,8 @@ export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProp
               {activePreset.label}
             </p>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
+              {(EDITORIAL_PRESET_GROUPS.find((g) => g.id === activePreset.group)?.title || '')}
+              {EDITORIAL_PRESET_GROUPS.some((g) => g.id === activePreset.group) ? ' · ' : ''}
               {activePreset.audienceTag} · {sectionsCount} apartado(s) activos
             </p>
           </div>
