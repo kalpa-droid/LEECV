@@ -186,8 +186,8 @@ export const BOOK_PRINT_PROFILES: Record<BookPrintTarget, BookPrintProfileConfig
       destination: 'A',
       unprintableMarginMm: 5,
       showGuides: false,
-      applyCreep: true,
-      paperThicknessMm: 0.1,
+      applyCreep: false,
+      paperThicknessMm: 0,
     },
   },
   print_shop: {
@@ -216,7 +216,7 @@ export interface BookControlledFieldLabels {
 
 export const BOOK_CONTROLLED_FIELD_LABELS: BookControlledFieldLabels = {
   paperSize: 'Hoja donde se imprimirá',
-  destination: 'Cómo se imprime la tapa',
+  destination: 'Destino de tapa y contratapa',
   unprintableMarginMm: 'Margen de borde de impresora',
   showGuides: 'Guías de doblez y recorte',
   applyCreep: 'Ajuste de páginas de adentro',
@@ -256,11 +256,20 @@ export function applyBookPrintProfile<T extends { manualOverrides?: Record<strin
   mode: GlobalApplyMode = 'preserve-manual',
 ): T {
   const profile = BOOK_PRINT_PROFILES[target];
-  return applyGlobalConfigWithCascade(currentOptions, {
+  const applied = applyGlobalConfigWithCascade(currentOptions, {
     alwaysPatch: { printTarget: target } as Partial<T>,
     defaultsPatch: profile.defaults as unknown as Partial<T>,
     mode,
   });
+  // En casa no existe la cubierta envolvente con lomo (destino C): se normaliza.
+  const asRecord = applied as unknown as { destination?: string; manualOverrides?: Record<string, boolean> };
+  if (target === 'home' && asRecord.destination === 'C') {
+    return {
+      ...applied,
+      destination: asRecord.manualOverrides?.destination ? 'B' : 'A',
+    } as T;
+  }
+  return applied;
 }
 
 export function markBookFieldManual<T extends { manualOverrides?: Record<string, boolean> }>(

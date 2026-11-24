@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { elevationSystem, zIndex } from '../uiDesignSystem';
 import { LidioHelpTrigger } from './LidioHelpTrigger';
@@ -68,21 +69,21 @@ export function Modal({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
+      className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/75 backdrop-blur-sm p-3 sm:p-5 py-4 sm:py-6 animate-fade-in no-print select-none"
       style={{ zIndex: zIndex.modal }}
     >
       <div
         data-ui-modal="true"
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[16px] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92dvh] ${className}`}
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[16px] ${elevationSystem.overlay} overflow-hidden flex flex-col my-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
           <div
-            className={`flex items-center justify-between gap-2 px-5 py-3.5 bg-[var(--ui-bg-header)] ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
+            className={`flex items-center justify-between gap-2 px-5 py-3.5 shrink-0 bg-[var(--ui-bg-header)] ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
           >
             <div className="flex items-center gap-2 font-black text-sm tracking-wide min-w-0">
               {icon && <span className="text-[var(--color-accent-amber-bright)] flex-shrink-0">{icon}</span>}
@@ -107,17 +108,22 @@ export function Modal({
         )}
 
         {/* Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 leading-relaxed">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 leading-relaxed">
           {children}
         </div>
 
         {/* Optional Footer */}
         {footer && (
-          <div className="px-5 py-3.5 border-t ui-border ui-bg-panel flex items-center justify-end gap-3 sticky bottom-0 shrink-0 z-10 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))]">
+          <div className="px-5 py-3.5 shrink-0 border-t ui-border ui-bg-panel flex items-center justify-end gap-3 sticky bottom-0 z-10 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))]">
             {footer}
           </div>
         )}
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 }

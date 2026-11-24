@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, CheckCircle2, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
-import { BookImpositionOptions, processBookImposition } from './domain/impositionEngine';
+import { BookImpositionOptions, processBookImposition, resolveSeparateCoverPlan } from './domain/impositionEngine';
 import {
   BOOK_PRINT_PROFILES,
   clearBookFieldManual,
@@ -16,7 +16,7 @@ import { LidioHelpTrigger } from '../../shared/core/ui/LidioHelpTrigger';
 import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
 import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/kits/print-imposition/impositionPlanner';
-import { computeBookFinalPageCount } from './domain/bookPageCount';
+import { computeBookPageBreakdown } from './domain/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -71,10 +71,19 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
     );
   }
 
-  const hasCover = options.hasCover || (options.customCover && options.customCover.type !== 'none');
-  const hasBackCover = options.hasBackCover || (options.customBackCover && options.customBackCover.type !== 'none');
-  const finalPageCount = computeBookFinalPageCount(options, pdfPageCount);
-  const totalSheetsToPrint = finalPageCount / 2;
+  const breakdown = computeBookPageBreakdown(options, pdfPageCount);
+  const separatePlan = resolveSeparateCoverPlan(options, breakdown.activePdfPages);
+  const finalPageCount = breakdown.totalBookPages;
+  const totalSheetsToPrint = breakdown.totalSheetsToPrint;
+
+  const hasCover =
+    options.hasCover ||
+    Boolean(options.customCover && options.customCover.type !== 'none') ||
+    separatePlan.frontSource === 'pdf-first';
+  const hasBackCover =
+    options.hasBackCover ||
+    Boolean(options.customBackCover && options.customBackCover.type !== 'none') ||
+    separatePlan.backSource === 'pdf-last';
 
   const readingDirection = options.readingDirection ?? 'ltr';
   const unprintableMarginMm = options.unprintableMarginMm ?? 5;
@@ -83,21 +92,23 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const activeProfile = BOOK_PRINT_PROFILES[activeTarget];
   const paperSpec = resolveBookPaperSpec(options.paperSize);
   const isNormalMode = options.mode !== 'fotocopia';
-  const spineWidthMm = calculateSpineWidth(finalPageCount, { paperThicknessMm: options.paperThicknessMm ?? 0 });
+  const effectiveThickness = activeTarget === 'home' ? 0 : (options.paperThicknessMm ?? 0);
+  const spineWidthMm = calculateSpineWidth(finalPageCount, { paperThicknessMm: effectiveThickness });
   const sheetsInSignature = Math.max(1, Math.floor(finalPageCount / 4));
-  const creepMaxMm = options.applyCreep !== false
-    ? calculateCreepOffset(0, sheetsInSignature, options.paperThicknessMm ?? 0)
+  const creepMaxMm = activeTarget === 'print_shop' && options.applyCreep !== false
+    ? calculateCreepOffset(0, sheetsInSignature, effectiveThickness)
     : 0;
   const zipPlan =
     options.zipByBooklet && (options.destination ?? 'A') === 'A' && isNormalMode
       ? planBookletSignatures(finalPageCount, 'multi-balanced', 4)
       : null;
   const multiSigs = zipPlan && zipPlan.signatures.length > 1 ? zipPlan.signatures : null;
+  const effectiveDest = activeTarget === 'home' && options.destination === 'C' ? 'B' : (options.destination ?? 'A');
   const destinationLabel =
-    (options.destination ?? 'A') === 'A'
+    effectiveDest === 'A'
       ? t.bookStudio.previewExportStep.destinationA
-      : (options.destination ?? 'A') === 'B'
-        ? t.bookStudio.previewExportStep.destinationB
+      : effectiveDest === 'B'
+        ? (activeTarget === 'home' ? t.bookStudio.impositionStep.destinationBSubHome : t.bookStudio.previewExportStep.destinationB)
         : t.bookStudio.previewExportStep.destinationC;
 
   const handleDownloadOriginal = () => {
@@ -255,6 +266,16 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             </div>
           </div>
 
+          {separatePlan.isSeparate && (
+            <p className="text-[11px] font-semibold text-[var(--color-accent-text)]">
+              Incluye {breakdown.interiorSheets} hojas del interior + 1 hoja aparte de tapa y contratapa (
+              {separatePlan.layout === 'home-guillotine'
+                ? 'Contratapa a la izquierda y Tapa a la derecha para guillotinar'
+                : 'Contratapa, Lomo y Tapa'}
+              ).
+            </p>
+          )}
+
           <div className="space-y-1.5 pt-1 text-xs">
             <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
               <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
@@ -264,6 +285,12 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
               <span>{t.bookStudio.previewExportStep.backCoverRowLabel} <strong>{hasBackCover ? (options.customBackCover ? t.bookStudio.previewExportStep.backCoverCustom : t.bookStudio.previewExportStep.sourceBackCoverPage) : t.bookStudio.previewExportStep.noBackCover}</strong></span>
             </div>
+            {(options.sectionDividers || []).length > 0 && (
+              <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
+                <span>Separadores de capítulo: <strong>{(options.sectionDividers || []).length} ({breakdown.dividerPages} págs.)</strong></span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5 pt-2 border-t border-[var(--ui-border)] text-xs">
@@ -275,14 +302,18 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
               <span>{t.bookStudio.previewExportStep.destinationRowLabel} <strong>{destinationLabel}</strong></span>
             </div>
-            <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-              <span>{t.bookStudio.previewExportStep.spineRowLabel} <strong>{spineWidthMm.toFixed(1)} mm{spineWidthMm === 0 ? t.bookStudio.previewExportStep.spineNoThickness : ''}</strong></span>
-            </div>
-            <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-              <span>{t.bookStudio.previewExportStep.creepRowLabel} <strong>{creepMaxMm > 0 ? t.bookStudio.previewExportStep.creepUpTo.replace('{max}', creepMaxMm.toFixed(1)) : t.bookStudio.previewExportStep.creepNotApply}</strong></span>
-            </div>
+            {activeTarget === 'print_shop' && (
+              <>
+                <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+                  <span>{t.bookStudio.previewExportStep.spineRowLabel} <strong>{spineWidthMm.toFixed(1)} mm{spineWidthMm === 0 ? t.bookStudio.previewExportStep.spineNoThickness : ''}</strong></span>
+                </div>
+                <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+                  <span>{t.bookStudio.previewExportStep.creepRowLabel} <strong>{creepMaxMm > 0 ? t.bookStudio.previewExportStep.creepUpTo.replace('{max}', creepMaxMm.toFixed(1)) : t.bookStudio.previewExportStep.creepNotApply}</strong></span>
+                </div>
+              </>
+            )}
             <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
               <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
               <span>{t.bookStudio.previewExportStep.guidesRowLabel} <strong>{options.showGuides ? t.bookStudio.previewExportStep.guidesYes : t.bookStudio.previewExportStep.guidesNo}</strong></span>

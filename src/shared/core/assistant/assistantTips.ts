@@ -206,6 +206,7 @@ const DEFAULT_BOOK_STEP_IDS = [
   'book_organize',
   'book_cover',
   'book_back_cover',
+  'book_dividers',
   'book_foliado',
   'book_imposition',
   'book_preview_export',
@@ -473,6 +474,20 @@ export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
       title: 'Contratapa',
       body: 'La contratapa es opcional: podés agregar un texto descriptivo o una imagen para el cierre del libro.',
       targetTab: 'book_back_cover',
+    },
+  ],
+  book_dividers: [
+    {
+      id: 'tip-book-dividers-1',
+      title: 'Hoja detrás del separador',
+      body: 'Con "Hoja detrás" el separador deja su reverso en blanco y las páginas impares siguen cayendo a la derecha. Sin esa hoja, el contenido sigue en el reverso y corre un lugar el lado de todo lo que viene después.',
+      targetTab: 'book_dividers',
+    },
+    {
+      id: 'tip-book-dividers-2',
+      title: 'Color propio con cuentagotas',
+      body: 'Elegí un color propio para el separador con el selector o el cuentagotas, igual que en la tapa y la contratapa.',
+      targetTab: 'book_dividers',
     },
   ],
   book_foliado: [

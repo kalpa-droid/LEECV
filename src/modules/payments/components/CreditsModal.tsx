@@ -1,6 +1,7 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Crown, Sparkles, AlertCircle } from 'lucide-react';
-import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius, zIndex } from '../../../shared/core/uiDesignSystem';
 import { useAuth } from '../../../shared/core/auth/AuthContext';
 import { LogIn } from 'lucide-react';
 import { useEntitlements } from '../../../shared/core/entitlements/useEntitlements';
@@ -18,10 +19,13 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: Cr
 
   if (!isOpen) return null;
 
-  return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn no-print`}>
+  const modalContent = (
+    <div
+      className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-4 animate-fadeIn no-print"
+      style={{ zIndex: zIndex.modal }}
+    >
       <div 
-        className={`bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] w-full max-w-md rounded-[${radius.modal}] p-6 flex flex-col gap-6 ${elevationSystem.floating} animate-slideUp`}
+        className={`bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] w-full max-w-md my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[${radius.modal}] p-6 flex flex-col gap-6 ${elevationSystem.floating} animate-slideUp`}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -151,4 +155,9 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: Cr
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 }

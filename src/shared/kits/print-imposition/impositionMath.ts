@@ -73,3 +73,62 @@ export function countBlanksBehindCover(
   }
   return count;
 }
+
+/**
+ * Igual que `countBlanksBehindCover`, pero tiene en cuenta cuántas páginas se
+ * insertaron (separadores, blancos manuales) o quitaron ANTES de la página de
+ * referencia: si ese corrimiento es impar, la página de referencia cambió de lado.
+ * Sin calibración (refPdfPage/refBookPage en 0) NO hace nada extra.
+ */
+export function countBlanksBehindCoverWithOffset(params: {
+  blankBehindCoverChecked: boolean;
+  refPdfPage: number;
+  refBookPage: number;
+  refPageSide: 'derecha' | 'izquierda';
+  insertedPagesBeforeRef: number;
+}): number {
+  const { blankBehindCoverChecked, refPdfPage, refBookPage, refPageSide, insertedPagesBeforeRef } = params;
+  if (refPdfPage <= 0 || refBookPage <= 0) {
+    return blankBehindCoverChecked ? 1 : 0;
+  }
+  const parityFlipped = Math.abs(insertedPagesBeforeRef) % 2 === 1;
+  const effectiveSide: 'derecha' | 'izquierda' = parityFlipped
+    ? refPageSide === 'derecha' ? 'izquierda' : 'derecha'
+    : refPageSide;
+  return countBlanksBehindCover(blankBehindCoverChecked, refPdfPage, refBookPage, effectiveSide);
+}
+
+/**
+ * Calcula las hojas en blanco de retiro + relleno a múltiplo de `capacity` cuando
+ * hay (o no) una contratapa embebida al final del mismo archivo.
+ * Modo "garantizar": el retiro delante de la contratapa asegura AL MENOS una
+ * hoja en blanco, pero el relleno a múltiplo de 4 absorbe ese blanco (nunca suma
+ * una tanda extra de 4 blancos seguidos).
+ */
+export function computePaddingPages(
+  pagesBeforeBackCover: number,
+  hasEmbeddedBackCover: boolean,
+  blankInFrontBackCover: boolean,
+  capacity = 4,
+): { retreatBlanks: number; paddingBlanks: number; totalPages: number } {
+  if (pagesBeforeBackCover <= 0 && !hasEmbeddedBackCover) {
+    return { retreatBlanks: 0, paddingBlanks: 0, totalPages: 0 };
+  }
+  const cap = capacity > 0 ? capacity : 4;
+  if (!hasEmbeddedBackCover) {
+    const paddingBlanks = (cap - (pagesBeforeBackCover % cap)) % cap;
+    return { retreatBlanks: 0, paddingBlanks, totalPages: pagesBeforeBackCover + paddingBlanks };
+  }
+  const withBack = pagesBeforeBackCover + 1;
+  const naturalPadding = (cap - (withBack % cap)) % cap;
+  // Garantiza al menos 1 blanco delante si el usuario lo pidió; el relleno natural lo absorbe.
+  const blanksBeforeBack = blankInFrontBackCover ? Math.max(1, naturalPadding) : naturalPadding;
+  const totalBefore = withBack + blanksBeforeBack;
+  const extraToCap = (cap - (totalBefore % cap)) % cap;
+  const blanksTotal = blanksBeforeBack + extraToCap;
+  return {
+    retreatBlanks: blankInFrontBackCover ? 1 : 0,
+    paddingBlanks: Math.max(0, blanksTotal - (blankInFrontBackCover ? 1 : 0)),
+    totalPages: withBack + blanksTotal,
+  };
+}

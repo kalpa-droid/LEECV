@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X, Loader2, FileText, CheckCircle2 } from 'lucide-react';
 import { executeAiTask } from '../../../../shared/core/ai/aiClient';
-import { button, radius } from '../../../../shared/core/uiDesignSystem';
+import { button, radius, zIndex } from '../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../shared/core/ui/Toast';
 import type { CoverLetterData } from '../../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
 
@@ -88,9 +89,12 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-modal)] shadow-2xl w-full max-w-xl p-6 relative flex flex-col gap-4">
+  const modalContent = (
+    <div
+      className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div className="bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-modal)] shadow-2xl w-full max-w-xl my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 relative flex flex-col gap-4">
         <button
           type="button"
           onClick={onClose}
@@ -156,4 +160,9 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 };

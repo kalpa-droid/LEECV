@@ -8,6 +8,8 @@ import {
   Sparkles,
   Check,
   Edit3,
+  BookmarkCheck,
+  Info,
 } from 'lucide-react';
 import { BookImpositionOptions } from './domain/impositionEngine';
 import {
@@ -44,6 +46,10 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   const refBookPage = options.refBookPage || 0;
   const isCalibrated = refPdfPage > 0 && refBookPage > 0;
   const isFotocopia = options.mode === 'fotocopia';
+  const dividers = options.sectionDividers || [];
+  const dividersWithBlank = dividers.filter((d) => d.blankBehind !== false);
+  const dividersWithoutBlank = dividers.filter((d) => d.blankBehind === false);
+  const firstDividerWithBlank = dividersWithBlank[0] || null;
 
   const [aiStatusMsg, setAiStatusMsg] = useState<string>('');
   const [deduction, setDeduction] = useState<DeducedFirstPageResult | null>(null);
@@ -60,7 +66,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isRenderingPreview, setIsRenderingPreview] = useState<boolean>(false);
 
-  // Renderizar la vista previa de la página DEDUCIDA como Página 1 (no la página testigo 10)
+  // Renderizar la vista previa de la página DEDUCIDA como Página 1 (solo cuando el usuario tocó el botón de IA).
   useEffect(() => {
     if (!deduction || !pdfDoc || !previewCanvasRef.current) return;
     let cancelled = false;
@@ -227,8 +233,47 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
         }
       >
         <ContextualGuideBox title={t.bookStudio.foliadoStep.howToTitle}>
-          Tocá el botón de IA para que deduzca cuál es la <strong>Página 1</strong> de tu libro, o hacé clic en cualquier miniatura del visor para escribir el número que veas impreso.
+          Este paso es <strong>opcional</strong>: si no elegís ningún número ni tocás el botón de IA, no hace nada y el libro se arma en orden directo. Si querés alinear páginas impares a la derecha, tocá el botón de IA o hacé clic en una miniatura.
         </ContextualGuideBox>
+
+        {firstDividerWithBlank && !isCalibrated && !deduction && (
+          <div
+            className="p-3.5 border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] space-y-2.5"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-start gap-2 text-xs">
+              <BookmarkCheck className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold text-[var(--ui-text-primary)]">
+                  Separador detectado con hoja detrás
+                </p>
+                <p className="text-[var(--ui-text-secondary)]">
+                  Pusiste &ldquo;{firstDividerWithBlank.title}&rdquo; antes de la Pág. {firstDividerWithBlank.insertBeforePage} del PDF. ¿Querés confirmar que esa página arranque a la derecha (impar)?
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => applyCalibration(firstDividerWithBlank.insertBeforePage, 1, 'derecha')}
+              className={`${button.base} ${button.primary} w-full text-xs font-bold flex items-center justify-center gap-1.5`}
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Confirmar Pág. {firstDividerWithBlank.insertBeforePage} a la derecha (sin usar IA)</span>
+            </button>
+          </div>
+        )}
+
+        {dividersWithoutBlank.length > 0 && (
+          <div
+            className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] flex items-start gap-2 text-xs text-[var(--ui-text-secondary)]"
+            style={{ borderRadius: radius.control }}
+          >
+            <Info className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
+            <p>
+              Tenés {dividersWithoutBlank.length} separador(es) de 1 sola página (sin hoja detrás). Cada uno corre en 1 lugar el lado derecha/izquierda a partir de esa sección; si calibrás un número después de ese separador, el motor ya descuenta ese desplazamiento automáticamente.
+            </p>
+          </div>
+        )}
 
         {aiStatusMsg && (
           <div
@@ -240,7 +285,6 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
           </div>
         )}
 
-        {/* Tarjeta de confirmación visual de la Página 1 deducida por la IA */}
         {deduction && (
           <div
             className={`p-3.5 border-2 border-[var(--color-accent-base)] bg-[var(--ui-bg-surface)] space-y-3 ${elevationSystem.raised}`}
@@ -258,7 +302,6 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
               </div>
             </div>
 
-            {/* Vista previa de la página DEDUCIDA como 1 (NO la página testigo 10) */}
             <div className="p-2.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] flex flex-col items-center space-y-2" style={{ borderRadius: radius.control }}>
               <div className="flex items-center justify-between w-full text-[11px] font-bold">
                 <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
@@ -286,7 +329,6 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
                 )}
               </div>
 
-              {/* Ajuste rápido ±1 página en vivo por si hay una hoja sin numerar entre medio */}
               <div className="flex items-center justify-between w-full gap-2 pt-1">
                 <button
                   type="button"
@@ -345,7 +387,6 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
           </div>
         )}
 
-        {/* Formulario manual directo para especificar qué página es cuál */}
         {!showManualForm ? (
           <button
             type="button"

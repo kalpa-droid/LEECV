@@ -7,6 +7,7 @@ const SECTION_FOR: Record<string, keyof typeof bookStudioCatalog> = {
   book_organize: 'organizeStep',
   book_cover: 'coverStep',
   book_back_cover: 'backCoverStep',
+  book_dividers: 'dividersStep',
   book_foliado: 'foliadoStep',
   book_imposition: 'impositionStep',
   book_preview_export: 'previewExportStep',
@@ -28,11 +29,12 @@ describe('bookStudioCatalog ↔ BOOK_STEP_SEQUENCE (Fase 4)', () => {
     expect(bookStudioCatalog.organizeStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[2].label}`);
     expect(bookStudioCatalog.coverStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[3].label}`);
     expect(bookStudioCatalog.backCoverStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[4].label}`);
-    expect(bookStudioCatalog.foliadoStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[5].label}`);
-    expect(bookStudioCatalog.impositionStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[6].label}`);
+    expect(bookStudioCatalog.dividersStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[5].label}`);
+    expect(bookStudioCatalog.foliadoStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[6].label}`);
+    expect(bookStudioCatalog.impositionStep.nextStep).toBe(`Siguiente: ${BOOK_STEP_SEQUENCE[7].label}`);
   });
 
-  it('el paso 5 ya no dice "Exportar" (fix del label desfasado: el siguiente es 6. Armado y Guías)', () => {
+  it('el paso 6 (Encuentro un número) apunta a 7. Armado y Guías (no Exportar)', () => {
     expect(bookStudioCatalog.foliadoStep.nextStep).toContain('Armado');
     expect(bookStudioCatalog.foliadoStep.nextStep).not.toContain('Exportar');
   });
@@ -40,6 +42,8 @@ describe('bookStudioCatalog ↔ BOOK_STEP_SEQUENCE (Fase 4)', () => {
   it('getNextBookStepId coincide con el catálogo en ambos modos', () => {
     expect(getNextBookStepId('book_source_type', 'normal')).toBe('book_cover');
     expect(getNextBookStepId('book_source_type', 'fotocopia')).toBe('book_organize');
+    expect(getNextBookStepId('book_back_cover', 'normal')).toBe('book_dividers');
+    expect(getNextBookStepId('book_dividers', 'normal')).toBe('book_foliado');
     expect(getNextBookStepId('book_foliado', 'normal')).toBe('book_imposition');
     expect(getNextBookStepId('book_imposition', 'normal')).toBe('book_preview_export');
   });

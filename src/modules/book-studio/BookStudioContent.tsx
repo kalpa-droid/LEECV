@@ -27,6 +27,7 @@ import { BookFoliadoStep } from './BookFoliadoStep';
 import { BookImpositionStep } from './BookImpositionStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
+import { BookDividersStep } from './BookDividersStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from './domain/bookStepSequence';
@@ -830,7 +831,6 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookCoverStep
               options={options}
               setOptions={handleOptionsChange}
-              pdfPageCount={pdfPageCount}
               onNextStep={() => handleNavigateNextStep('book_cover')}
               onPrevStep={() => handleNavigatePrevStep('book_cover')}
             />
@@ -842,6 +842,16 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_back_cover')}
               onPrevStep={() => handleNavigatePrevStep('book_back_cover')}
+            />
+          )}
+
+          {activeStepTab === 'book_dividers' && (
+            <BookDividersStep
+              options={options}
+              setOptions={handleOptionsChange}
+              pdfPageCount={pdfPageCount}
+              onNextStep={() => handleNavigateNextStep('book_dividers')}
+              onPrevStep={() => handleNavigatePrevStep('book_dividers')}
             />
           )}
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Sparkles, ShieldCheck, ArrowRight, Clock } from 'lucide-react';
 import { dal } from '../../../shared/core/storage/dataAccessLayer';
-import { button, glassmorphism, radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { button, glassmorphism, radius, elevationSystem, zIndex } from '../../../shared/core/uiDesignSystem';
 import { t } from '../../../shared/i18n/useText';
 
 interface RetentionOfferModalProps {
@@ -55,9 +56,12 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-      <div className={`relative w-full max-w-lg rounded-[${radius.modal}] p-6 overflow-hidden ${glassmorphism.panel} border-[var(--color-secondary-base)]/40 ${elevationSystem.overlay} bg-[var(--ui-bg-card)]`}>
+  const modalContent = (
+    <div
+      className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4 bg-black/85 backdrop-blur-sm animate-fade-in"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div className={`relative w-full max-w-lg my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[${radius.modal}] p-6 overflow-hidden ${glassmorphism.panel} border-[var(--color-secondary-base)]/40 ${elevationSystem.overlay} bg-[var(--ui-bg-card)]`}>
         {/* Glow de fondo */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-secondary-base)]/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -114,4 +118,9 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 };
