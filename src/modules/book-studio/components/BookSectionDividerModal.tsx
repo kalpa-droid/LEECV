@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { BookMarked, Check, FilePlus2, FileText, Image, Palette } from 'lucide-react';
+import { BookMarked, Image, Palette } from 'lucide-react';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { Field } from '../../../shared/core/ui/Field';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
-import { COVER_PRESETS } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
-import { button, input, radius, selectableCard } from '../../../shared/core/uiDesignSystem';
+import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
+import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { button, input, radius } from '../../../shared/core/uiDesignSystem';
 import { BookSectionDivider } from '../domain/bookDividerCanvas';
 import { BookPaperSizeId } from '../domain/bookPrintProfileEngine';
 import { bookAssetManager } from '../domain/bookAssetManager';
 import { CoverPreviewThumbnail } from './CoverPreviewThumbnail';
+import { BookCoverColorPickerGrid } from './BookCoverColorPickerGrid';
 
 export interface BookSectionDividerModalProps {
   isOpen: boolean;
@@ -27,7 +29,7 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
   onClose,
   pdfPageCount,
   defaultInsertBeforePage = 1,
-  defaultCoverStyle = 'monica-classic',
+  defaultCoverStyle = 'modern-corporate',
   paperSize = 'A4',
   initialDivider = null,
   onSaveDivider,
@@ -36,6 +38,8 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
   const [blankBehind, setBlankBehind] = useState<boolean>(true);
   const [type, setType] = useState<'template' | 'upload'>('template');
   const [coverStyle, setCoverStyle] = useState<string>(defaultCoverStyle);
+  const [bgColor, setBgColor] = useState<string | undefined>(undefined);
+  const [textColor, setTextColor] = useState<string | undefined>(undefined);
   const [kicker, setKicker] = useState<string>('Capítulo 1');
   const [title, setTitle] = useState<string>('');
   const [subtitle, setSubtitle] = useState<string>('');
@@ -50,6 +54,8 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
       setBlankBehind(initialDivider.blankBehind !== false);
       setType(initialDivider.type || 'template');
       setCoverStyle(initialDivider.coverStyle || defaultCoverStyle);
+      setBgColor(initialDivider.bgColor);
+      setTextColor(initialDivider.textColor);
       setKicker(initialDivider.kicker ?? '');
       setTitle(initialDivider.title || '');
       setSubtitle(initialDivider.subtitle ?? '');
@@ -60,6 +66,8 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
       setBlankBehind(true);
       setType('template');
       setCoverStyle(defaultCoverStyle);
+      setBgColor(undefined);
+      setTextColor(undefined);
       setKicker('Capítulo 1');
       setTitle('');
       setSubtitle('');
@@ -94,6 +102,8 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
     subtitle: subtitle.trim(),
     type,
     coverStyle,
+    bgColor,
+    textColor,
     assetId,
     imageFit,
     blankBehind,
@@ -106,7 +116,7 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
       return;
     }
     if (type === 'upload' && !assetId) {
-      setErrorMsg('Subí una imagen para el separador o elegí una plantilla de diseño.');
+      setErrorMsg('Subí una imagen para el separador o elegí un diseño.');
       return;
     }
     const maxPage = Math.max(1, pdfPageCount || 1);
@@ -120,6 +130,8 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
       subtitle: subtitle.trim(),
       type,
       coverStyle,
+      bgColor,
+      textColor,
       assetId,
       imageFit,
       blankBehind,
@@ -133,13 +145,12 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
       onClose={onClose}
       size="lg"
       icon={<BookMarked className="w-4 h-4" />}
-      title={initialDivider ? 'Editar carátula / separador de capítulo' : 'Agregar carátula / separador de capítulo'}
+      title={initialDivider ? 'Editar separador de capítulo' : 'Agregar separador de capítulo'}
       helpTitle="Carátulas internas entre páginas"
-      helpText="Insertá una portada de capítulo o sección antes de cualquier página de tu PDF. Podés usar los mismos diseños de la tapa principal y elegir si dejar el reverso en blanco."
+      helpText="Insertá una portada de capítulo antes de cualquier página de tu PDF. Con 'Hoja detrás' deja su reverso en blanco y mantiene las páginas impares a la derecha."
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-[var(--ui-text-primary)]">
-        {/* 1. Ubicación y Preset de hoja (Con hoja blanca detrás vs Solo 1 página) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
           <div className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] space-y-1.5" style={{ borderRadius: radius.control }}>
             <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
               Insertar antes de la página PDF:
@@ -157,52 +168,44 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
             </span>
           </div>
 
-          <div className="md:col-span-2 space-y-1.5">
-            <span className="text-xs font-bold text-[var(--ui-text-primary)] block">
-              Cómo insertar el separador:
-            </span>
-            <ActionGrid columns={2}>
-              <ActionTileButton
-                role="preset"
-                icon={<FilePlus2 className="w-4 h-4" />}
-                label="Con hoja blanca detrás"
-                badge="2 págs."
-                active={blankBehind}
-                helpText="Recomendado para impresión doble cara: la carátula queda a la derecha y su reverso queda limpio en blanco."
-                helpGroupKey="divider-blank-behind-yes"
-                onClick={() => setBlankBehind(true)}
+          <div
+            className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] flex items-center justify-between gap-2"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-bold text-[var(--ui-text-primary)]">Hoja detrás</span>
+              <LidioHelpTrigger
+                size="xs"
+                title="Hoja en blanco detrás del separador"
+                text="Activado (2 págs.): deja el reverso en blanco y conserva el lado derecha/izquierda de las páginas siguientes. Desactivado (1 pág.): corre en 1 lugar el lado."
+                groupKey="divider-modal-blank-behind"
               />
-              <ActionTileButton
-                role="record"
-                icon={<FileText className="w-4 h-4" />}
-                label="Solo 1 página"
-                badge="1 pág."
-                active={!blankBehind}
-                helpText="Inserta únicamente la página de carátula; el contenido continúa inmediatamente en el reverso."
-                helpGroupKey="divider-blank-behind-no"
-                onClick={() => setBlankBehind(false)}
-              />
-            </ActionGrid>
+            </div>
+            <SectionSwitch
+              size="sm"
+              checked={blankBehind}
+              onChange={setBlankBehind}
+              label="Hoja detrás"
+            />
           </div>
         </div>
 
-        {/* 2. Modo de diseño + Vista previa en vivo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 space-y-3">
             <ActionGrid columns={2}>
               <ActionTileButton
                 role="preset"
                 icon={<Palette className="w-4 h-4" />}
-                label="Diseño con Preset"
+                label="Crear Separador"
                 active={type === 'template'}
-                helpText="Usa los mismos diseños editoriales del catálogo de portadas."
+                helpText="Elegí un diseño o un color propio con selector y cuentagotas."
                 helpGroupKey="divider-mode-template"
                 onClick={() => setType('template')}
               />
               <ActionTileButton
                 role="io"
                 icon={<Image className="w-4 h-4" />}
-                label="Subir imagen propia"
+                label="Subir mi Separador"
                 active={type === 'upload'}
                 helpText="Subí una carátula de capítulo ya diseñada en JPG o PNG."
                 helpGroupKey="divider-mode-upload"
@@ -212,37 +215,28 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
 
             {type === 'template' ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {COVER_PRESETS.map((preset) => {
-                    const selected = coverStyle === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setCoverStyle(preset.id)}
-                        className={`${selectableCard.base} ${
-                          selected ? selectableCard.selected : selectableCard.unselected
-                        } flex items-center justify-between p-2 text-[11px] cursor-pointer`}
-                      >
-                        <div className="flex items-center gap-1.5 overflow-hidden">
-                          <span
-                            className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                            style={{ backgroundColor: preset.badgeBg }}
-                          />
-                          <span className="truncate font-semibold">{preset.name.split('&')[0].trim()}</span>
-                        </div>
-                        {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                <BookCoverColorPickerGrid
+                  selectedStyle={coverStyle}
+                  bgColor={bgColor}
+                  textColor={textColor}
+                  onSelectPreset={(presetId) => {
+                    setCoverStyle(presetId);
+                    setBgColor(undefined);
+                    setTextColor(undefined);
+                  }}
+                  onSelectCustomColor={(nextBg, nextText) => {
+                    setCoverStyle('monica-classic');
+                    setBgColor(nextBg);
+                    setTextColor(nextText);
+                  }}
+                />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <Field
                     label="Etiqueta superior (opcional)"
                     value={kicker}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKicker(e.target.value)}
-                    placeholder="Ej: Capítulo 1 / Parte I"
+                    placeholder="Ej: Capítulo 1"
                   />
                   <div className="sm:col-span-2">
                     <Field
@@ -279,7 +273,6 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
             )}
           </div>
 
-          {/* Columna derecha: Vista previa en vivo */}
           <div className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] flex flex-col items-center justify-center space-y-2" style={{ borderRadius: radius.card }}>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
               Vista previa del separador
@@ -292,7 +285,7 @@ export const BookSectionDividerModal: React.FC<BookSectionDividerModalProps> = (
               className="w-full max-w-[160px] h-auto aspect-[1/1.41] object-contain rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] shadow-xs"
             />
             <span className="text-[11px] font-semibold text-[var(--color-accent-text)] text-center">
-              {blankBehind ? 'Suma 2 páginas (con reverso blanco)' : 'Suma 1 página'}
+              {blankBehind ? 'Suma 2 páginas (con hoja detrás)' : 'Suma 1 página'}
             </span>
           </div>
         </div>

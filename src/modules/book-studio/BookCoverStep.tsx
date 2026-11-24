@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, Ban, Check, FileText, Image, Palette, ChevronLeft, ChevronRight, BookMarked, Trash2 } from 'lucide-react';
+import { BookOpen, Ban, FileText, Image, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from './domain/impositionEngine';
-import {
-  BookSectionDivider,
-  makeDividerPageToken,
-  resolveBookOrderedItems,
-} from './domain/bookDividerCanvas';
-import { BookSectionDividerModal } from './components/BookSectionDividerModal';
-import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { bookAssetManager } from './domain/bookAssetManager';
+import { BookCoverColorPickerGrid } from './components/BookCoverColorPickerGrid';
 import { PanelSection } from '../../shared/core/ui/PanelSection';
 import { ActionGrid } from '../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
@@ -17,13 +11,12 @@ import { Field } from '../../shared/core/ui/Field';
 import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
 import { LidioHelpTrigger } from '../../shared/core/ui/LidioHelpTrigger';
 import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
-import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
+import { radius, typeScale, button, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookCoverStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
-  pdfPageCount?: number;
   onNextStep?: () => void;
   onPrevStep?: () => void;
 }
@@ -31,12 +24,10 @@ interface BookCoverStepProps {
 export const BookCoverStep: React.FC<BookCoverStepProps> = ({
   options,
   setOptions,
-  pdfPageCount = 1,
   onNextStep,
   onPrevStep,
 }) => {
   const t = useText();
-  const [isDividerModalOpen, setIsDividerModalOpen] = useState(false);
   const [coverType, setCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasCover
       ? 'source'
@@ -53,13 +44,13 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
       title: '',
       author: '',
       publisher: '',
-      coverStyle: options.coverStyle || 'monica-classic',
+      coverStyle: options.coverStyle || 'modern-corporate',
     }
   );
   const [imageError, setImageError] = useState<string | null>(null);
   const [thumbUri, setThumbUri] = useState<string | null>(null);
 
-  const hasCoverChosen = options.hasCover || Boolean(options.customCover);
+  const hasCoverChosen = options.hasCover || Boolean(options.customCover && options.customCover.type !== 'none');
 
   useEffect(() => {
     let cancelled = false;
@@ -79,32 +70,58 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
     setCoverType(type);
     if (type === 'source') {
       setOptions((prev) => ({ ...prev, hasCover: true, customCover: null }));
-      emitLidioMessage({ kind: 'state', groupKey: 'book-cover-mode', title: 'Tapa del PDF activada', body: 'Se usará la primera página de tu archivo como portada.' });
+      emitLidioMessage({
+        kind: 'state',
+        groupKey: 'book-cover-mode',
+        title: 'Tapa del PDF activada',
+        body: 'Se usará la primera página de tu archivo como portada.',
+      });
     } else if (type === 'custom') {
-      const updated = { ...coverData, type: 'template' as const };
+      const updated: CoverConfig = { ...coverData, type: 'template' };
+      setCoverData(updated);
       setOptions((prev) => ({ ...prev, hasCover: false, customCover: updated }));
-      emitLidioMessage({ kind: 'state', groupKey: 'book-cover-mode', title: 'Tapa diseñada activada', body: 'Elegí un estilo y escribí título y autor.' });
+      emitLidioMessage({
+        kind: 'state',
+        groupKey: 'book-cover-mode',
+        title: 'Crear Tapa activada',
+        body: 'Elegí un diseño o un color propio y escribí título y autor.',
+      });
     } else if (type === 'upload') {
-      const updated = { ...coverData, type: 'upload' as const };
+      const updated: CoverConfig = { ...coverData, type: 'upload' };
+      setCoverData(updated);
       setOptions((prev) => ({ ...prev, hasCover: false, customCover: updated }));
-      emitLidioMessage({ kind: 'state', groupKey: 'book-cover-mode', title: 'Imagen de tapa activada', body: 'Subí tu propia imagen vertical en JPG o PNG.' });
+      emitLidioMessage({
+        kind: 'state',
+        groupKey: 'book-cover-mode',
+        title: 'Imagen de tapa activada',
+        body: 'Subí tu propia imagen vertical en JPG o PNG.',
+      });
     } else {
       if (options.customCover?.assetId) {
         bookAssetManager.remove(options.customCover.assetId);
       }
       setThumbUri(null);
       setOptions((prev) => ({ ...prev, hasCover: false, customCover: null }));
-      emitLidioMessage({ kind: 'state', groupKey: 'book-cover-mode', title: 'Sin tapa especial', body: 'El libro empieza directo en la primera página del contenido.' });
+      emitLidioMessage({
+        kind: 'state',
+        groupKey: 'book-cover-mode',
+        title: 'Sin tapa especial',
+        body: 'El libro empieza directo en la primera página del contenido.',
+      });
     }
   };
 
-  const updateCoverField = (field: keyof CoverConfig, value: string) => {
-    const updated = { ...coverData, type: (coverType === 'upload' ? 'upload' : 'template') as any, [field]: value };
+  const patchCoverData = (patch: Partial<CoverConfig>) => {
+    const updated: CoverConfig = {
+      ...coverData,
+      type: coverType === 'upload' ? 'upload' : 'template',
+      ...patch,
+    };
     setCoverData(updated);
     if (coverType === 'custom' || coverType === 'upload') {
       setOptions((prev) => ({
         ...prev,
-        ...(field === 'coverStyle' ? { coverStyle: value } : {}),
+        ...(patch.coverStyle ? { coverStyle: patch.coverStyle } : {}),
         customCover: updated,
       }));
     }
@@ -123,7 +140,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
         bookAssetManager.remove(coverData.assetId);
       }
       setThumbUri(null);
-      const updated: CoverConfig = { ...coverData, type: 'upload' as const, assetId, imageUri: undefined };
+      const updated: CoverConfig = { ...coverData, type: 'upload', assetId, imageUri: undefined };
       setCoverData(updated);
       setImageError(null);
       setOptions((prev) => ({ ...prev, customCover: updated }));
@@ -139,6 +156,38 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
         title={t.bookStudio.coverStep.title}
         helpTitle="Elegí cómo armar la tapa"
         helpText={t.bookStudio.coverStep.description}
+        headerRight={
+          hasCoverChosen ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[var(--ui-text-secondary)]">
+                {t.bookStudio.coverStep.blankBehindLabel}
+              </span>
+              <LidioHelpTrigger
+                size="xs"
+                title="Hoja en blanco detrás de la tapa"
+                text={t.bookStudio.coverStep.blankBehindHelper}
+                groupKey="book-cover-retiro"
+              />
+              <SectionSwitch
+                checked={options.blankBehindCover !== false}
+                onChange={(checked) => {
+                  setOptions((prev) => ({ ...prev, blankBehindCover: checked }));
+                  emitLidioMessage({
+                    kind: 'state',
+                    groupKey: 'book-cover-retiro',
+                    title: checked ? 'Hoja detrás de la tapa activada' : 'Hoja detrás de la tapa desactivada',
+                    body: checked
+                      ? 'El reverso de la tapa queda en blanco.'
+                      : 'La primera página va justo detrás de la portada.',
+                  });
+                }}
+                label={t.bookStudio.coverStep.blankBehindLabel}
+                helpText={t.bookStudio.coverStep.blankBehindHelper}
+                size="sm"
+              />
+            </div>
+          ) : undefined
+        }
       >
         <ActionGrid columns={2}>
           <ActionTileButton
@@ -154,7 +203,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
             role="preset"
             icon={<Palette className="w-4 h-4" />}
             label={t.bookStudio.coverStep.presetMode}
-            helpText="Genera una tapa prolija eligiendo diseño, título y autor."
+            helpText="Creá una tapa eligiendo un diseño o un color propio, con título y autor."
             helpGroupKey="book-cover-opt-custom"
             active={coverType === 'custom'}
             onClick={() => handleCoverTypeChange('custom')}
@@ -227,7 +276,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
                       name="coverImageFit"
                       value="crop"
                       checked={!coverData.imageFit || coverData.imageFit === 'crop'}
-                      onChange={() => updateCoverField('imageFit', 'crop')}
+                      onChange={() => patchCoverData({ imageFit: 'crop' })}
                       className="accent-[var(--color-accent-base)]"
                     />
                     <span className="text-xs">{t.bookStudio.sharedBody.imageFitCrop}</span>
@@ -238,7 +287,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
                       name="coverImageFit"
                       value="fit"
                       checked={coverData.imageFit === 'fit'}
-                      onChange={() => updateCoverField('imageFit', 'fit')}
+                      onChange={() => patchCoverData({ imageFit: 'fit' })}
                       className="accent-[var(--color-accent-base)]"
                     />
                     <span className="text-xs">{t.bookStudio.sharedBody.imageFitContain}</span>
@@ -249,7 +298,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
                       name="coverImageFit"
                       value="stretch"
                       checked={coverData.imageFit === 'stretch'}
-                      onChange={() => updateCoverField('imageFit', 'stretch')}
+                      onChange={() => patchCoverData({ imageFit: 'stretch' })}
                       className="accent-[var(--color-accent-base)]"
                     />
                     <span className="text-xs">{t.bookStudio.sharedBody.imageFitStretch}</span>
@@ -265,146 +314,47 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
         <PanelSection
           icon={<Palette className="w-4 h-4" />}
           title={t.bookStudio.coverStep.presetHeading}
-          helpTitle="Estilo visual de tapa"
-          helpText="Elegí el diseño de fondo de portada y completá los textos impresos."
+          helpTitle="Diseño y color de la tapa"
+          helpText="Elegí un diseño de fondo o tocá Elegir color para usar el selector de color y cuentagotas."
         >
           <ContextualGuideBox title="Qué escribir en la tapa">
             Escribí el título principal como querés leerlo en portada. Autor y editorial son opcionales.
           </ContextualGuideBox>
 
-          <div className="grid grid-cols-2 gap-2">
-            {COVER_PRESETS.map((preset) => {
-              const isSelected = (coverData.coverStyle || 'monica-classic') === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => updateCoverField('coverStyle', preset.id)}
-                  className={`${selectableCard.base} ${
-                    isSelected ? selectableCard.selected : selectableCard.unselected
-                  } flex items-center justify-between p-2.5 text-xs cursor-pointer`}
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <div
-                      className="w-4 h-4 rounded-full border border-black/20 shrink-0"
-                      style={{ backgroundColor: preset.badgeBg }}
-                    />
-                    <span className="truncate font-medium">{preset.name}</span>
-                  </div>
-                  {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
+          <BookCoverColorPickerGrid
+            selectedStyle={coverData.coverStyle || 'modern-corporate'}
+            bgColor={coverData.bgColor}
+            textColor={coverData.textColor}
+            onSelectPreset={(presetId) =>
+              patchCoverData({ coverStyle: presetId, bgColor: undefined, textColor: undefined })
+            }
+            onSelectCustomColor={(bgColor, textColor) =>
+              patchCoverData({ coverStyle: 'monica-classic', bgColor, textColor })
+            }
+          />
 
           <div className="space-y-3 pt-1">
             <Field
               label={t.bookStudio.coverStep.titleLabel}
               value={coverData.title || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCoverField('title', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => patchCoverData({ title: e.target.value })}
               placeholder={t.bookStudio.coverStep.titlePlaceholder}
             />
             <Field
               label={t.bookStudio.coverStep.authorCompileLabel}
               value={coverData.author || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCoverField('author', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => patchCoverData({ author: e.target.value })}
               placeholder={t.bookStudio.coverStep.authorPlaceholder}
             />
             <Field
               label={t.bookStudio.sharedBody.publisherLabel}
               value={coverData.publisher || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCoverField('publisher', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => patchCoverData({ publisher: e.target.value })}
               placeholder={t.bookStudio.sharedBody.publisherPlaceholder}
             />
           </div>
         </PanelSection>
       )}
-
-      {hasCoverChosen && (
-        <div
-          className="flex items-center justify-between gap-3 p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-surface)]"
-          style={{ borderRadius: radius.control }}
-        >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-bold text-xs text-[var(--ui-text-primary)] truncate">
-              {t.bookStudio.coverStep.blankBehindLabel}
-            </span>
-            <LidioHelpTrigger
-              title={t.bookStudio.coverStep.blankBehindLabel}
-              text={t.bookStudio.coverStep.blankBehindHelper}
-              groupKey="book-cover-retiro"
-            />
-          </div>
-          <SectionSwitch
-            checked={options.blankBehindCover !== false}
-            onChange={(checked) => {
-              setOptions((prev) => ({ ...prev, blankBehindCover: checked }));
-              emitLidioMessage({
-                kind: 'state',
-                groupKey: 'book-cover-retiro',
-                title: checked ? 'Retiro de tapa en blanco activado' : 'Retiro de tapa desactivado',
-                body: checked
-                  ? 'El reverso de la tapa queda limpio sin texto encima.'
-                  : 'La primera página va justo detrás de la portada.',
-              });
-            }}
-            label={t.bookStudio.coverStep.blankBehindLabel}
-            helpText={t.bookStudio.coverStep.blankBehindHelper}
-            size="sm"
-          />
-        </div>
-      )}
-
-      <PanelSection
-        icon={<BookMarked className="w-4 h-4" />}
-        title="Carátulas o separadores por capítulo"
-        helpTitle="Portadillas internas"
-        helpText="Podés insertar portadas o separadores manuales antes de cualquier página de tu PDF (con hoja blanca detrás o de 1 sola página) usando los mismos diseños de tapa."
-      >
-        <button
-          type="button"
-          onClick={() => setIsDividerModalOpen(true)}
-          className="w-full py-2 px-3 rounded-lg border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-90"
-        >
-          <BookMarked className="w-3.5 h-3.5" />
-          <span>＋ Agregar carátula o separador de capítulo</span>
-        </button>
-
-        {(options.sectionDividers || []).length > 0 && (
-          <div className="space-y-1.5 pt-1">
-            {(options.sectionDividers || []).map((div) => (
-              <div
-                key={div.id}
-                className="p-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2 text-xs"
-              >
-                <div className="min-w-0">
-                  <span className="font-bold text-[var(--ui-text-primary)] truncate block">
-                    {div.kicker ? `${div.kicker}: ` : ''}{div.title}
-                  </span>
-                  <span className="text-[10px] text-[var(--ui-text-secondary)]">
-                    Antes de Pág. {div.insertBeforePage} · {div.blankBehind ? 'Con hoja blanca detrás (2 págs.)' : 'Solo 1 página'}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const token = makeDividerPageToken(div.id);
-                    setOptions((prev) => ({
-                      ...prev,
-                      sectionDividers: (prev.sectionDividers || []).filter((d) => d.id !== div.id),
-                      pageOrder: (prev.pageOrder || []).filter((it) => String(it) !== token),
-                    }));
-                  }}
-                  className="p-1 text-[var(--color-status-danger-text)] hover:opacity-80 cursor-pointer"
-                  title="Eliminar separador"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </PanelSection>
 
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
         {onPrevStep ? (
@@ -429,35 +379,6 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({
           </button>
         )}
       </div>
-
-      <BookSectionDividerModal
-        isOpen={isDividerModalOpen}
-        onClose={() => setIsDividerModalOpen(false)}
-        pdfPageCount={pdfPageCount}
-        defaultCoverStyle={coverData.coverStyle || options.coverStyle || 'monica-classic'}
-        paperSize={options.paperSize}
-        onSaveDivider={(divider: BookSectionDivider) => {
-          setOptions((prev) => {
-            const existing = prev.sectionDividers || [];
-            const nextDividers = [...existing, divider];
-            const token = makeDividerPageToken(divider.id);
-            const baseOrder = resolveBookOrderedItems({
-              pdfPageCount,
-              pageOrder: prev.pageOrder,
-              sectionDividers: existing,
-            });
-            const targetPage = Math.max(1, Number(divider.insertBeforePage) || 1);
-            const idx = baseOrder.findIndex((it) => typeof it === 'number' && it >= targetPage);
-            if (idx === -1) baseOrder.push(token);
-            else baseOrder.splice(idx, 0, token);
-            return {
-              ...prev,
-              sectionDividers: nextDividers,
-              pageOrder: baseOrder,
-            };
-          });
-        }}
-      />
     </div>
   );
 };

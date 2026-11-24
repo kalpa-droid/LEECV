@@ -1,5 +1,5 @@
 import { PDFDocument, rgb } from 'pdf-lib';
-import { countBlanksBehindCover } from '../../../shared/kits/print-imposition/impositionMath';
+import { countBlanksBehindCoverWithOffset } from '../../../shared/kits/print-imposition/impositionMath';
 import { getCoverPresetById } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from '../../../shared/kits/print-imposition/canvasColors';
@@ -8,10 +8,20 @@ import { BookPaperSizeId, BookPrintTarget, resolveBookPaperSpec } from './bookPr
 import {
   BookSectionDivider,
   crearCanvasSeparadorCapitulo,
+  countInsertedPagesBeforePdfPage,
   extractDividerIdFromToken,
   isDividerPageToken,
   resolveBookOrderedItems,
 } from './bookDividerCanvas';
+import {
+  buildSeparateCoverDoc,
+  resolveSeparateCoverPlan,
+  resolveSpineColors,
+  type CoverPiece,
+} from './bookSeparateCover';
+
+export { resolveSeparateCoverPlan };
+export type { SeparateCoverPlan } from './bookSeparateCover';
 
 export type { BookSectionDivider };
 
@@ -125,6 +135,12 @@ export interface BookImpositionOptions {
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
   blankInFrontBackCover?: boolean;
+  /** Destino separado (B/C) sin tapa/contratapa creada: usar la 1ª y la última página del PDF como tapa y contratapa. */
+  extractPdfCoversWhenSeparate?: boolean;
+  /** Dónde van las hojas blancas de relleno (múltiplo de 4) cuando la contratapa viaja en el mismo archivo. */
+  paddingPlacement?: 'before-back-cover' | 'after-back-cover';
+  /** Interno: la tapa del PDF sale aparte, no hace falta su hoja detrás dentro del interior. */
+  suppressSourceCoverBlanks?: boolean;
   onProgress?: (message: string, percent: number) => void;
 }
 
@@ -151,6 +167,8 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   pageOrder: [],
   blankBehindCover: true,
   blankInFrontBackCover: true,
+  extractPdfCoversWhenSeparate: false,
+  paddingPlacement: 'before-back-cover',
   exportMode: 'vector',
   destination: 'A',
   paperThicknessMm: 0,
@@ -462,79 +480,13 @@ export async function crearCanvasContratapaCustom(
     }
 
     if (publisher) {
-      ctx.fillStyle = resolveCanvasColor(textColor || '', COVER_FALLBACK_TEXT);
+      ctx.fillStyle = resolvedTextColor;
       ctx.font = `400 ${Math.round(38 * renderScale)}px ${fontFamily}`;
       ctx.fillText(publisher.toUpperCase(), width / 2, height * 0.92);
     }
   }
 
   return canvas;
-}
-
-/**
- * Construye la cubierta envolvente (contratapa | lomo | tapa, continua) como
- * un canvas ancho. Se usa en destino 'C' (va al final del mismo PDF) y en
- * destino 'B' (archivo aparte dentro del ZIP).
- */
-async function buildWrapCoverCanvas(
-  customCover: CoverConfig | null,
-  customBackCover: BackCoverConfig | null,
-  coverCanvasSize: { width: number; height: number },
-  spineWidthMm: number,
-  paperSize: BookPaperSizeId,
-  coverStyle: string | undefined,
-  assetResolver?: (ref: string) => Promise<string | null>
-): Promise<HTMLCanvasElement> {
-  const paperWidthMm = resolveBookPaperSpec(paperSize).widthMm;
-  const pxPerMm = coverCanvasSize.width / paperWidthMm;
-  const spinePx = Math.max(0, Math.round(spineWidthMm * pxPerMm));
-
-  const wrap = document.createElement('canvas');
-  wrap.width = coverCanvasSize.width * 2 + spinePx;
-  wrap.height = coverCanvasSize.height;
-  const ctx = wrap.getContext('2d');
-  if (!ctx) throw new Error('No se pudo preparar la cubierta envolvente.');
-
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, wrap.width, wrap.height);
-
-  // Contratapa (tercio izquierdo).
-  const backCanvas =
-    customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')
-      ? await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, assetResolver)
-      : null;
-  if (backCanvas) {
-    ctx.drawImage(backCanvas, 0, 0, coverCanvasSize.width, coverCanvasSize.height);
-    backCanvas.width = 0;
-    backCanvas.height = 0;
-  }
-
-  // Lomo (franja central), con el color del preset elegido.
-  if (spinePx > 0) {
-    const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
-    const spineBg = resolveCanvasColor(preset?.badgeBg || '', COVER_FALLBACK_BG);
-    const spineFg = resolveCanvasColor(preset?.badgeTextColor || '', COVER_FALLBACK_TEXT);
-    ctx.fillStyle = spineBg;
-    ctx.fillRect(coverCanvasSize.width, 0, spinePx, wrap.height);
-    ctx.fillStyle = spineFg;
-    ctx.globalAlpha = 0.4;
-    ctx.fillRect(coverCanvasSize.width, 0, 1, wrap.height);
-    ctx.fillRect(coverCanvasSize.width + spinePx - 1, 0, 1, wrap.height);
-    ctx.globalAlpha = 1;
-  }
-
-  // Tapa (tercio derecho).
-  const frontCanvas =
-    customCover && (customCover.type === 'upload' || customCover.type === 'template')
-      ? await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, assetResolver)
-      : null;
-  if (frontCanvas) {
-    ctx.drawImage(frontCanvas, coverCanvasSize.width + spinePx, 0, coverCanvasSize.width, coverCanvasSize.height);
-    frontCanvas.width = 0;
-    frontCanvas.height = 0;
-  }
-
-  return wrap;
 }
 
 /**
@@ -708,6 +660,21 @@ async function procesarComoImagenes(
     if (totalSourcePages === 0) {
       throw new Error('El PDF está vacío o no se pudo leer.');
     }
+    const insertedBeforeRef = countInsertedPagesBeforePdfPage({
+      pdfPageCount: totalSourcePages,
+      pageOrder,
+      sectionDividers: options.sectionDividers,
+      deletedPages,
+      refPdfPage,
+    });
+    const countCoverBlanks = (effectiveRef: number) =>
+      countBlanksBehindCoverWithOffset({
+        blankBehindCoverChecked: blankBehindCover,
+        refPdfPage: effectiveRef,
+        refBookPage,
+        refPageSide,
+        insertedPagesBeforeRef: insertedBeforeRef,
+      });
 
     let effectiveRefPdfPage = refPdfPage;
     const embedCustomCoverInDoc = destination === 'A';
@@ -719,7 +686,7 @@ async function procesarComoImagenes(
         pageC.drawImage(coverImg, { x: 0, y: 0, width: coverCanvas.width, height: coverCanvas.height });
         if (effectiveRefPdfPage > 0) effectiveRefPdfPage += 1;
 
-        const blanksNeeded = countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide);
+        const blanksNeeded = countCoverBlanks(effectiveRefPdfPage);
         for (let i = 0; i < blanksNeeded; i++) {
           const blankPage = newPdf.addPage([coverCanvas.width, coverCanvas.height]);
           blankPage.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
@@ -729,8 +696,7 @@ async function procesarComoImagenes(
       }
     }
 
-    const blanksBehindSourceCover = hasCover
-      ? countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide)
+    const blanksBehindSourceCover = hasCover && !options.suppressSourceCoverBlanks ? countCoverBlanks(effectiveRefPdfPage)
       : 0;
 
     const dividersList = options.sectionDividers || [];
@@ -810,6 +776,21 @@ async function procesarComoImagenes(
   const pdf = await loadDocument();
 
   const totalSourcePages = pdf.numPages;
+  const insertedBeforeRef = countInsertedPagesBeforePdfPage({
+    pdfPageCount: totalSourcePages,
+    pageOrder,
+    sectionDividers: options.sectionDividers,
+    deletedPages,
+    refPdfPage,
+  });
+  const countCoverBlanks = (effectiveRef: number) =>
+    countBlanksBehindCoverWithOffset({
+      blankBehindCoverChecked: blankBehindCover,
+      refPdfPage: effectiveRef,
+      refBookPage,
+      refPageSide,
+      insertedPagesBeforeRef: insertedBeforeRef,
+    });
   const renderDPI = totalSourcePages > 600 ? 150 : totalSourcePages > 300 ? 200 : 300;
   const renderScale = renderDPI / 72;
   const jpegQuality = totalSourcePages > 300 ? 0.85 : 0.92;
@@ -836,7 +817,7 @@ async function procesarComoImagenes(
         effectiveRefPdfPage += 1;
       }
 
-      const blanksNeeded = countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide);
+      const blanksNeeded = countCoverBlanks(effectiveRefPdfPage);
       insertarBlancosDetrasDeTapa(blanksNeeded, coverCanvas.width, coverCanvas.height);
 
       coverCanvas.width = 0;
@@ -844,15 +825,49 @@ async function procesarComoImagenes(
     }
   }
 
-  const blanksBehindSourceCover = hasCover
-    ? countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide)
+  const blanksBehindSourceCover = hasCover && !options.suppressSourceCoverBlanks ? countCoverBlanks(effectiveRefPdfPage)
     : 0;
 
   if (hasSplitIds) {
     const cachedSheetCanvases: Record<number, HTMLCanvasElement> = {};
 
-    for (let idx = 0; idx < pageOrder.length; idx++) {
-      const itemId = String(pageOrder[idx]);
+    const splitDividerMap = new Map((options.sectionDividers || []).map((d) => [d.id, d]));
+    const splitItems = resolveBookOrderedItems({
+      pdfPageCount: pdf.numPages,
+      pageOrder,
+      sectionDividers: options.sectionDividers,
+    });
+    for (let idx = 0; idx < splitItems.length; idx++) {
+      const itemId = String(splitItems[idx]);
+
+      if (itemId.startsWith('blank')) {
+        insertarBlancosDetrasDeTapa(1, coverCanvasSize.width, coverCanvasSize.height);
+        continue;
+      }
+
+      if (isDividerPageToken(itemId)) {
+        const splitDivId = extractDividerIdFromToken(itemId);
+        const splitDiv = splitDivId ? splitDividerMap.get(splitDivId) : undefined;
+        if (splitDiv) {
+          const splitCanvas = await crearCanvasSeparadorCapitulo(
+            splitDiv,
+            options.coverStyle || 'monica-classic',
+            coverCanvasSize,
+            1,
+            options.assetResolver,
+          );
+          const splitImg = await newPdf.embedJpg(splitCanvas.toDataURL('image/jpeg', 0.92));
+          const splitPage = newPdf.addPage([splitCanvas.width, splitCanvas.height]);
+          splitPage.drawImage(splitImg, { x: 0, y: 0, width: splitCanvas.width, height: splitCanvas.height });
+          splitCanvas.width = 0;
+          splitCanvas.height = 0;
+          if (splitDiv.blankBehind) {
+            insertarBlancosDetrasDeTapa(1, coverCanvasSize.width, coverCanvasSize.height);
+          }
+        }
+        continue;
+      }
+
       const parts = itemId.split('_');
       const sheetNum = parseInt(parts[0], 10);
       const side = parts[1];
@@ -860,8 +875,8 @@ async function procesarComoImagenes(
       if (deletedPages && (deletedPages.includes(sheetNum) || deletedPages.includes(itemId))) continue;
 
       if (onProgress) {
-        const avance = 10 + Math.floor(((idx + 1) / pageOrder.length) * 45);
-        onProgress(`Procesando página individual ${idx + 1} de ${pageOrder.length}...`, avance);
+        const avance = 10 + Math.floor(((idx + 1) / splitItems.length) * 45);
+        onProgress(`Procesando página individual ${idx + 1} de ${splitItems.length}...`, avance);
       }
 
       let finalCanvas = cachedSheetCanvases[sheetNum];
@@ -1140,8 +1155,13 @@ export async function processBookImposition(
   } = options;
 
   // Propagar el estilo de cubierta elegido en la UI a las configs si no lo traen.
+  const mayExtractFrontFromPdf =
+    destination !== 'A' &&
+    !(customCover && (customCover.type === 'upload' || customCover.type === 'template')) &&
+    Boolean(options.hasCover || options.extractPdfCoversWhenSeparate);
   const effectiveOptions: BookImpositionOptions = {
     ...options,
+    suppressSourceCoverBlanks: mayExtractFrontFromPdf || options.suppressSourceCoverBlanks,
     customCover: options.customCover
       ? { ...options.customCover, coverStyle: options.customCover.coverStyle || coverStyle }
       : options.customCover,
@@ -1171,80 +1191,100 @@ export async function processBookImposition(
 
   let backCoverCanvas: HTMLCanvasElement | null = null;
 
-  // Destinos de cubierta:
-  //  - 'A' (mismo papel que el documento): la cubierta viaja dentro del flujo de páginas.
-  //  - 'B' (archivo de cubierta separado) y 'C' (cubierta envolvente contratapa|lomo|tapa):
-  //    la cubierta NO entra en el interior; se arma aparte con buildWrapCoverCanvas.
-  // Si no hay cubierta personalizada (las tapas vienen del PDF original),
-  // no hay nada que separar: se conserva el comportamiento del destino 'A'.
-  const hasAnyCustomCover = Boolean(
-    (customCover && (customCover.type === 'upload' || customCover.type === 'template')) ||
-    (customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template'))
-  );
-  const separateCover = destination !== 'A' && hasAnyCustomCover;
-  if (destination !== 'A' && !hasAnyCustomCover && onProgress) {
-    onProgress('Sin cubierta personalizada: la cubierta viaja dentro del archivo, como en destino A.', 9);
+  // Destinos de tapa y contratapa:
+  //  - 'A': viajan dentro del flujo de páginas del mismo archivo.
+  //  - 'B' / 'C': salen en una hoja aparte (en casa: Contratapa | Tapa para guillotina;
+  //    en imprenta: Contratapa | Lomo | Tapa). Si no se crearon, se toman la 1ª y
+  //    la última página del PDF (si la persona lo permite) y se sacan del interior.
+  const separatePlan = resolveSeparateCoverPlan(effectiveOptions, pagesDoc.getPageCount());
+  if (destination !== 'A' && !separatePlan.isSeparate && onProgress) {
+    onProgress('Sin tapa ni contratapa para separar: todo viaja dentro del archivo, como en destino A.', 9);
   }
 
-  if (!separateCover && !hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
-    backCoverCanvas = await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, options.assetResolver);
-  }
+  const addBlankPage = () => {
+    const blank = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
+    blank.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+  };
+  const paddingPlacement = options.paddingPlacement || 'before-back-cover';
 
-  if (separateCover) {
+  let frontPiece: CoverPiece | null = null;
+  let backPiece: CoverPiece | null = null;
+
+  if (separatePlan.isSeparate) {
+    // Tapa separada: personalizada o 1ª página lógica del interior ya armado.
+    if (separatePlan.frontSource === 'custom') {
+      const c = await crearCanvasTapaCustom(effectiveOptions.customCover ?? null, coverCanvasSize, 1, options.assetResolver);
+      if (c) frontPiece = { kind: 'canvas', canvas: c };
+    } else if (separatePlan.frontSource === 'pdf-first') {
+      const tmp = await PDFDocument.create();
+      const [first] = await tmp.copyPages(pagesDoc, [0]);
+      tmp.addPage(first);
+      pagesDoc.removePage(0);
+      frontPiece = { kind: 'pdf', doc: tmp, pageIndex: 0 };
+    }
+    // Contratapa separada: personalizada o última página lógica del interior.
+    if (separatePlan.backSource === 'custom') {
+      const c = await crearCanvasContratapaCustom(effectiveOptions.customBackCover ?? null, coverCanvasSize, 1, options.assetResolver);
+      if (c) backPiece = { kind: 'canvas', canvas: c };
+    } else if (separatePlan.backSource === 'pdf-last') {
+      const lastIdx = pagesDoc.getPageCount() - 1;
+      const tmp = await PDFDocument.create();
+      const [last] = await tmp.copyPages(pagesDoc, [lastIdx]);
+      tmp.addPage(last);
+      pagesDoc.removePage(lastIdx);
+      backPiece = { kind: 'pdf', doc: tmp, pageIndex: 0 };
+    }
     // El interior no lleva cubiertas: solo rellenar hasta múltiplo de 4.
-    const currentCount = pagesDoc.getPageCount();
-    const remainder = (4 - (currentCount % 4)) % 4;
-    for (let i = 0; i < remainder; i++) {
-      const blank = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
-      blank.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
-    }
-  } else if (hasBackCover && pagesDoc.getPageCount() > 1) {
-    const lastIdx = pagesDoc.getPageCount() - 1;
-    const tempBCDoc = await PDFDocument.create();
-    const [extractedBC] = await tempBCDoc.copyPages(pagesDoc, [lastIdx]);
-    tempBCDoc.addPage(extractedBC);
-    pagesDoc.removePage(lastIdx);
-
-    if (blankInFrontBackCover) {
-      const blankInFront = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
-      blankInFront.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
-    }
-
-    const totalWithBC = pagesDoc.getPageCount() + 1;
-    const remainder = (4 - (totalWithBC % 4)) % 4;
-    for (let i = 0; i < remainder; i++) {
-      const blank = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
-      blank.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
-    }
-
-    const [bcBack] = await pagesDoc.copyPages(tempBCDoc, [0]);
-    pagesDoc.addPage(bcBack);
+    const remainder = (4 - (pagesDoc.getPageCount() % 4)) % 4;
+    for (let i = 0; i < remainder; i++) addBlankPage();
   } else {
-    // Retiro de contratapa: solo si hay una contratapa real embebida (canvas).
-    // Sin contratapa configurada NO se inyecta hoja en blanco fantasma — antes
-    // esta rama agregaba la hoja igual y el libro terminaba con una página en
-    // blanco de más (y el conteo/crédito descuadrado).
-    const hayContratapa = Boolean(backCoverCanvas);
-    if (blankInFrontBackCover && hayContratapa) {
-      const blankInFront = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
-      blankInFront.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+    if (!hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
+      backCoverCanvas = await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, options.assetResolver);
     }
 
-    const currentCount = pagesDoc.getPageCount();
-    const targetCount = backCoverCanvas ? currentCount + 1 : currentCount;
-    const remainder = (4 - (targetCount % 4)) % 4;
+    if (hasBackCover && pagesDoc.getPageCount() > 1) {
+      // Contratapa del PDF: se extrae y se vuelve a colocar como última cara.
+      const lastIdx = pagesDoc.getPageCount() - 1;
+      const tempBCDoc = await PDFDocument.create();
+      const [extractedBC] = await tempBCDoc.copyPages(pagesDoc, [lastIdx]);
+      tempBCDoc.addPage(extractedBC);
+      pagesDoc.removePage(lastIdx);
 
-    for (let i = 0; i < remainder; i++) {
-      const blank = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
-      blank.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
-    }
+      if (blankInFrontBackCover) addBlankPage();
+      const remainder = (4 - ((pagesDoc.getPageCount() + 1) % 4)) % 4;
+      const [bcBack] = await pagesDoc.copyPages(tempBCDoc, [0]);
+      if (paddingPlacement === 'after-back-cover') {
+        pagesDoc.addPage(bcBack);
+        for (let i = 0; i < remainder; i++) addBlankPage();
+      } else {
+        for (let i = 0; i < remainder; i++) addBlankPage();
+        pagesDoc.addPage(bcBack);
+      }
+    } else {
+      // Retiro de contratapa: solo si hay una contratapa real embebida (canvas).
+      // Sin contratapa NO se inyecta hoja fantasma (el conteo quedaría descuadrado).
+      const hayContratapa = Boolean(backCoverCanvas);
+      if (blankInFrontBackCover && hayContratapa) addBlankPage();
 
-    if (backCoverCanvas) {
-      const backCoverImg = await pagesDoc.embedJpg(backCoverCanvas.toDataURL('image/jpeg', 0.92));
-      const pageBC = pagesDoc.addPage([backCoverCanvas.width, backCoverCanvas.height]);
-      pageBC.drawImage(backCoverImg, { x: 0, y: 0, width: backCoverCanvas.width, height: backCoverCanvas.height });
-      backCoverCanvas.width = 0;
-      backCoverCanvas.height = 0;
+      const targetCount = backCoverCanvas ? pagesDoc.getPageCount() + 1 : pagesDoc.getPageCount();
+      const remainder = (4 - (targetCount % 4)) % 4;
+
+      const placeBackCover = async () => {
+        if (!backCoverCanvas) return;
+        const backCoverImg = await pagesDoc.embedJpg(backCoverCanvas.toDataURL('image/jpeg', 0.92));
+        const pageBC = pagesDoc.addPage([backCoverCanvas.width, backCoverCanvas.height]);
+        pageBC.drawImage(backCoverImg, { x: 0, y: 0, width: backCoverCanvas.width, height: backCoverCanvas.height });
+        backCoverCanvas.width = 0;
+        backCoverCanvas.height = 0;
+      };
+
+      if (paddingPlacement === 'after-back-cover' && backCoverCanvas) {
+        await placeBackCover();
+        for (let i = 0; i < remainder; i++) addBlankPage();
+      } else {
+        for (let i = 0; i < remainder; i++) addBlankPage();
+        await placeBackCover();
+      }
     }
   }
 
@@ -1298,31 +1338,54 @@ export async function processBookImposition(
   }
 
   // ============================================================
-  // Cubierta envolvente (destinos B y C)
+  // Tapa y contratapa separadas (destinos B y C)
   // ============================================================
   let finalBytes: Uint8Array = output;
-  if (separateCover) {
-    if (onProgress) onProgress('Armando la cubierta envolvente (contratapa | lomo | tapa)...', 95);
-    const wrapCanvas = await buildWrapCoverCanvas(customCover, customBackCover, coverCanvasSize, spineWidthMm, paperSize, coverStyle, options.assetResolver);
-    const coverDoc = await PDFDocument.create();
-    const coverImg = await coverDoc.embedJpg(wrapCanvas.toDataURL('image/jpeg', 0.92));
-    const coverPage = coverDoc.addPage([wrapCanvas.width, wrapCanvas.height]);
-    coverPage.drawImage(coverImg, { x: 0, y: 0, width: wrapCanvas.width, height: wrapCanvas.height });
-    const coverBytes = await coverDoc.save();
-    wrapCanvas.width = 0;
-    wrapCanvas.height = 0;
+  if (separatePlan.isSeparate) {
+    if (onProgress) {
+      onProgress(
+        separatePlan.layout === 'home-guillotine'
+          ? 'Armando la hoja de tapa y contratapa para guillotina...'
+          : 'Armando la cubierta envolvente (contratapa | lomo | tapa)...',
+        95,
+      );
+    }
+    const interiorPages = pagesDoc.getPageCount();
+    const spineForCover = separatePlan.spineEnabled ? calculateSpineWidth(interiorPages, { paperThicknessMm }) : 0;
+    const spineColors = resolveSpineColors(effectiveOptions.customCover, effectiveOptions.customBackCover, coverStyle);
+    const coverDoc = await buildSeparateCoverDoc({
+      plan: separatePlan,
+      front: frontPiece,
+      back: backPiece,
+      paperSize,
+      spineWidthMm: spineForCover,
+      spineBgCss: spineColors.bg,
+      spineFgCss: spineColors.fg,
+      showGuides,
+      unprintableMarginMm,
+    });
+    for (const piece of [frontPiece, backPiece]) {
+      if (piece && piece.kind === 'canvas') {
+        piece.canvas.width = 0;
+        piece.canvas.height = 0;
+      }
+    }
 
     if (destination === 'C') {
-      // La hoja envolvente cierra el mismo PDF (contratapa | lomo | tapa).
+      // La hoja de cubierta cierra el mismo PDF.
       const [wrapPage] = await bookletDoc.copyPages(coverDoc, [0]);
       bookletDoc.addPage(wrapPage);
       finalBytes = await bookletDoc.save();
     } else {
-      // Destino 'B': ZIP con el interior y la cubierta como archivo aparte.
+      // Destino 'B': ZIP con el interior y la hoja de tapa y contratapa aparte.
+      const coverBytes = await coverDoc.save();
       const { default: JSZip } = await import('jszip');
       const zip = new JSZip();
       zip.file('libro_interior.pdf', output);
-      zip.file('cubierta_envolvente.pdf', coverBytes);
+      zip.file(
+        separatePlan.layout === 'home-guillotine' ? 'tapa_y_contratapa_guillotina.pdf' : 'cubierta_envolvente.pdf',
+        coverBytes,
+      );
       finalBytes = await zip.generateAsync({ type: 'uint8array' });
       outputIsZip = true;
     }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Check,
@@ -15,7 +16,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import { radius, elevationSystem, button, input } from '../../../shared/core/uiDesignSystem';
+import { radius, elevationSystem, button, input, zIndex } from '../../../shared/core/uiDesignSystem';
 import { resolveNaturalPdfPageSide } from '../../../shared/kits/print-imposition/impositionMath';
 import { useText } from '../../../shared/i18n/useText';
 
@@ -230,10 +231,13 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   const prevPage = getPrevPage();
   const nextPage = getNextPage();
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
+  const modalContent = (
+    <div
+      className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4 bg-black/75 backdrop-blur-xs animate-fadeIn"
+      style={{ zIndex: zIndex.modal }}
+    >
       <div
-        className={`relative w-full max-w-4xl max-h-[90vh] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col md:flex-row text-[var(--ui-text-primary)]`}
+        className={`relative w-full max-w-4xl my-auto max-h-[calc(100dvh-2rem)] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col md:flex-row text-[var(--ui-text-primary)]`}
       >
         {/* Botón Cerrar */}
         <button
@@ -601,4 +605,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 };

@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 6,
-  patch: 1,
-  label: 'V3.6.1',
-  lastUpdated: '2026-11-23',
+  minor: 7,
+  patch: 0,
+  label: 'V3.7.0',
+  lastUpdated: '2026-11-24',
   lastAgent: '@antigravity',
-  stage: 'feat(ai-pro-rotation): V3.6.1 — Enrutado por tier (Pro vs Fast), pool aislado gemini_pro, rotación inmediata ante 429 y 401/403, x-goog-api-key en header, extracción segura sin thought parts y maxDuration=60 en ai-generate.',
+  stage: 'feat(book-studio): V3.7.0 — Paso 5 Separadores con paridad en vivo, selector de color y cuentagotas, perillas Hoja detrás/delante, hoja aparte guillotina en casa, paso 7 adaptado Casa vs Imprenta y portal global de modales.',
 } as const;

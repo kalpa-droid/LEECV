@@ -357,9 +357,20 @@ export async function crearCanvasSeparadorCapitulo(
     return canvas;
   }
 
-  // Por defecto: Canon Clásico & Proporción Áurea (monica-classic)
+  // Por defecto: Canon Clásico & Proporción Áurea (monica-classic).
+  // Con color propio (selector/cuentagotas) la portadilla va a color pleno,
+  // igual que la tapa y la contratapa de color propio.
+  const hasCustomColor = Boolean(divider.bgColor);
+  const inkMain = hasCustomColor ? onAccentColor : 'rgb(15, 23, 42)';
+  const inkSoft = hasCustomColor ? onAccentColor : 'rgb(71, 85, 105)';
+  const lineColor = hasCustomColor ? onAccentColor : accentColor;
+  if (hasCustomColor) {
+    ctx.fillStyle = accentColor;
+    ctx.fillRect(0, 0, width, height);
+  }
+
   const framePad = Math.round(width * 0.09);
-  ctx.strokeStyle = accentColor;
+  ctx.strokeStyle = lineColor;
   ctx.lineWidth = Math.max(2, Math.round(5 * renderScale));
   ctx.strokeRect(framePad, framePad, width - framePad * 2, height - framePad * 2);
 
@@ -368,18 +379,18 @@ export async function crearCanvasSeparadorCapitulo(
   let y = Math.round(height * 0.38);
 
   if (kickerText) {
-    ctx.fillStyle = accentColor;
+    ctx.fillStyle = lineColor;
     ctx.font = `bold ${kickerSize}px sans-serif`;
     ctx.fillText(kickerText, width / 2, y);
     y += Math.round(kickerSize * 1.1);
   }
 
   const ruleW = Math.round(width * 0.16);
-  ctx.fillStyle = accentColor;
+  ctx.fillStyle = lineColor;
   ctx.fillRect((width - ruleW) / 2, y, ruleW, Math.max(2, Math.round(5 * renderScale)));
   y += Math.round(titleSize * 1.2);
 
-  ctx.fillStyle = 'rgb(15, 23, 42)';
+  ctx.fillStyle = inkMain;
   ctx.font = `bold ${titleSize}px ${fontFamily}`;
   for (const line of wrapCanvasText(ctx, titleText, maxW)) {
     ctx.fillText(line, width / 2, y);
@@ -388,7 +399,7 @@ export async function crearCanvasSeparadorCapitulo(
 
   if (subtitleText) {
     y += Math.round(subSize * 0.4);
-    ctx.fillStyle = 'rgb(71, 85, 105)';
+    ctx.fillStyle = inkSoft;
     ctx.font = `italic ${subSize}px ${fontFamily}`;
     for (const line of wrapCanvasText(ctx, subtitleText, maxW)) {
       ctx.fillText(line, width / 2, y);
@@ -396,8 +407,47 @@ export async function crearCanvasSeparadorCapitulo(
     }
   }
 
-  ctx.fillStyle = accentColor;
+  ctx.fillStyle = lineColor;
   ctx.fillRect((width - ruleW) / 2, y + Math.round(16 * renderScale), ruleW, Math.max(2, Math.round(5 * renderScale)));
 
   return canvas;
+}
+
+/**
+ * Cuenta el corrimiento neto de páginas ANTES de la página `refPdfPage` del PDF:
+ * +2 por separador con hoja detrás, +1 por separador simple, +1 por hoja en
+ * blanco manual, -1 por cada página eliminada. Un resultado impar significa que
+ * la página de referencia cambió de lado (derecha ↔ izquierda).
+ */
+export function countInsertedPagesBeforePdfPage(params: {
+  pdfPageCount: number;
+  pageOrder?: ReadonlyArray<number | string>;
+  sectionDividers?: ReadonlyArray<BookSectionDivider>;
+  deletedPages?: ReadonlyArray<number | string>;
+  refPdfPage: number;
+}): number {
+  const { pdfPageCount, pageOrder, sectionDividers = [], deletedPages = [], refPdfPage } = params;
+  if (!refPdfPage || refPdfPage <= 0) return 0;
+
+  const items = resolveBookOrderedItems({ pdfPageCount, pageOrder, sectionDividers });
+  const dividerMap = new Map(sectionDividers.map((d) => [d.id, d]));
+  const deleted = new Set(deletedPages.map((p) => Number(p)));
+
+  let delta = 0;
+  for (const item of items) {
+    const str = String(item);
+    if (isDividerPageToken(str)) {
+      const div = dividerMap.get(extractDividerIdFromToken(str) || '');
+      delta += div ? (div.blankBehind ? 2 : 1) : 0;
+      continue;
+    }
+    if (str.startsWith('blank')) {
+      delta += 1;
+      continue;
+    }
+    const base = Number(str.split('_')[0]);
+    if (base === refPdfPage) return delta;
+    if (deleted.has(base)) delta -= 1;
+  }
+  return delta;
 }

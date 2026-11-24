@@ -1,6 +1,8 @@
 import { padToMultiple } from '../../../shared/kits/print-imposition/impositionPlanner';
-import { countBlanksBehindCover } from '../../../shared/kits/print-imposition/impositionMath';
-import { isDividerPageToken } from './bookDividerCanvas';
+import { countBlanksBehindCoverWithOffset } from '../../../shared/kits/print-imposition/impositionMath';
+import { countInsertedPagesBeforePdfPage, isDividerPageToken } from './bookDividerCanvas';
+import { resolveSeparateCoverPlan } from './bookSeparateCover';
+import type { BookPaperSizeId, BookPrintTarget } from './bookPrintProfileEngine';
 
 /**
  * Entrada exacta para replicar el armado real del motor (`procesarComoImagenes`
@@ -35,6 +37,8 @@ export interface FinalBookPageCountInput {
   refPdfPage?: number;
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
+  /** Páginas insertadas (separadores, blancos) o quitadas antes de la página de referencia: corrimiento de lado. */
+  insertedPagesBeforeRef?: number;
   /** Capacidad de pliego (4 cuadernillo). */
   capacity?: number;
 }
@@ -64,6 +68,11 @@ export interface BookFinalPageCountOptions {
   refPdfPage?: number;
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
+  printTarget?: BookPrintTarget;
+  paperSize?: BookPaperSizeId;
+  unprintableMarginMm?: number;
+  extractPdfCoversWhenSeparate?: boolean;
+  paddingPlacement?: 'before-back-cover' | 'after-back-cover';
 }
 
 /** Suma cuántas páginas reales aportan los separadores de capítulos (1 o 2 si lleva reverso en blanco). */
@@ -84,26 +93,159 @@ export function computeBookFinalPageCount(
   options: BookFinalPageCountOptions,
   pdfPageCount: number
 ): number {
+  const sourcePageCount = effectiveSourcePageCount(
+    pdfPageCount,
+    options.deletedPages,
+    options.pageOrder,
+    options.sectionDividers
+  );
+  const plan = resolveSeparateCoverPlan(
+    {
+      destination: (options.destination as 'A' | 'B' | 'C' | undefined) ?? 'A',
+      printTarget: options.printTarget,
+      paperSize: options.paperSize,
+      unprintableMarginMm: options.unprintableMarginMm,
+      hasCover: options.hasCover,
+      hasBackCover: options.hasBackCover,
+      customCover: options.customCover,
+      customBackCover: options.customBackCover,
+      extractPdfCoversWhenSeparate: options.extractPdfCoversWhenSeparate,
+    },
+    sourcePageCount
+  );
+
+  if (plan.isSeparate) {
+    // Tapa y contratapa salen aparte: lo que se extrae del PDF deja de ser interior.
+    const removed = (plan.frontSource === 'pdf-first' ? 1 : 0) + (plan.backSource === 'pdf-last' ? 1 : 0);
+    return padToMultiple(Math.max(0, sourcePageCount - removed), 4);
+  }
+
   return calculateFinalBookPageCount({
-    sourcePageCount: effectiveSourcePageCount(
-      pdfPageCount,
-      options.deletedPages,
-      options.pageOrder,
-      options.sectionDividers
-    ),
+    sourcePageCount,
     hasSourceCover: options.hasCover,
     hasCustomCover: hasCustomCoverConfig(options.customCover),
     hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
     hasSourceBackCover: options.hasBackCover,
     blankBehindCover: options.blankBehindCover,
     blankInFrontBackCover: options.blankInFrontBackCover,
-    separateCover:
-      (options.destination ?? 'A') !== 'A' &&
-      (hasCustomCoverConfig(options.customCover) || hasCustomCoverConfig(options.customBackCover)),
+    separateCover: false,
     refPdfPage: options.refPdfPage,
     refBookPage: options.refBookPage,
     refPageSide: options.refPageSide,
+    insertedPagesBeforeRef: countInsertedPagesBeforePdfPage({
+      pdfPageCount,
+      pageOrder: options.pageOrder,
+      sectionDividers: options.sectionDividers as never,
+      deletedPages: options.deletedPages,
+      refPdfPage: options.refPdfPage ?? 0,
+    }),
   });
+}
+
+/** Desglose transparente del conteo final (se muestra en los pasos 7 y 8). */
+export interface BookPageBreakdown {
+  activePdfPages: number;
+  dividerPages: number;
+  manualBlankPages: number;
+  coverPagesInInterior: number;
+  frontRetreatBlanks: number;
+  backRetreatBlanks: number;
+  paddingBlanks: number;
+  totalBookPages: number;
+  interiorSheets: number;
+  separateCoverSheets: number;
+  totalSheetsToPrint: number;
+}
+
+export function computeBookPageBreakdown(
+  options: BookFinalPageCountOptions,
+  pdfPageCount: number
+): BookPageBreakdown {
+  const sourcePageCount = effectiveSourcePageCount(
+    pdfPageCount,
+    options.deletedPages,
+    options.pageOrder,
+    options.sectionDividers
+  );
+  const dividerPages = countSectionDividerPages(options.sectionDividers);
+  const manualBlankPages = (options.pageOrder || []).filter(
+    (id) => !isDividerPageToken(id) && String(id).startsWith('blank')
+  ).length;
+  const activePdfPages = Math.max(0, sourcePageCount - dividerPages - manualBlankPages);
+  const total = computeBookFinalPageCount(options, pdfPageCount);
+
+  const plan = resolveSeparateCoverPlan(
+    {
+      destination: (options.destination as 'A' | 'B' | 'C' | undefined) ?? 'A',
+      printTarget: options.printTarget,
+      paperSize: options.paperSize,
+      unprintableMarginMm: options.unprintableMarginMm,
+      hasCover: options.hasCover,
+      hasBackCover: options.hasBackCover,
+      customCover: options.customCover,
+      customBackCover: options.customBackCover,
+      extractPdfCoversWhenSeparate: options.extractPdfCoversWhenSeparate,
+    },
+    sourcePageCount
+  );
+
+  let coverPagesInInterior = 0;
+  let frontRetreatBlanks = 0;
+  let backRetreatBlanks = 0;
+  let used = sourcePageCount;
+
+  if (plan.isSeparate) {
+    used -= (plan.frontSource === 'pdf-first' ? 1 : 0) + (plan.backSource === 'pdf-last' ? 1 : 0);
+  } else {
+    const customFront = hasCustomCoverConfig(options.customCover);
+    const customBack = hasCustomCoverConfig(options.customBackCover);
+    const inserted = countInsertedPagesBeforePdfPage({
+      pdfPageCount,
+      pageOrder: options.pageOrder,
+      sectionDividers: options.sectionDividers as never,
+      deletedPages: options.deletedPages,
+      refPdfPage: options.refPdfPage ?? 0,
+    });
+    const retreatFor = (effectiveRef: number) =>
+      countBlanksBehindCoverWithOffset({
+        blankBehindCoverChecked: options.blankBehindCover !== false,
+        refPdfPage: effectiveRef,
+        refBookPage: options.refBookPage ?? 0,
+        refPageSide: options.refPageSide ?? 'derecha',
+        insertedPagesBeforeRef: inserted,
+      });
+    if (customFront) {
+      coverPagesInInterior += 1;
+      const ref = (options.refPdfPage ?? 0) > 0 ? (options.refPdfPage ?? 0) + 1 : options.refPdfPage ?? 0;
+      frontRetreatBlanks = retreatFor(ref);
+    } else if (options.hasCover) {
+      frontRetreatBlanks = retreatFor(options.refPdfPage ?? 0);
+    }
+    if (customBack) {
+      coverPagesInInterior += 1;
+      backRetreatBlanks = options.blankInFrontBackCover !== false ? 1 : 0;
+    } else if (options.hasBackCover) {
+      backRetreatBlanks = options.blankInFrontBackCover !== false ? 1 : 0;
+    }
+    used += coverPagesInInterior + frontRetreatBlanks + backRetreatBlanks;
+  }
+
+  const paddingBlanks = Math.max(0, total - used);
+  const separateCoverSheets = plan.isSeparate ? 1 : 0;
+  const interiorSheets = total / 2;
+  return {
+    activePdfPages,
+    dividerPages,
+    manualBlankPages,
+    coverPagesInInterior,
+    frontRetreatBlanks,
+    backRetreatBlanks,
+    paddingBlanks,
+    totalBookPages: total,
+    interiorSheets,
+    separateCoverSheets,
+    totalSheetsToPrint: interiorSheets + separateCoverSheets,
+  };
 }
 
 /**
@@ -175,8 +317,18 @@ export function calculateFinalBookPageCount(
     refPdfPage = 0,
     refBookPage = 0,
     refPageSide = 'derecha',
+    insertedPagesBeforeRef = 0,
     capacity: targetCapacity = 4,
   } = input;
+
+  const blanksBehind = (effectiveRef: number): number =>
+    countBlanksBehindCoverWithOffset({
+      blankBehindCoverChecked: blankBehindCover,
+      refPdfPage: effectiveRef,
+      refBookPage,
+      refPageSide,
+      insertedPagesBeforeRef,
+    });
 
   if (sourcePageCount <= 0) return 0;
   if (targetCapacity <= 0) return 0;
@@ -186,7 +338,7 @@ export function calculateFinalBookPageCount(
   // Destino B/C con cubiertas personalizadas: nada de cubiertas en el interior.
   if (separateCover) {
     if (hasSourceCover) {
-      count += countBlanksBehindCover(blankBehindCover, refPdfPage, refBookPage, refPageSide);
+      count += blanksBehind(refPdfPage);
     }
     return padToMultiple(count, targetCapacity);
   }
@@ -196,9 +348,9 @@ export function calculateFinalBookPageCount(
   if (wantCustomCover) {
     count += 1;
     const effectiveRef = refPdfPage > 0 ? refPdfPage + 1 : refPdfPage;
-    count += countBlanksBehindCover(blankBehindCover, effectiveRef, refBookPage, refPageSide);
+    count += blanksBehind(effectiveRef);
   } else if (hasSourceCover) {
-    count += countBlanksBehindCover(blankBehindCover, refPdfPage, refBookPage, refPageSide);
+    count += blanksBehind(refPdfPage);
   }
 
   // Contratapa:
