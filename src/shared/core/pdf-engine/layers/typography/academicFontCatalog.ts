@@ -25,6 +25,13 @@ export interface AcademicFontSpec {
     italic?: string;
     boldItalic?: string;
   };
+  /** Rutas locales servidas desde /public para evitar latencia/CORS en producción. */
+  localTtfUrls?: {
+    regular: string;
+    bold?: string;
+    italic?: string;
+    boldItalic?: string;
+  };
 }
 
 export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
@@ -35,6 +42,12 @@ export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
     norms: ['apa7', 'chicago', 'mla', 'libre'],
     recommendedSizePt: 12,
     badge: 'APA 7 · Chicago · MLA (12 pt)',
+    localTtfUrls: {
+      regular: '/fonts/editorial/Tinos-Regular.ttf',
+      bold: '/fonts/editorial/Tinos-Bold.ttf',
+      italic: '/fonts/editorial/Tinos-Italic.ttf',
+      boldItalic: '/fonts/editorial/Tinos-BoldItalic.ttf',
+    },
     ttfUrls: {
       regular: 'https://cdn.jsdelivr.net/fontsource/fonts/tinos@latest/latin-400-normal.ttf',
       bold: 'https://cdn.jsdelivr.net/fontsource/fonts/tinos@latest/latin-700-normal.ttf',
@@ -49,6 +62,12 @@ export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
     norms: ['apa7', 'vancouver', 'ieee', 'libre'],
     recommendedSizePt: 11,
     badge: 'APA 7 · Monografías · Informes (11 pt)',
+    localTtfUrls: {
+      regular: '/fonts/editorial/Arimo-Regular.ttf',
+      bold: '/fonts/editorial/Arimo-Bold.ttf',
+      italic: '/fonts/editorial/Arimo-Italic.ttf',
+      boldItalic: '/fonts/editorial/Arimo-BoldItalic.ttf',
+    },
     ttfUrls: {
       regular: 'https://cdn.jsdelivr.net/fontsource/fonts/arimo@latest/latin-400-normal.ttf',
       bold: 'https://cdn.jsdelivr.net/fontsource/fonts/arimo@latest/latin-700-normal.ttf',
@@ -144,4 +163,19 @@ export function findAcademicFontSpec(family?: string): AcademicFontSpec | undefi
   return ACADEMIC_FONT_CATALOG.find(
     (f) => f.family.toLowerCase() === lower || f.openEquivalentName.toLowerCase() === lower,
   );
+}
+
+/**
+ * Resuelve nombres Type1 legacy (Times-Roman / Helvetica / sans-serif) a una familia Unicode
+ * completa con soporte TTF local (Tinos / Arimo) para el motor editorial.
+ */
+export function resolveDefaultUnicodeFontForPreset(rawFamily?: string): string {
+  const clean = String(rawFamily || '').trim();
+  if (!clean) return 'Times New Roman';
+  const spec = findAcademicFontSpec(clean);
+  if (spec) return spec.family;
+  const lower = clean.toLowerCase();
+  if (lower.startsWith('times') || lower === 'serif') return 'Times New Roman';
+  if (lower.startsWith('helvetica') || lower === 'sans' || lower === 'sans-serif') return 'Arial';
+  return clean;
 }

@@ -35,6 +35,11 @@ import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssista
 import { EDITORIAL_STEP_SEQUENCE } from './domain/editorialStepSequence';
 import { resolveSectionBadgeLabel } from './domain/editorialDockEngine';
 import {
+  areTocMapsEqual,
+  buildResolvedTocPageLabels,
+  extractTocAnchorMapFromPageTexts,
+} from './domain/editorialTocResolver';
+import {
   saveDocumentToDisk,
   openDocumentFromDisk,
   getBoundNativeFileName,
@@ -199,6 +204,59 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   useEffect(() => {
     setFocusedAnchorId(activeStepTab);
   }, [activeStepTab]);
+
+  // Precarga de fuentes TTF Unicode locales (Tinos / Arimo) sin afectar el bundle inicial
+  const [fontsReadyTick, setFontsReadyTick] = useState<number>(0);
+  const activeFontFamily =
+    debouncedDraft?.design?.typography?.fontFamily || DEFAULT_EDITORIAL_PRESET.typography.fontFamily;
+  useEffect(() => {
+    let active = true;
+    void import('./pdf/editorialTwoPassRenderer')
+      .then(({ ensureEditorialFontsReady }) => ensureEditorialFontsReady(debouncedDraft, preset))
+      .then(() => {
+        if (active) setFontsReadyTick((n) => n + 1);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [activeFontFamily, preset, debouncedDraft]);
+
+  // Índice exacto en dos pasadas sobre la vista previa real de pdfjs-dist
+  const [resolvedTocState, setResolvedTocState] = useState<{
+    displayMap: Record<string, string>;
+    bodyStartPage: number;
+  }>({ displayMap: {}, bodyStartPage: 1 });
+  const resolvedTocStateRef = useRef(resolvedTocState);
+  resolvedTocStateRef.current = resolvedTocState;
+  const tocPassCountRef = useRef<number>(0);
+
+  useEffect(() => {
+    tocPassCountRef.current = 0;
+  }, [debouncedDraft, preset]);
+
+  const handleDocumentTextScanned = useCallback(
+    (pageTexts: Record<number, string>) => {
+      const rawMap = extractTocAnchorMapFromPageTexts(pageTexts);
+      if (Object.keys(rawMap).length === 0) return;
+
+      const sections = Array.isArray(debouncedDraft?.sections) ? debouncedDraft.sections : [];
+      const usePrelimRoman = debouncedDraft?.design?.preliminaryRomanNumerals !== false;
+      const next = buildResolvedTocPageLabels(sections, rawMap, usePrelimRoman);
+
+      const prev = resolvedTocStateRef.current;
+      if (areTocMapsEqual(prev.displayMap, next.map) && prev.bodyStartPage === next.bodyStartPage) {
+        return;
+      }
+      if (tocPassCountRef.current >= 2) return;
+      tocPassCountRef.current += 1;
+      setResolvedTocState({
+        displayMap: next.map,
+        bodyStartPage: next.bodyStartPage,
+      });
+    },
+    [debouncedDraft],
+  );
 
   const focusSectionInPreview = useCallback((sectionId: string) => {
     setFocusedAnchorId(sectionId);
@@ -466,12 +524,16 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const pdfElement = useMemo(
     () => (
       <EditorialPdfDocument
+        key={`ed-pdf-${fontsReadyTick}`}
         data={debouncedDraft as any}
         preset={debouncedPreset}
         interactiveAnchors={true}
+        resolvedTocMap={resolvedTocState.displayMap}
+        bodyStartPage={resolvedTocState.bodyStartPage}
+        emitTocAnchors={true}
       />
     ),
-    [debouncedDraft, debouncedPreset],
+    [debouncedDraft, debouncedPreset, fontsReadyTick, resolvedTocState],
   );
 
   const notify = { success: showSuccess, error: showError };
@@ -675,6 +737,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                   zoomLevel={rasterZoom}
                   activeTab={focusedAnchorId}
                   preset={EDITORIAL_PRESETS.find((p) => p.id === preset) || EDITORIAL_PRESETS[0]}
+                  onDocumentTextScanned={handleDocumentTextScanned}
                 />
               </ErrorBoundary>
             </ScaledPaperSheet>

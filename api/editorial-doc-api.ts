@@ -1,7 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
-import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
+import {
+  Document,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  Packer,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+} from 'docx';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
@@ -81,6 +92,47 @@ function extractTextFromHtml(buffer: Buffer): string {
     .trim();
 }
 
+function convertMammothHtmlToStructuredMarkdown(html: string): string {
+  const withTables = html.replace(/<table\b[^>]*>([\s\S]*?)<\/table>/gi, (_m, tableInner: string) => {
+    const rows = Array.from(tableInner.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)).map((rm) =>
+      Array.from(rm[1].matchAll(/<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi)).map((cm) =>
+        decodeXmlEntities(
+          cm[1]
+            .replace(/<br\s*\/?>/gi, ' ')
+            .replace(/<\/p>\s*<p[^>]*>/gi, ' ')
+            .replace(/<[^>]+>/g, '')
+            .replace(/[ \t\n]+/g, ' ')
+            .trim(),
+        ),
+      ),
+    );
+    if (rows.length === 0) return '';
+    return `\n\n${rows.map((r) => r.join(' | ')).join('\n')}\n\n`;
+  });
+
+  const formatted = withTables
+    .replace(/<h([1-3])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_m, lvl, inner) => {
+      const clean = decodeXmlEntities(inner.replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim());
+      return clean ? `\n\n${'#'.repeat(Number(lvl))} ${clean}\n\n` : '';
+    })
+    .replace(/<strong\b[^>]*>([\s\S]*?)<\/strong>/gi, (_m, inner) => `**${inner}**`)
+    .replace(/<b\b[^>]*>([\s\S]*?)<\/b>/gi, (_m, inner) => `**${inner}**`)
+    .replace(/<em\b[^>]*>([\s\S]*?)<\/em>/gi, (_m, inner) => `*${inner}*`)
+    .replace(/<i\b[^>]*>([\s\S]*?)<\/i>/gi, (_m, inner) => `*${inner}*`)
+    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_m, inner) => {
+      const clean = decodeXmlEntities(inner.replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim());
+      return clean ? `\n- ${clean}` : '';
+    })
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(?:p|div|blockquote)>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '');
+
+  return decodeXmlEntities(formatted)
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 async function extractTextByFilename(
   buffer: Buffer,
   filename: string = '',
@@ -98,10 +150,11 @@ async function extractTextByFilename(
   if (lower.endsWith('.txt') || lower.endsWith('.md')) {
     return { text: buffer.toString('utf8').trim(), messages: [], detectedFormat: 'text' };
   }
-  // Por defecto (Word .docx)
-  const result = await mammoth.extractRawText({ buffer });
+  // Por defecto (Word .docx) usando HTML estructurado para no perder tablas ni jerarquía
+  const result = await mammoth.convertToHtml({ buffer });
+  const structuredText = convertMammothHtmlToStructuredMarkdown(result.value || '');
   return {
-    text: (result.value || '').trim(),
+    text: structuredText,
     messages: result.messages || [],
     detectedFormat: 'docx',
   };
@@ -167,7 +220,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { title = 'Documento Editorial', author = '', sections = [] } = req.body || {};
 
-      const docChildren: Paragraph[] = [
+      const docChildren: (Paragraph | Table)[] = [
         new Paragraph({
           text: title,
           heading: HeadingLevel.TITLE,
@@ -185,12 +238,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       for (const section of sections) {
+        if (section.kickerLabel) {
+          docChildren.push(
+            new Paragraph({
+              children: [new TextRun({ text: String(section.kickerLabel).toUpperCase(), bold: true })],
+              spacing: { before: 320, after: 80 },
+            }),
+          );
+        }
         if (section.title) {
           docChildren.push(
             new Paragraph({
               text: section.title,
               heading: HeadingLevel.HEADING_1,
-              spacing: { before: 400, after: 200 },
+              spacing: { before: section.kickerLabel ? 80 : 400, after: 200 },
             })
           );
         }
@@ -198,7 +259,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (Array.isArray(section.records)) {
           for (const rec of section.records) {
             const content = rec.content || '';
-            if (!content) continue;
+            if (rec.type === 'table' && ((rec.tableHeaders?.length || 0) > 0 || (rec.tableRows?.length || 0) > 0)) {
+              const allRows: string[][] = [
+                ...(Array.isArray(rec.tableHeaders) && rec.tableHeaders.length > 0 ? [rec.tableHeaders] : []),
+                ...(Array.isArray(rec.tableRows) ? rec.tableRows : []),
+              ];
+              if (allRows.length > 0) {
+                docChildren.push(
+                  new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: allRows.map((rowVals, rowIdx) =>
+                      new TableRow({
+                        children: rowVals.map(
+                          (cellVal) =>
+                            new TableCell({
+                              children: [
+                                new Paragraph({
+                                  children: [
+                                    new TextRun({
+                                      text: String(cellVal ?? ''),
+                                      bold: rowIdx === 0 && rec.tableHasHeaderRow !== false,
+                                    }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                        ),
+                      }),
+                    ),
+                  }),
+                );
+                continue;
+              }
+            }
+
+            if (!content && rec.type !== 'footnote_list' && rec.type !== 'figure_placeholder') continue;
 
             if (rec.type === 'subtitle') {
               docChildren.push(
@@ -208,7 +303,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   spacing: { before: 200, after: 100 },
                 })
               );
-            } else if (rec.type === 'quote') {
+            } else if (rec.type === 'quote' || rec.type === 'epigraph') {
               docChildren.push(
                 new Paragraph({
                   children: [
@@ -221,6 +316,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   indent: { left: 720 },
                 })
               );
+            } else if (rec.type === 'poem') {
+              for (const line of content.split('\n')) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [new TextRun({ text: line })],
+                    spacing: { after: line.trim() ? 40 : 120 },
+                    indent: { left: 720 },
+                  }),
+                );
+              }
+            } else if (rec.type === 'callout') {
+              const lines = [
+                ...(rec.calloutTitle ? [rec.calloutTitle] : []),
+                ...content.split('\n'),
+                ...(Array.isArray(rec.calloutItems) ? rec.calloutItems.map((it: string) => `• ${it}`) : []),
+              ].filter(Boolean);
+              docChildren.push(
+                new Table({
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                  rows: [
+                    new TableRow({
+                      children: [
+                        new TableCell({
+                          borders: {
+                            left: { style: BorderStyle.SINGLE, size: 12 },
+                            top: { style: BorderStyle.SINGLE, size: 4 },
+                            right: { style: BorderStyle.SINGLE, size: 4 },
+                            bottom: { style: BorderStyle.SINGLE, size: 4 },
+                          },
+                          children: lines.map(
+                            (l, idx) =>
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: l,
+                                    bold: Boolean(rec.calloutTitle && idx === 0),
+                                  }),
+                                ],
+                                spacing: { after: 60 },
+                              }),
+                          ),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              );
+            } else if (rec.type === 'figure_placeholder') {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `[${rec.figureNumber || 'Figura'}: ${rec.figureCaption || content}]`,
+                      italics: true,
+                    }),
+                  ],
+                  spacing: { before: 120, after: 120 },
+                }),
+              );
+            } else if (rec.type === 'footnote_list' && Array.isArray(rec.footnotes)) {
+              for (const fn of rec.footnotes) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [new TextRun({ text: `[${fn.number}] ${fn.text}`, size: 18 })],
+                    spacing: { after: 60 },
+                  }),
+                );
+              }
             } else {
               docChildren.push(
                 new Paragraph({

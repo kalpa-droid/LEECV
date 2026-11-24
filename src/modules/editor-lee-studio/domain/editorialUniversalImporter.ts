@@ -262,6 +262,9 @@ export async function extractEditorialTextFromFiles(
       totalDigital += pdfRes.digitalPages;
       totalOcr += pdfRes.ocrPages;
       if (pdfRes.text.trim()) segments.push(pdfRes.text.trim());
+      allWarnings.push(
+        `El archivo PDF "${file.name}" perdió parte de su estructura al importarlo. Si tenés el archivo original de Word, cargalo para conservar títulos, tablas, poemas y notas con mayor fidelidad.`,
+      );
       continue;
     }
 
@@ -313,8 +316,19 @@ export async function structureManuscriptInChunks(params: {
 }): Promise<StructureResult> {
   const { fullText, richBlocks, presetId, onProgress, onPartialSections, signal } = params;
 
-  // Vía determinística Zero-Loss cuando el Word trae bloques OOXML reales con encabezados, tablas o gráficos
-  if (richBlocks && richBlocks.some((b) => b.kind === 'heading' || b.kind === 'table' || b.kind === 'image')) {
+  // Vía determinística Zero-Loss cuando el Word trae bloques OOXML reales con encabezados, tablas, gráficos o cajas
+  if (
+    richBlocks &&
+    richBlocks.some(
+      (b) =>
+        b.kind === 'heading' ||
+        b.kind === 'table' ||
+        b.kind === 'image' ||
+        b.kind === 'callout' ||
+        b.kind === 'poem' ||
+        b.kind === 'figure_placeholder',
+    )
+  ) {
     const richSections = buildSectionsFromDocxRichBlocks(richBlocks);
     if (richSections.length > 0) {
       const firstLine = richSections[0]?.title;
@@ -383,7 +397,7 @@ export async function structureManuscriptInChunks(params: {
       const incomingSections = Array.isArray(res.data?.sections) ? res.data.sections : [];
       const inputChars = countNonWhitespaceChars(chunks[idx]);
       const outputChars = countSectionRecordsChars(incomingSections);
-      const retainedEnough = incomingSections.length > 0 && outputChars >= inputChars * 0.92;
+      const retainedEnough = incomingSections.length > 0 && outputChars >= inputChars * 0.98;
 
       if (retainedEnough) {
         sectionsAcc = mergeEditorialChunkedSections(sectionsAcc, incomingSections);

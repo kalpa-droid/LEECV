@@ -11,6 +11,11 @@ import type { CoverStyleId } from '../../../shared/core/pdf-engine/layers/preset
 import { PRESET_COLORS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import type { EditorialCoverMode, EditorialLegalFields, EditorialMetadata } from '../domain/editorialTypes';
 import type { ColorPalette } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
+import { sanitizeEditorialText } from '../domain/editorialTypographyEngine';
+import {
+  EditorialDiamondSeparator,
+  resolveEditorialPdfFontStyles,
+} from './EditorialBlockPrimitives';
 
 export interface EditorialCoverPageProps {
   pageSize: 'A4' | 'A5' | 'LETTER' | [number, number];
@@ -33,7 +38,11 @@ export interface EditorialCoverPageProps {
 }
 
 function cleanText(raw?: string): string {
-  return String(raw || '').replace(/\s+/g, ' ').trim();
+  return sanitizeEditorialText(String(raw || ''), {
+    preserveLineBreaks: false,
+    targetFontIsUnicode: true,
+    preserveDiamondGlyph: true,
+  });
 }
 
 export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
@@ -58,6 +67,11 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
   const palette: ColorPalette =
     (coverPaletteKey && PRESET_COLORS[coverPaletteKey]?.palette) || fallbackPalette;
 
+  const { styles: resolvedFonts, isUnicodeFont } = resolveEditorialPdfFontStyles(baseFont);
+  const regStyle = isUnicodeFont ? resolvedFonts.regular : { fontFamily: baseFont };
+  const bldStyle = isUnicodeFont ? resolvedFonts.bold : { fontFamily: boldFont };
+  const itlStyle = isUnicodeFont ? resolvedFonts.italic : { fontFamily: italicFont };
+
   const year = metadata?.year ? String(metadata.year) : '';
   const institution = cleanText(legalFields?.institucion);
   const facultyOrCourse = cleanText(legalFields?.catedra || legalFields?.curso);
@@ -70,7 +84,7 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
 
   const s = StyleSheet.create({
     page: {
-      fontFamily: baseFont,
+      ...regStyle,
       backgroundColor: '#FFFFFF',
       color: palette.text,
       minHeight: '100%',
@@ -127,7 +141,7 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
     },
     kicker: {
       fontSize: 9,
-      fontFamily: boldFont,
+      ...bldStyle,
       letterSpacing: 1.4,
       textTransform: 'uppercase',
       color: palette.secondary,
@@ -135,41 +149,41 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
     },
     titleHero: {
       fontSize: coverStyleId === 'bold-impact' ? 32 : 26,
-      fontFamily: boldFont,
+      ...bldStyle,
       color: palette.text,
       lineHeight: 1.18,
       marginBottom: 10,
     },
     titleOnBand: {
       fontSize: 28,
-      fontFamily: boldFont,
+      ...bldStyle,
       color: palette.textOnPrimary,
       lineHeight: 1.18,
       marginBottom: 6,
     },
     subtitle: {
       fontSize: 13,
-      fontFamily: italicFont,
+      ...itlStyle,
       color: '#475569',
       lineHeight: 1.35,
       marginBottom: 12,
     },
     subtitleOnBand: {
       fontSize: 13,
-      fontFamily: italicFont,
+      ...itlStyle,
       color: palette.textOnPrimary,
       opacity: 0.9,
       lineHeight: 1.35,
     },
     authorBlock: {
       fontSize: 13,
-      fontFamily: boldFont,
+      ...bldStyle,
       color: palette.text,
       marginBottom: 4,
     },
     metaLine: {
       fontSize: 10,
-      fontFamily: baseFont,
+      ...regStyle,
       color: '#475569',
       marginTop: 3,
       lineHeight: 1.4,
@@ -191,7 +205,7 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
     if (!isAcademic && !institution && !facultyOrCourse && !teacher && !members) return null;
     return (
       <View style={[s.academicBox, alignCenter ? { alignItems: 'center', textAlign: 'center' } : {}]}>
-        {institution && <Text style={[s.metaLine, { fontFamily: boldFont, color: palette.text }]}>{institution}</Text>}
+        {institution && <Text style={[s.metaLine, bldStyle, { color: palette.text }]}>{institution}</Text>}
         {facultyOrCourse && <Text style={s.metaLine}>{facultyOrCourse}</Text>}
         {teacher && <Text style={s.metaLine}>Docente / Tutor: {teacher}</Text>}
         {members && <Text style={s.metaLine}>Integrantes: {members}</Text>}
@@ -360,6 +374,9 @@ export interface EditorialSectionDividerPageProps {
   kicker?: string;
   title: string;
   subtitle?: string;
+  epigraphText?: string;
+  epigraphAuthor?: string;
+  tocMarker?: React.ReactNode;
   baseFont: string;
   boldFont: string;
   italicFont: string;
@@ -378,6 +395,9 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
   kicker,
   title,
   subtitle,
+  epigraphText,
+  epigraphAuthor,
+  tocMarker,
   baseFont,
   boldFont,
   italicFont,
@@ -385,21 +405,43 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
   const palette: ColorPalette =
     (coverPaletteKey && PRESET_COLORS[coverPaletteKey]?.palette) || fallbackPalette;
 
+  const { styles: resolvedFonts, isUnicodeFont } = resolveEditorialPdfFontStyles(baseFont);
+  const regStyle = isUnicodeFont ? resolvedFonts.regular : { fontFamily: baseFont };
+  const bldStyle = isUnicodeFont ? resolvedFonts.bold : { fontFamily: boldFont };
+  const itlStyle = isUnicodeFont ? resolvedFonts.italic : { fontFamily: italicFont };
+
   const cleanKicker = cleanText(kicker);
   const cleanTitle = cleanText(title);
   const cleanSubtitle = cleanText(subtitle);
+  const cleanEpigraph = cleanText(epigraphText);
+  const cleanEpigraphAuthor = cleanText(epigraphAuthor);
+
+  const renderDividerEpigraph = () =>
+    cleanEpigraph ? (
+      <View style={{ marginTop: 28, paddingHorizontal: 18, maxWidth: 360 }}>
+        <Text style={[itlStyle, { fontSize: 10.5, color: '#475569', lineHeight: 1.4, textAlign: 'center' }]}>
+          {cleanEpigraph}
+        </Text>
+        {cleanEpigraphAuthor ? (
+          <Text style={[regStyle, { fontSize: 9, color: '#64748B', marginTop: 4, textAlign: 'center' }]}>
+            — {cleanEpigraphAuthor}
+          </Text>
+        ) : null}
+      </View>
+    ) : null;
 
   if (coverStyleId === 'magazine-executive' || coverStyleId === 'bold-impact') {
     return (
       <Page
         size={pageSize}
         style={{
-          fontFamily: baseFont,
+          ...regStyle,
           backgroundColor: '#FFFFFF',
           color: palette.text,
           flexDirection: 'column',
         }}
       >
+        {tocMarker}
         <View
           style={{
             backgroundColor: palette.primary,
@@ -413,7 +455,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
             <Text
               style={{
                 fontSize: 10,
-                fontFamily: boldFont,
+                ...bldStyle,
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
                 color: palette.textOnPrimary,
@@ -427,7 +469,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
           <Text
             style={{
               fontSize: 28,
-              fontFamily: boldFont,
+              ...bldStyle,
               color: palette.textOnPrimary,
               lineHeight: 1.2,
             }}
@@ -437,11 +479,12 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
         </View>
         {cleanSubtitle ? (
           <View style={{ paddingHorizontal: 44, paddingTop: 32 }}>
-            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+            <Text style={{ fontSize: 13, ...itlStyle, color: '#475569', lineHeight: 1.4 }}>
               {cleanSubtitle}
             </Text>
           </View>
         ) : null}
+        {renderDividerEpigraph()}
       </Page>
     );
   }
@@ -451,7 +494,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
       <Page
         size={pageSize}
         style={{
-          fontFamily: baseFont,
+          ...regStyle,
           backgroundColor: '#FFFFFF',
           color: palette.text,
           paddingLeft: 58,
@@ -459,6 +502,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
           justifyContent: 'center',
         }}
       >
+        {tocMarker}
         <View
           style={{
             position: 'absolute',
@@ -474,7 +518,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
             <Text
               style={{
                 fontSize: 10,
-                fontFamily: boldFont,
+                ...bldStyle,
                 letterSpacing: 1.4,
                 textTransform: 'uppercase',
                 color: palette.primary,
@@ -484,14 +528,15 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
               {cleanKicker}
             </Text>
           ) : null}
-          <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, marginBottom: 10 }}>
+          <Text style={{ fontSize: 26, ...bldStyle, color: palette.text, marginBottom: 10 }}>
             {cleanTitle}
           </Text>
           {cleanSubtitle ? (
-            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+            <Text style={{ fontSize: 13, ...itlStyle, color: '#475569', lineHeight: 1.4 }}>
               {cleanSubtitle}
             </Text>
           ) : null}
+          {renderDividerEpigraph()}
         </View>
       </Page>
     );
@@ -502,13 +547,14 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
       <Page
         size={pageSize}
         style={{
-          fontFamily: baseFont,
+          ...regStyle,
           backgroundColor: '#FFFFFF',
           color: palette.text,
           padding: 46,
           justifyContent: 'center',
         }}
       >
+        {tocMarker}
         <View
           style={
             coverStyleId === 'modern-corporate'
@@ -534,7 +580,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
             <Text
               style={{
                 fontSize: 10,
-                fontFamily: boldFont,
+                ...bldStyle,
                 letterSpacing: 1.4,
                 textTransform: 'uppercase',
                 color: palette.secondary,
@@ -544,30 +590,32 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
               {cleanKicker}
             </Text>
           ) : null}
-          <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, marginBottom: 10 }}>
+          <Text style={{ fontSize: 26, ...bldStyle, color: palette.text, marginBottom: 10 }}>
             {cleanTitle}
           </Text>
           {cleanSubtitle ? (
-            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+            <Text style={{ fontSize: 13, ...itlStyle, color: '#475569', lineHeight: 1.4 }}>
               {cleanSubtitle}
             </Text>
           ) : null}
+          {renderDividerEpigraph()}
         </View>
       </Page>
     );
   }
 
-  // Canon Clásico Van de Graaf (monica-classic)
+  // Canon Clásico Van de Graaf (monica-classic) con rombo SVG vectorial
   return (
     <Page
       size={pageSize}
       style={{
-        fontFamily: baseFont,
+        ...regStyle,
         backgroundColor: '#FFFFFF',
         color: palette.text,
         padding: 42,
       }}
     >
+      {tocMarker}
       <View
         style={{
           flexGrow: 1,
@@ -583,7 +631,7 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
           <Text
             style={{
               fontSize: 10,
-              fontFamily: boldFont,
+              ...bldStyle,
               letterSpacing: 1.5,
               textTransform: 'uppercase',
               color: palette.primary,
@@ -593,16 +641,17 @@ export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPagePr
             {cleanKicker}
           </Text>
         ) : null}
-        <View style={{ width: 54, height: 1.8, backgroundColor: palette.primary, marginBottom: 14 }} />
-        <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, textAlign: 'center', marginBottom: 10 }}>
+        <EditorialDiamondSeparator color={palette.primary} marginVertical={10} />
+        <Text style={{ fontSize: 26, ...bldStyle, color: palette.text, textAlign: 'center', marginBottom: 10 }}>
           {cleanTitle}
         </Text>
         {cleanSubtitle ? (
-          <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', textAlign: 'center', marginBottom: 12 }}>
+          <Text style={{ fontSize: 13, ...itlStyle, color: '#475569', textAlign: 'center', marginBottom: 12 }}>
             {cleanSubtitle}
           </Text>
         ) : null}
-        <View style={{ width: 54, height: 1.8, backgroundColor: palette.primary, marginTop: 4 }} />
+        <EditorialDiamondSeparator color={palette.primary} marginVertical={8} />
+        {renderDividerEpigraph()}
       </View>
     </Page>
   );

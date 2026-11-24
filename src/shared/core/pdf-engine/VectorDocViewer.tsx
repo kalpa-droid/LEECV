@@ -20,6 +20,8 @@ interface VectorDocViewerProps {
   sections?: ContentSection[];
   preset?: Preset;
   layoutOverrides?: CvLayoutOverrides;
+  /** Callback opcional invocado una vez por render con el texto extraído por página (1-indexado). */
+  onDocumentTextScanned?: (pageTexts: Record<number, string>) => void;
 }
 
 /**
@@ -39,7 +41,7 @@ interface VectorDocViewerProps {
  * literalmente, el mismo PDF que el usuario termina descargando — cero
  * posibilidad de que preview y descarga difieran.
  */
-export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections = [], preset, layoutOverrides }: VectorDocViewerProps) {
+export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections = [], preset, layoutOverrides, onDocumentTextScanned }: VectorDocViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,11 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   // Scroll explícito pedido por el usuario (p. ej. cambió columna/orden desde el panel):
   // gana sobre el restore de posición relativa cuando el nuevo PDF termina de renderizar.
   const pendingExplicitScrollRef = useRef(false);
+  const onDocumentTextScannedRef = useRef(onDocumentTextScanned);
+
+  useEffect(() => {
+    onDocumentTextScannedRef.current = onDocumentTextScanned;
+  }, [onDocumentTextScanned]);
 
   useEffect(() => {
     const myToken = ++renderTokenRef.current;
@@ -89,6 +96,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
         }
         const devicePixelRatio = window.devicePixelRatio || 1;
         const newAnchorMap: Record<string, { startPage: number; startXRatio: number; startYRatio: number; endPage: number; endXRatio: number; endYRatio: number }> = {};
+        const scannedPageTexts: Record<number, string> = {};
 
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           if (cancelled || renderTokenRef.current !== myToken) return;
@@ -101,7 +109,11 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           // Extraer marcadores de texto reales embedidos por @react-pdf/renderer
           try {
             const textContent = await page.getTextContent();
+            const pageTextParts: string[] = [];
             for (const item of textContent.items as any[]) {
+              if (typeof item.str === 'string') {
+                pageTextParts.push(item.str);
+              }
               if (typeof item.str === 'string' && item.str.includes('ANCHOR_')) {
                 const str = item.str.trim();
                 const xPdf = Array.isArray(item.transform) ? item.transform[4] : 0;
@@ -132,6 +144,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
                 }
               }
             }
+            scannedPageTexts[pageNum] = pageTextParts.join(' ');
           } catch (_e) {
             // Silencioso: si falla la extracción de texto, la función cae en el heurístico
           }
@@ -163,6 +176,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           container.appendChild(fragment);
           anchorMapRef.current = newAnchorMap;
           setLoading(false);
+          onDocumentTextScannedRef.current?.(scannedPageTexts);
           
           requestAnimationFrame(() => {
             // Notificar al motor que los píxeles reales del PDF están en pantalla
