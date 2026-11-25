@@ -5,7 +5,10 @@
  * eliminando la duplicación en exportadores de PDF, tarjetas y JSON.
  */
 
+import { recordLastExportedArtifact } from './lastExportArtifactStore';
+
 export function downloadBlob(blob: Blob, fileName: string): void {
+  recordLastExportedArtifact(blob, fileName);
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const url = URL.createObjectURL(blob);

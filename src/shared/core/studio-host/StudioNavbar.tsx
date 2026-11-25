@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Check,
   CheckCircle2,
+  Cloud,
   CopyPlus,
   FileArchive,
   FolderOpen,
@@ -11,6 +12,9 @@ import {
   ShieldCheck,
   User,
 } from 'lucide-react';
+import type { UniversalBackupHandlers } from '../ui/UniversalBackupModal';
+
+const UniversalBackupModal = React.lazy(() => import('../ui/UniversalBackupModal'));
 import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
 import { UI_ICON_IDS } from '../ui/iconCatalog';
 import {
@@ -98,6 +102,8 @@ export interface NavbarProps {
   globalContextPills?: NavbarGlobalContextPill[];
   /** Acciones o diagnósticos globales transversales (máx. 2, ej. Carta + ATS). */
   globalActions?: NavbarGlobalAction[];
+  /** Callbacks opacos opcionales para respaldos cifrados locales (p. ej. FacturLee .leecv-fact) sin filtrar secretos ni red al módulo. */
+  driveBackupHandlers?: UniversalBackupHandlers;
   onOpenPricing?: () => void;
   onOpenCreditsModal?: () => void;
   onOpenAgencyPanel?: () => void;
@@ -156,6 +162,7 @@ export function StudioNavbar({
   globalContextPill,
   globalContextPills,
   globalActions,
+  driveBackupHandlers,
   onOpenCreditsModal,
   onOpenShareAppModal,
   onOpenPrivacy,
@@ -170,6 +177,7 @@ export function StudioNavbar({
   const isMobile = useIsMobile();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isUniversalBackupOpen, setIsUniversalBackupOpen] = useState(false);
   const { pdfTokens, isPro } = useEntitlements();
   const { user } = useAuth();
   const t = useText();
@@ -253,9 +261,10 @@ export function StudioNavbar({
   );
 
   return (
-    <header
-      className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}
-    >
+    <>
+      <header
+        className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}
+      >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5 sm:gap-2 relative">
         {/* ZONA 1: Logo + Deshacer/Rehacer */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -543,6 +552,18 @@ export function StudioNavbar({
                   type="button"
                   onClick={() => {
                     setIsActionMenuOpen(false);
+                    setIsUniversalBackupOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
+                >
+                  <Cloud className="w-4 h-4 text-[var(--color-accent-bright)]" />
+                  <span>Abrir / Guardar (PC y Google Drive)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionMenuOpen(false);
                     onPrint();
                   }}
                   className={`w-full text-left px-3 py-2 rounded-[12px] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
@@ -672,6 +693,18 @@ export function StudioNavbar({
         </div>
       </div>
     </header>
+    {isUniversalBackupOpen && (
+      <Suspense fallback={null}>
+        <UniversalBackupModal
+          isOpen={isUniversalBackupOpen}
+          onClose={() => setIsUniversalBackupOpen(false)}
+          docType={docType}
+          currentData={currentCvData}
+          backupHandlers={driveBackupHandlers}
+        />
+      </Suspense>
+    )}
+    </>
   );
 }
 

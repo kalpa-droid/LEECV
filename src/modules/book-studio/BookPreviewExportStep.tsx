@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { BookOpen, CheckCircle2, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
+import { BookOpen, CheckCircle2, Cloud, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
+import { downloadBlob } from '../../shared/core/utils/downloadUtils';
+import { isGoogleDriveConfigured, uploadFileToPersonalDrive } from '../../shared/core/storage/googleDriveClient';
+import { useToast } from '../../shared/core/ui/Toast';
 import { BookImpositionOptions, processBookImposition, resolveSeparateCoverPlan } from './domain/impositionEngine';
 import {
   BOOK_PRINT_PROFILES,
@@ -45,9 +48,13 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   sourceProtected = false,
 }) => {
   const t = useText();
+  const { showSuccess, showError } = useToast();
   const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement('book');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadingDrive, setUploadingDrive] = useState(false);
+  const [driveUploadedName, setDriveUploadedName] = useState<string | null>(null);
+  const [lastExportArtifact, setLastExportArtifact] = useState<{ blob: Blob; fileName: string } | null>(null);
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
@@ -171,13 +178,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       setPdfBlobUrl(url);
       setLastExportSignature(currentSignature);
 
-      const a = document.createElement('a');
-      a.href = url;
       const cleanName = selectedFile.name.replace(/\.(pdf|zip)$/i, '');
-      a.download = `${cleanName}_IMPRESION_LIBRO${isZip ? '.zip' : '.pdf'}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const outFileName = `${cleanName}_IMPRESION_LIBRO${isZip ? '.zip' : '.pdf'}`;
+      setLastExportArtifact({ blob, fileName: outFileName });
+      setDriveUploadedName(null);
+      downloadBlob(blob, outFileName);
 
       setIsProcessing(false);
     } catch (err) {
@@ -455,6 +460,40 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
                 className="text-[11px] font-semibold text-[var(--ui-text-secondary)] hover:text-[var(--color-accent-text)] underline cursor-pointer"
               >
                 Volver a generar
+              </button>
+            )}
+            {lastExportArtifact && isGoogleDriveConfigured() && (
+              <button
+                type="button"
+                disabled={uploadingDrive}
+                onClick={() => {
+                  void (async () => {
+                    setUploadingDrive(true);
+                    try {
+                      const res = await uploadFileToPersonalDrive({
+                        blob: lastExportArtifact.blob,
+                        fileName: lastExportArtifact.fileName,
+                        folderKind: 'finished_docs',
+                      });
+                      setDriveUploadedName(res.file.name);
+                      showSuccess(`Copia guardada en ${res.folderName}.`);
+                    } catch (err: any) {
+                      showError(err?.message || 'No pudimos subir el libro a Google Drive.');
+                    } finally {
+                      setUploadingDrive(false);
+                    }
+                  })();
+                }}
+                className="text-[11px] font-bold text-[var(--color-accent-text)] hover:underline inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                <Cloud className="w-3.5 h-3.5" />
+                <span>
+                  {uploadingDrive
+                    ? 'Subiendo libro a Google Drive...'
+                    : driveUploadedName
+                      ? `✓ En Drive (${driveUploadedName})`
+                      : 'Guardar también en mi Google Drive (incluido)'}
+                </span>
               </button>
             )}
             {isNormalMode && (

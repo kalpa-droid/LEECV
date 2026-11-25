@@ -21,6 +21,8 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
 import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
+import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldBanner';
+import { getLastExternalBackupTimestamp } from '../../shared/core/storage/storageResilienceEngine';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
@@ -604,7 +606,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         navbarSlot={
           <StudioNavbar
             docType="editorial"
-            currentCvData={{}}
+            currentCvData={draft}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={() => {
               setActiveStepTab('editorial_historial');
@@ -672,6 +674,13 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         }
         panelSlot={
           <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
+            <LocalBackupShieldBanner
+              visible={!getLastExternalBackupTimestamp() && Array.isArray(draft?.sections) && draft.sections.length >= 2}
+              title="Resguardá tu obra fuera del navegador"
+              description="Guardá una copia en tu dispositivo o en tu Google Drive personal desde Archivo → Abrir / Guardar."
+              onBackupNow={() => void handleSaveToDisk(true)}
+              dismissKey="leecv_editorial_shield_dismissed"
+            />
             {activeStepTab === 'editorial_inicio' && (
               <EditorialPresetInicioPanel
                 draft={draft}

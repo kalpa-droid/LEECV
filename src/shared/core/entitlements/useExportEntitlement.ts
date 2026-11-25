@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import {
+  grantExportSessionWindow,
+  hasActiveExportSessionWindow,
+} from './exportSessionGrant';
 import { useAuth } from '../auth/AuthContext';
 
 export function useExportEntitlement(docType?: string) {
@@ -116,16 +120,22 @@ export function useExportEntitlement(docType?: string) {
     checkEntitlement();
   }, [checkEntitlement]);
 
-  const consumeEntitlementIfNeeded = useCallback(async (docTypeOverride?: string) => {
-    if (!supabase) return false;
-
+  const consumeEntitlementIfNeeded = useCallback(async (docTypeOverride?: string, docIdOverride?: string) => {
     const effectiveDocType = docTypeOverride || docType;
+    const effectiveDocId = docIdOverride || 'active';
+
+    if (effectiveDocType && hasActiveExportSessionWindow(effectiveDocType, effectiveDocId)) {
+      return true;
+    }
+
+    if (!supabase) return false;
 
     if (user) {
       const rpcParams: { p_user_id: string; p_doc_type?: string } = { p_user_id: user.id };
       if (effectiveDocType) rpcParams.p_doc_type = effectiveDocType;
       const { data, error } = await supabase.rpc('check_and_consume_export_entitlement', rpcParams);
       if (error || !data) return false;
+      if (effectiveDocType) grantExportSessionWindow(effectiveDocType, effectiveDocId);
       return true;
     } else {
       const token = localStorage.getItem('leecv_export_token');
@@ -133,9 +143,10 @@ export function useExportEntitlement(docType?: string) {
       const { data, error } = await supabase.rpc('consume_export_token', { p_token: token });
       if (error || !data) return false;
       localStorage.removeItem('leecv_export_token');
+      if (effectiveDocType) grantExportSessionWindow(effectiveDocType, effectiveDocId);
       return true;
     }
-  }, [user]);
+  }, [user, docType]);
 
   return {
     loading,

@@ -25,6 +25,15 @@ import { getLocalDocKey, getLocalSummaryKey, localDocumentStore } from './localD
 import { encryptedVaultDriver } from './encryptedVaultDriver';
 import { importLegacyCloudDocumentsOnce } from './legacyCloudImporter';
 import { replicateDocumentBackupIfEnabled } from './cloudBackupReplicator';
+import { ensurePersistentStorage } from './storageResilienceEngine';
+
+let persistentStorageRequested = false;
+
+function triggerPersistentStorageOnce(): void {
+  if (persistentStorageRequested || typeof navigator === 'undefined') return;
+  persistentStorageRequested = true;
+  void ensurePersistentStorage().catch(() => {});
+}
 
 export { supabase, checkStorageStatus };
 
@@ -199,6 +208,7 @@ export const saveDocumentDraftLocal = async (
   docTypeId: string = 'cv'
 ): Promise<SaveDocumentResult> => {
   if (!docData) return { success: false, error: 'DocumentData es nulo' };
+  triggerPersistentStorageOnce();
 
   const docConfig = getDocumentTypeConfig(docTypeId);
   const id = docData.id || `doc_${docTypeId}_${Date.now()}`;
