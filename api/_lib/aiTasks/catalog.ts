@@ -149,7 +149,7 @@ Devuelve sólo competencias respaldadas por el CV, sin repetir las actuales.`,
 
   cover_letter: {
     taskId: 'cover_letter',
-    tier: 'pro',
+    tier: 'fast',
     defaultMaxTokens: 2500,
     buildSystemPrompt: (cvContext: string) => `Eres un redactor experto en empleabilidad.
 Tu objetivo es escribir una carta de presentación estricta de 3 párrafos.
@@ -499,7 +499,7 @@ Reescribí el registro. En "improvedFields" devolvé SOLO las claves que mejoras
 
   app_guide_assistant: {
     taskId: 'app_guide_assistant',
-    tier: 'pro',
+    tier: 'fast',
     defaultMaxTokens: 2048,
     buildSystemPrompt: (_cvContext: string, payload: any) => composeAssistantSystemPrompt(payload?.docType),
     buildUserPrompt: (payload: any) => {
@@ -709,7 +709,7 @@ Respondé EXCLUSIVAMENTE en JSON con lista \`citations\`, sin inventar años o D
 
   editorial_detect_preset: {
     taskId: 'editorial_detect_preset',
-    tier: 'pro',
+    tier: 'fast',
     defaultMaxTokens: 4000,
     buildSystemPrompt: () => `Sos un clasificador editorial experto. Analizás el inicio y el cierre de un manuscrito o documento recién subido a EditorLee para detectar qué tipo de publicación es realmente, qué norma visual de estructura le corresponde y qué estilo de referencias bibliográficas utiliza.
 
@@ -883,7 +883,7 @@ Detectá los números de página impresos y devolvé JSON válido.`;
 
   suggest_job_profiles: {
     taskId: 'suggest_job_profiles',
-    tier: 'pro',
+    tier: 'fast',
     defaultMaxTokens: 2500,
     buildSystemPrompt: (cvContext: string) => `Eres un estratega de empleabilidad y analista de mercado laboral en Latinoamérica y trabajo remoto global.
 Tu tarea es leer TODO el CV Base del candidato (formación, títulos, cursos, experiencia, habilidades, herramientas y ciudad/provincia si figura) y analizar en qué roles y organizaciones se perfila con mayor solidez.

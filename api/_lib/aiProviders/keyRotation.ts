@@ -37,22 +37,64 @@ interface KeyStatus {
 
 const keyStatusStoreMap = new Map<string, KeyStatus>();
 
-function getEnvKeysForProvider(providerId: string): string[] {
-  let envVal = '';
-  if (providerId === 'groq') {
-    envVal = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
-  } else if (providerId === 'openrouter') {
-    envVal = process.env.OPENROUTER_API_KEYS || process.env.OPENROUTER_API_KEY || '';
-  } else if (providerId === 'gemini') {
-    envVal = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
-  } else if (providerId === 'gemini_pro') {
-    envVal = process.env.GEMINI_PRO_API_KEYS || process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
-  }
-
-  return envVal
+function parseEnvKeyList(raw: string | undefined): string[] {
+  return String(raw || '')
     .split(',')
     .map(k => k.trim())
     .filter(Boolean);
+}
+
+function getEnvKeysForProvider(providerId: string): string[] {
+  if (providerId === 'groq') {
+    return parseEnvKeyList(process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY);
+  }
+  if (providerId === 'openrouter') {
+    return parseEnvKeyList(process.env.OPENROUTER_API_KEYS || process.env.OPENROUTER_API_KEY);
+  }
+  if (providerId === 'gemini') {
+    const rawFastKeys = parseEnvKeyList(process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY);
+    const proKeySet = new Set(parseEnvKeyList(process.env.GEMINI_PRO_API_KEYS));
+    if (proKeySet.size > 0 && rawFastKeys.length > 0) {
+      const fastOnlyKeys = rawFastKeys.filter(k => !proKeySet.has(k));
+      // Excluir claves Pro mezcladas en GEMINI_API_KEYS siempre que quede al menos 1 clave Fast pura.
+      if (fastOnlyKeys.length > 0) {
+        return fastOnlyKeys;
+      }
+    }
+    return rawFastKeys;
+  }
+  if (providerId === 'gemini_pro') {
+    return parseEnvKeyList(
+      process.env.GEMINI_PRO_API_KEYS || process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY
+    );
+  }
+  return [];
+}
+
+export interface GeminiKeyPoolDiagnostics {
+  fastConfigured: number;
+  proConfigured: number;
+  overlapFiltered: number;
+  isolated: boolean;
+}
+
+/**
+ * Diagnóstico de aislamiento entre pool Gemini Fast y pool Gemini Pro (nunca expone claves).
+ */
+export function getGeminiKeyPoolDiagnostics(): GeminiKeyPoolDiagnostics {
+  const rawFast = parseEnvKeyList(process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY);
+  const rawPro = parseEnvKeyList(process.env.GEMINI_PRO_API_KEYS);
+  const proKeySet = new Set(rawPro);
+  const overlapCount = rawFast.filter(k => proKeySet.has(k)).length;
+  const effectiveFast = getEnvKeysForProvider('gemini');
+  const overlapFiltered = effectiveFast.length < rawFast.length ? overlapCount : 0;
+
+  return {
+    fastConfigured: effectiveFast.length,
+    proConfigured: rawPro.length,
+    overlapFiltered,
+    isolated: rawPro.length > 0 && effectiveFast.length > 0 && (overlapCount === 0 || overlapFiltered > 0),
+  };
 }
 
 function storeMemoryPause(providerId: string, key: string, pausedUntil: number): void {

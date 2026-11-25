@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { button, elevationSystem } from '../uiDesignSystem';
 import { useToast } from './Toast';
 import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
 import { UI_ICON_IDS } from './iconCatalog';
 import { LidioHelpTrigger } from './LidioHelpTrigger';
+
+const ANTI_DOUBLE_CLICK_COOLDOWN_MS = 3000;
 
 export interface AIButtonProps {
   /** Etiqueta accesible / título del botón (en modo `iconOnly` no recarga visualmente). */
@@ -33,16 +35,31 @@ export const AIButton: React.FC<AIButtonProps> = ({
   className = '',
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { showError, showSuccess } = useToast();
 
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleAction = async () => {
-    if (isLoading || disabled) return;
+    if (isLoading || isCoolingDown || disabled) return;
     setIsLoading(true);
     try {
       const resultText = await onGenerate();
       if (resultText) {
         onSuccess(resultText);
         showSuccess('Sugerencia generada con IA exitosamente.');
+        setIsCoolingDown(true);
+        if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+        cooldownTimerRef.current = setTimeout(() => {
+          setIsCoolingDown(false);
+        }, ANTI_DOUBLE_CLICK_COOLDOWN_MS);
       }
     } catch (err: any) {
       console.error('AI completion error:', err);
@@ -72,9 +89,9 @@ export const AIButton: React.FC<AIButtonProps> = ({
     <button
       type="button"
       onClick={handleAction}
-      disabled={isLoading || disabled}
+      disabled={isLoading || isCoolingDown || disabled}
       aria-label={isLoading ? 'Generando sugerencia con IA' : label}
-      title={isLoading ? 'Generando...' : label}
+      title={isLoading ? 'Generando...' : isCoolingDown ? 'Espera un momento antes de pedir otra sugerencia' : label}
       data-ai-icon-only={iconOnly ? 'true' : 'false'}
       className={`inline-flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
         iconOnly
