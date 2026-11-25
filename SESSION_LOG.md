@@ -1,3 +1,24 @@
+## [2026-11-25] - PR #168 (V3.10.0): Monetización Modular sin Suscripción Forzosa, Blindaje IA Pro/Ágil, Respaldo Google Drive, Sala de Equipo EditorLee y Admin con Telegram
+
+**Commit en `main`:** `13e0d741245f53e077a68c565a368932b8cd41d1`
+
+**Resumen:**
+- **Etapa 1 — Landing 5 Apps, Carta/Tarjeta gratis y Legales (`LandingPage`, `PortalProductsGrid`, `legalCopyEngine`)**:
+  - Vidriera principal enfocada en las 5 aplicaciones núcleo + **Carta de Presentación** y **Tarjeta QR** 100% gratis dentro de Currículum, previews WebP y anexos legales generales y por aplicación (alcance de compra definitiva vs. vitalicia, cierre ordenado y ausencia de débitos automáticos).
+- **Etapa 2 — Blindaje IA Pro/Ágil, cuotas y caché (`keyRotation.ts`, `catalog.ts`, `api/ai-generate.ts`, `aiClient.ts`, `AIButton.tsx`)**:
+  - Separación de `GEMINI_PRO_API_KEYS` respecto del pool rápido `gemini` preservando buckets 429 aislados y revocación compartida 401/403, reclasificación de tareas ágiles vs. Pro, cuotas diarias divididas Fast/Pro con trazabilidad `userId` desde JWT y caché de deduplicación + cooldown en botón IA.
+- **Etapa 3 — Pases permanentes, Pase 30d, Billetera y FacturLee 3 gratis (`pricingCatalog`, `applyPayment.ts`, `api/entitlements-api.ts`, `FacturadorStudioContent`, `PdfCheckoutModal`)**:
+  - Incorporados `pass_30d`, `pass_editorlee`, `pass_facturlee` y `pass_editorial_team_30d` (compra única por Mercado Pago / PayPal con `returnPath` al estudio o canje directo por créditos de billetera), 3 pruebas gratis iniciales en FacturLee y migración SQL `supabase/migrations/20261125_passes_wallet_teams_funnel.sql`.
+- **Etapa 4 — Guardado Cero-Miedo, Google Drive personal y Sesión 1 Crédito (`documentStorageService`, `googleDriveClient.ts`, `exportSessionGrant.ts`, `UniversalBackupModal`)**:
+  - `navigator.storage.persist()`, integración con Google Drive personal (`drive.file` con carpetas propias y subida resumable >4 MB), ventana de 15 minutos que cubre PDF + Word/Excel + Drive con 1 crédito, y apertura segura en copia nueva sin pisar borradores locales.
+- **Etapa 5 — Sala de Equipo en vivo en EditorLee (`editorialTeamHandler.ts`, `editorialTeamClient.ts`, `EditorialTeamModal`, `EditorLeeStudioContent`)**:
+  - Salas colaborativas de hasta 10 personas (titular Pro/`pass_30d`/`pass_editorial_team_30d` + hasta 9 invitados gratis) con bloqueo por capítulo, versionado optimista y sincronización en vivo vía Supabase Realtime aislada de borradores locales (`supabase/migrations/20261126_editorial_teams.sql`).
+- **Etapa 6 — Admin automatizado, Bot real de Telegram y correos `leecv.app` (`telegramAlert.ts`, `adminNotifier.ts`, `whatsappAlert.ts`, `lifecycleEmails.ts`, `cron-downgrade.ts`, `admin-api.ts`)**:
+  - Reemplazado el stub `wa.me` por alertas reales al Bot de Telegram + unificador no bloqueante, migración de correos a `leecv.app` (`hola@leecv.app`), avisos tranquilos 5 días antes de vencer y acciones Admin (`grant-app-pass`, `revoke-app-pass`, `list-user-passes`, `funnel-metrics`, `test-telegram-alert`, liberación de `resolve-pending-grant` invitado hacia `unclaimed_email_credits` y visibilidad de los 4 pools de IA).
+- **Verificación:** `npm run check-all` en `0` errores local (`131` archivos / `1001` tests en verde; 2 skipped preexistentes), GitHub Actions (`check-all` en `2m07s`, `SUCCESS`) y Vercel Preview (`SUCCESS`) antes del merge; 10 endpoints serverless en raíz `api/*.ts`.
+
+---
+
 ## [2026-11-24] - PR #166 (V3.9.0): EditorLEE Motor Editorial Pro PR 2 (Fases 6–8) — 12 Formatos, 4 Normas Estructurales Exactas, 7 Estilos Bibliográficos, Preflight y Controles en Estudio
 
 **Commit en `main`:** `cc0371fae3055090616c37b9313a6051108c977c`
