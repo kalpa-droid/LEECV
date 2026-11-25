@@ -16,6 +16,7 @@ import {
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
+import { handleEditorialTeamAction } from './_lib/editorialTeamHandler.js';
 
 export const maxDuration = 60;
 
@@ -424,6 +425,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await captureBackendException(err, 'editorial_export_docx', { clientIp });
       return errorResponse(res, 500, 'Error al exportar a archivo Word.');
     }
+  }
+
+  if (action.startsWith('team-')) {
+    return handleEditorialTeamAction(req, res, action);
   }
 
   return errorResponse(res, 400, `Acción desconocida: ${action}`);

@@ -619,5 +619,51 @@ export const dal = {
       const nowMs = Date.now();
       return rows.filter((row) => row.is_permanent || !row.expires_at || new Date(row.expires_at).getTime() > nowMs);
     }
+  },
+
+  editorialTeams: {
+    subscribeToRoom(
+      projectId: string,
+      memberEmail: string,
+      onSectionUpdated: (sectionRow: any) => void,
+      onPresenceChange: (onlineEmails: string[]) => void
+    ): () => void {
+      if (!supabase || !projectId) return () => {};
+
+      const channel = supabase
+        .channel(`editorial-team-${projectId}`, {
+          config: { presence: { key: memberEmail || `anon-${Date.now()}` } },
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'editorial_team_sections',
+            filter: `project_id=eq.${projectId}`,
+          },
+          (payload: any) => {
+            if (payload?.new) onSectionUpdated(payload.new);
+          }
+        )
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const emails = Object.keys(state || {});
+          onPresenceChange(emails);
+        })
+        .subscribe(async (status: string) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ email: memberEmail, online_at: new Date().toISOString() });
+          }
+        });
+
+      return () => {
+        try {
+          void supabase.removeChannel(channel);
+        } catch {
+          // Ignorar al desmontar
+        }
+      };
+    }
   }
 };
