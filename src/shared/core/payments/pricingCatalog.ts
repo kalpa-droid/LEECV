@@ -21,7 +21,15 @@
  * memoria de quien edite uno de los dos.
  */
 
-export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro';
+export type PlanId =
+  | 'single_pdf'
+  | 'credits_pack_5'
+  | 'credits_pack_10'
+  | 'pass_30d'
+  | 'pass_editorlee'
+  | 'pass_facturlee'
+  | 'pass_editorial_team_30d'
+  | 'pro';
 
 export interface PricingCatalogEntry {
   id: PlanId;
@@ -30,7 +38,7 @@ export interface PricingCatalogEntry {
   usd: number;
   /** Precio en ARS — lo cobra Mercado Pago. */
   ars: number;
-  /** Créditos de exportación/publicación que otorga esta compra. Los planes de suscripción no consumen créditos (son ilimitados mientras estén activos). */
+  /** Créditos de exportación/publicación que otorga esta compra. Los planes con acceso ilimitado no consumen créditos mientras estén activos. */
   credits: number | 'unlimited';
   /** true = suscripción mensual recurrente. false = pago único. */
   recurring: boolean;
@@ -40,8 +48,32 @@ export const PRICING_CATALOG: PricingCatalogEntry[] = [
   { id: 'single_pdf', label: '1 Exportación de PDF / Publicación', usd: 2.6, ars: 3200, credits: 1, recurring: false },
   { id: 'credits_pack_5', label: 'Pack 5 Créditos', usd: 10.0, ars: 12500, credits: 5, recurring: false },
   { id: 'credits_pack_10', label: 'Pack 10 Créditos', usd: 17.0, ars: 21000, credits: 10, recurring: false },
+  { id: 'pass_30d', label: 'Pase Total 30 Días (Todas las apps)', usd: 10.0, ars: 12500, credits: 'unlimited', recurring: false },
+  { id: 'pass_editorlee', label: 'Pase Permanente EditorLee', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
+  { id: 'pass_facturlee', label: 'Pase Permanente FacturLee', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
+  { id: 'pass_editorial_team_30d', label: 'Sala de Equipo EditorLee (30 días)', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
   { id: 'pro', label: 'LEECV Pro', usd: 22.0, ars: 27000, credits: 'unlimited', recurring: true }
 ];
+
+export const NON_PURCHASABLE_PLANS = new Set<PlanId>(['pro']);
+
+export function isPurchasablePlan(planId: string): boolean {
+  return PRICING_CATALOG.some((p) => p.id === planId) && !NON_PURCHASABLE_PLANS.has(planId as PlanId);
+}
+
+/** Equivalencia de canje desde créditos ya comprados en la billetera. */
+export const PASS_CREDIT_COSTS: Record<'pass_30d' | 'pass_editorlee' | 'pass_facturlee' | 'pass_editorial_team_30d', number> = {
+  pass_30d: 5,
+  pass_editorlee: 10,
+  pass_facturlee: 10,
+  pass_editorial_team_30d: 10,
+};
+
+/** Pase permanente asociado a cada aplicación que lo admite (claveado por docType). */
+export const APP_PERMANENT_PASS_BY_DOC_TYPE: Record<string, PlanId | undefined> = {
+  editorial: 'pass_editorlee',
+  invoice: 'pass_facturlee',
+};
 
 export function getPrice(planId: PlanId): PricingCatalogEntry {
   const entry = PRICING_CATALOG.find((p) => p.id === planId);

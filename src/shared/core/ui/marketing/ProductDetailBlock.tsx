@@ -30,12 +30,19 @@ export const ProductDetailBlock: React.FC<ProductDetailBlockProps> = ({
     >
       {/* Image Preview Container */}
       <div className="w-full lg:w-1/2">
-        <div className={`relative rounded-[${radius.modal}] p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-[var(--shadow-floating)] overflow-hidden group`}>
-          <div className={`relative aspect-[16/10] w-full rounded-[${radius.card}] overflow-hidden bg-[var(--ui-bg-panel)]`}>
+        <div
+          style={{ borderRadius: radius.modal }}
+          className="relative p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-[var(--shadow-floating)] overflow-hidden group"
+        >
+          <div
+            style={{ borderRadius: radius.card }}
+            className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--ui-bg-panel)]"
+          >
             <img
               src={image}
               alt={title}
               loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
             />
           </div>

@@ -7,7 +7,11 @@ export async function sendPurchaseReceipt(
    *  acreditan solos al entrar con el mismo correo). */
   extraNote?: string
 ) {
-  const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+  const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
+  if (!RESEND_API_KEY) {
+    return false;
+  }
+  const from = process.env.RESEND_FROM_EMAIL?.trim() || 'LEECV <hola@leecv.app>';
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
@@ -28,7 +32,7 @@ export async function sendPurchaseReceipt(
           <td style="padding: 10px; text-align: right;">${orderId}</td>
         </tr>
       </table>
-      <p>Tus créditos / plan ya han sido acreditados en tu cuenta. Puedes ir a <a href="https://leecv.com">LEECV</a> para empezar a usarlos.</p>
+      <p>Tus créditos / plan ya han sido acreditados en tu cuenta. Puedes ir a <a href="https://leecv.app">leecv.app</a> para empezar a usarlos.</p>
       ${extraNote ? `<p style="background:#f4f4f5;border-left:3px solid #6a1b9a;padding:10px;">${extraNote}</p>` : ''}
       <p>Si tienes alguna consulta, puedes responder a este correo.</p>
       <p>Saludos,<br>El equipo de LEECV.</p>
@@ -43,7 +47,7 @@ export async function sendPurchaseReceipt(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'LEECV Pagos <pagos@leecv.com>',
+        from,
         to: [toEmail],
         subject: `Recibo de tu compra: ${planLabel}`,
         html: htmlContent

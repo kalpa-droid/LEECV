@@ -9,9 +9,6 @@ import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
-import { useExportEntitlement } from '../../../shared/core/entitlements/useExportEntitlement';
-import PdfCheckoutModal from '../../../shared/core/studio-host/PdfCheckoutModal';
-
 const CARD_SIZE_OPTIONS = [
   ...Object.values(PAGE_SIZES)
     .filter(p => p.category === 'tarjeta')
@@ -29,14 +26,12 @@ interface CardSheetExportSelectorProps {
 
 export function CardSheetExportSelector({ preset, cardData, onExported }: CardSheetExportSelectorProps) {
   const { showError, showSuccess } = useToast();
-  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
   const [cardSizeId, setCardSizeId] = useState('tarjeta_estandar');
   const [customWidthMm, setCustomWidthMm] = useState(85);
   const [customHeightMm, setCustomHeightMm] = useState(55);
   const [sheetSizeId, setSheetSizeId] = useState(preset.print?.defaultSheetPageSizeId || 'a4');
   const [printerMode, setPrinterMode] = useState<'impresora_oficina' | 'sin_margen_borderless'>('impresora_oficina');
   const [isExporting, setIsExporting] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const trimSize: PageSize = useMemo(() => {
     return cardSizeId === 'personalizado'
@@ -56,12 +51,6 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   }, [trimSize, sheetSize, printerMode, preset.print]);
 
   const handleExport = async () => {
-    const allowed = await consumeCreditIfNeeded();
-    if (!allowed) {
-      setIsCheckoutOpen(true);
-      return;
-    }
-
     setIsExporting(true);
     await withErrorHandling(
       async () => {
@@ -71,7 +60,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           impositionPresetIdOverride: printerMode,
         };
         await exportBusinessCardSheetToPDF(cardData, preset, options);
-        showSuccess('Hoja de tarjetas generada con éxito.');
+        showSuccess('Hoja de tarjetas generada gratis con éxito.');
         onExported?.();
       },
       {
@@ -86,6 +75,23 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   return (
     <>
       <div className="space-y-5 p-5 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]" style={{ borderRadius: radius.modal }}>
+        {/* Insignia Gratis + resumen heredado del CV */}
+        <div
+          className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40"
+          style={{ borderRadius: radius.card }}
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-black text-[var(--color-status-success-text)]">
+              Gratis · Incluido con tu CV
+            </p>
+            <p className="text-[11px] text-[var(--ui-text-secondary)] truncate">
+              {cardData.fullName ? `${cardData.fullName}${cardData.role ? ` · ${cardData.role}` : ''}` : 'Datos y código QR listos desde tu perfil'}
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-[var(--ui-bg-card)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] text-[10px] font-black uppercase tracking-wider shrink-0">
+            $0 · Sin créditos
+          </span>
+        </div>
         {/* Tamaño de tarjeta */}
         <div>
           <label className="block text-xs font-extrabold text-[var(--color-neutral-text-primary)] mb-1.5 uppercase tracking-wide">
@@ -200,22 +206,13 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
 
         <button
           onClick={handleExport}
-          disabled={isExporting || isGating || preview.totalPerSheet === 0}
+          disabled={isExporting || preview.totalPerSheet === 0}
           className={`w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition cursor-pointer ${elevationSystem.raised}`} style={{ borderRadius: radius.card }}
         >
           <Download className="w-4 h-4" />
-          {isExporting ? 'Generando PDF...' : isGating ? 'Verificando pago...' : 'Exportar hoja de tarjetas (frente + dorso)'}
+          {isExporting ? 'Generando PDF...' : 'Descargar tarjetas gratis (frente + dorso)'}
         </button>
       </div>
-
-      <PdfCheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        onConfirm={() => {
-          setIsCheckoutOpen(false);
-          handleExport();
-        }}
-      />
     </>
   );
 }

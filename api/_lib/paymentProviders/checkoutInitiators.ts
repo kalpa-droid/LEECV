@@ -12,7 +12,8 @@ export async function createCheckoutForProvider(
   plan: string,
   exportToken: string,
   email: string,
-  userId?: string
+  userId?: string,
+  returnPath?: string
 ): Promise<CheckoutSessionResult> {
   if (plan === 'pro') {
     throw new Error('El plan Pro no está disponible para compra.');
@@ -22,6 +23,13 @@ export async function createCheckoutForProvider(
   if (!planData) {
     throw new Error(`Plan desconocido: ${plan}`);
   }
+
+  const ALLOWED_RETURN_PATH_REGEX = /^\/crear-(cv|editor|libro|factura|agenda)$/;
+  const normalizedReturnPath =
+    typeof returnPath === 'string' && ALLOWED_RETURN_PATH_REGEX.test(returnPath.trim())
+      ? returnPath.trim()
+      : '';
+  const returnBaseUrl = `${env.SITE_URL}${normalizedReturnPath}`;
 
   switch (providerId) {
     case 'mercadopago': {
@@ -56,9 +64,9 @@ export async function createCheckoutForProvider(
           // JSON legacy de preferencias ya creadas.
           external_reference: formatPlanReference(plan, exportToken, userId),
           back_urls: {
-            success: `${env.SITE_URL}/?pago=exitoso`,
-            failure: `${env.SITE_URL}/?pago=fallido`,
-            pending: `${env.SITE_URL}/?pago=pendiente`,
+            success: `${returnBaseUrl}/?pago=exitoso`,
+            failure: `${returnBaseUrl}/?pago=fallido`,
+            pending: `${returnBaseUrl}/?pago=pendiente`,
           },
           auto_return: 'approved',
           notification_url: `${env.SITE_URL}/api/mercadopago-webhook`,
@@ -111,8 +119,8 @@ export async function createCheckoutForProvider(
             brand_name: 'LEECV',
             landing_page: 'NO_PREFERENCE',
             user_action: 'PAY_NOW',
-            return_url: `${env.SITE_URL}/?pago=exitoso`,
-            cancel_url: `${env.SITE_URL}/?pago=fallido`,
+            return_url: `${returnBaseUrl}/?pago=exitoso`,
+            cancel_url: `${returnBaseUrl}/?pago=fallido`,
           },
         }),
       });

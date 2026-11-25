@@ -116,6 +116,8 @@ export interface NumeracionEstado {
 export interface FacturadorBackupConfig {
   lastBackupAt?: string;
   cadenceDays: number;
+  /** Contador local de comprobantes de prueba exportados gratis en FacturLee (máximo 3). */
+  freeExportsUsed?: number;
 }
 
 export interface FacturadorDesignConfig {

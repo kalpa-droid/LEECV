@@ -5,7 +5,13 @@ import { Modal } from '../../../shared/core/ui/Modal';
 import { Field } from '../../../shared/core/ui/Field';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
-import { grantExportTokens } from '../adminService';
+import {
+  grantExportTokens,
+  listUserAppPasses,
+  grantUserAppPass,
+  revokeUserAppPass,
+} from '../adminService';
+import type { AdminUserPassRow } from '../adminService';
 
 export function UsersTab({
   users,
@@ -25,6 +31,62 @@ export function UsersTab({
   const [accessMode, setAccessMode] = useState('automatic');
   const [reason, setReason] = useState('');
   const [savingAccess, setSavingAccess] = useState(false);
+
+  const [passesUser, setPassesUser] = useState<any>(null);
+  const [userPasses, setUserPasses] = useState<AdminUserPassRow[]>([]);
+  const [selectedPassId, setSelectedPassId] = useState<'pass_30d' | 'pass_editorlee' | 'pass_facturlee' | 'pass_editorial_team_30d'>('pass_editorlee');
+  const [passReason, setPassReason] = useState('');
+  const [savingPass, setSavingPass] = useState(false);
+
+  async function openPassesEditor(user: any) {
+    setPassesUser(user);
+    setPassReason('');
+    const list = await listUserAppPasses(user.id);
+    setUserPasses(list);
+  }
+
+  async function handleGrantPass() {
+    if (!passesUser) return;
+    setSavingPass(true);
+    await withErrorHandling(
+      async () => {
+        await grantUserAppPass(passesUser.id, selectedPassId, passReason.trim() || undefined);
+        showSuccess(`Pase ${selectedPassId} asignado a ${passesUser.email}.`);
+        const list = await listUserAppPasses(passesUser.id);
+        setUserPasses(list);
+        await onPdfExportAccessUpdated();
+      },
+      {
+        context: 'Asignación de pase',
+        errorMessage: 'No se pudo asignar el pase.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setSavingPass(false);
+  }
+
+  async function handleRevokePass() {
+    if (!passesUser || passReason.trim().length < 5) {
+      showError('Indicá un motivo de al menos 5 caracteres para revocar.');
+      return;
+    }
+    setSavingPass(true);
+    await withErrorHandling(
+      async () => {
+        await revokeUserAppPass(passesUser.id, selectedPassId, passReason.trim());
+        showSuccess(`Pase ${selectedPassId} revocado para ${passesUser.email}.`);
+        const list = await listUserAppPasses(passesUser.id);
+        setUserPasses(list);
+        await onPdfExportAccessUpdated();
+      },
+      {
+        context: 'Revocación de pase',
+        errorMessage: 'No se pudo revocar el pase.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setSavingPass(false);
+  }
 
   function openPdfAccessEditor(user: any) {
     setEditingUser(user);
@@ -113,11 +175,11 @@ export function UsersTab({
                   <td className="py-3 px-3">
                     <div className="flex flex-col gap-1">
                       <span className={`inline-flex items-center gap-1 w-max px-2 py-0.5 rounded text-[10px] font-bold ${
-                        user.plan === 'pro'
+                        user.plan === 'pro' || user.plan === 'pass_30d'
                           ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/20'
                           : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]'
                       }`}>
-                        {user.plan === 'pro' && <Crown className="w-3 h-3" />}
+                        {(user.plan === 'pro' || user.plan === 'pass_30d') && <Crown className="w-3 h-3" />}
                         {user.plan?.toUpperCase() || 'FREE'}
                       </span>
                     </div>
@@ -148,6 +210,13 @@ export function UsersTab({
                         className={`${button.secondary} px-2.5 py-1 text-[10px] font-black`}
                       >
                         Acceso PDF
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openPassesEditor(user)}
+                        className={`${button.secondary} px-2.5 py-1 text-[10px] font-black`}
+                      >
+                        Pases
                       </button>
                       {user.plan !== 'pro' ? (
                         <button
@@ -284,6 +353,65 @@ export function UsersTab({
                 disabled={savingAccess || reason.trim().length < 5}
               >
                 {savingAccess ? 'Guardando…' : 'Guardar estado'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(passesUser)}
+        onClose={() => !savingPass && setPassesUser(null)}
+        title="Pases por aplicación y Pase 30 días"
+        size="md"
+        closeOnOverlayClick={!savingPass}
+      >
+        {passesUser && (
+          <div className="space-y-4">
+            <p className="text-xs ui-text-secondary">
+              Cuenta: <strong className="ui-text-primary">{passesUser.email}</strong>
+            </p>
+            {userPasses.length > 0 && (
+              <div className="space-y-1.5 max-h-32 overflow-y-auto border border-[var(--color-neutral-border)] p-2" style={{ borderRadius: radius.card }}>
+                {userPasses.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-[var(--color-neutral-text-primary)]">{p.pass_id}</span>
+                    <span className={p.revoked_at ? 'text-[var(--color-status-danger-text)]' : 'text-[var(--color-status-success-text)]'}>
+                      {p.revoked_at ? 'Revocado' : p.is_permanent ? 'Permanente' : `Hasta ${(p.expires_at || '').slice(0, 10)}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Field
+              as="select"
+              id="admin-pass-select"
+              label="Pase a otorgar o revocar"
+              value={selectedPassId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPassId(e.target.value as any)}
+              disabled={savingPass}
+            >
+              <option value="pass_editorlee">Pase Permanente EditorLee</option>
+              <option value="pass_facturlee">Pase Permanente FacturLee</option>
+              <option value="pass_editorial_team_30d">Sala de Equipo EditorLee (30 días)</option>
+              <option value="pass_30d">Pase Total 30 Días (sin débito)</option>
+            </Field>
+            <Field
+              as="input"
+              id="admin-pass-reason"
+              label="Motivo (obligatorio para revocar)"
+              value={passReason}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassReason(e.target.value)}
+              placeholder="Ej.: cortesía por soporte o pago acreditado"
+              maxLength={500}
+              disabled={savingPass}
+            />
+            <div className="flex justify-end gap-2 border-t border-[var(--color-neutral-border)] pt-4">
+              <button type="button" className={button.secondary} onClick={handleRevokePass} disabled={savingPass || passReason.trim().length < 5}>
+                Revocar
+              </button>
+              <button type="button" className={button.primary} onClick={handleGrantPass} disabled={savingPass}>
+                {savingPass ? 'Aplicando…' : 'Asignar pase'}
               </button>
             </div>
           </div>

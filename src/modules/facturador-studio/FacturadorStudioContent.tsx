@@ -11,11 +11,14 @@ import { OpenTab } from '../../shared/core/documents/tabStore';
 import { resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
 import { saveInvoiceShell } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
+import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldBanner';
+import { Modal } from '../../shared/core/ui/Modal';
+import { Field } from '../../shared/core/ui/Field';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
 import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../../shared/core/studio-host/PdfCheckoutModal';
-import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { downloadBlob } from '../../shared/core/utils/downloadUtils';
 import { useFacturadorVault } from './useFacturadorVault';
 import { VaultLockScreen } from './VaultLockScreen';
@@ -157,13 +160,15 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
   const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState<boolean>(false);
   const [rememberHabitualForClient, setRememberHabitualForClient] = useState<boolean>(false);
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null);
+  const [restorePassword, setRestorePassword] = useState<string>('');
 
   useUnsavedChangesGuard({
     isDirty: phase === 'unlocked' && Boolean(vault?.draftActual?.items?.length),
     onFlush: flush,
   });
 
-  const { consumeCreditIfNeeded } = useExportEntitlement();
+  const { consumeCreditIfNeeded } = useExportEntitlement('invoice');
 
   const invoiceId = useMemo(
     () => resolveDocumentIdWithHandoff(activeTabId, 'invoice'),
@@ -323,12 +328,27 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
     setActiveStepTab('fact_historial');
   }, [vault, draft, updateVault, flush, invoiceId, showSuccess, showError, showInfo, rememberHabitualForClient]);
 
+  const FACTURLEE_FREE_PROOFS_LIMIT = 3;
+  const FACTURLEE_FREE_PROOFS_KEY = 'leecv_facturlee_free_proofs_v1';
+
   const handleExportPDF = useCallback(async () => {
     if (!vault) return;
-    const allowed = await consumeCreditIfNeeded();
-    if (!allowed) {
-      setIsCheckoutOpen(true);
-      return;
+
+    let localFreeCount = 0;
+    try {
+      localFreeCount = Number(localStorage.getItem(FACTURLEE_FREE_PROOFS_KEY) || 0) || 0;
+    } catch {
+      localFreeCount = 0;
+    }
+    const usedFreeCount = Math.max(Number(vault.backup?.freeExportsUsed || 0), localFreeCount);
+    const usingFreeProof = usedFreeCount < FACTURLEE_FREE_PROOFS_LIMIT;
+
+    if (!usingFreeProof) {
+      const allowed = await consumeCreditIfNeeded('invoice');
+      if (!allowed) {
+        setIsCheckoutOpen(true);
+        return;
+      }
     }
 
     setIsExporting(true);
@@ -339,7 +359,22 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
           vault.design.presetId
         );
         if (!ok) throw new Error('pdf_sin_documento');
-        showSuccess('Comprobante exportado en PDF.');
+
+        if (usingFreeProof) {
+          const nextFree = Math.min(FACTURLEE_FREE_PROOFS_LIMIT, usedFreeCount + 1);
+          try {
+            localStorage.setItem(FACTURLEE_FREE_PROOFS_KEY, String(nextFree));
+          } catch {
+            // Ignorar storage restringido
+          }
+          updateVault((prev) => ({
+            ...prev,
+            backup: { ...prev.backup, freeExportsUsed: nextFree },
+          }));
+          showSuccess(`Comprobante gratis ${nextFree} de ${FACTURLEE_FREE_PROOFS_LIMIT} descargado.`);
+        } else {
+          showSuccess('Comprobante exportado en PDF.');
+        }
       },
       {
         context: 'Exportación FacturLee',
@@ -348,7 +383,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
       }
     );
     setIsExporting(false);
-  }, [vault, draft, consumeCreditIfNeeded, showSuccess, showError]);
+  }, [vault, draft, consumeCreditIfNeeded, updateVault, showSuccess, showError]);
 
   const handleExportPortable = useCallback(async () => {
     await flush();
@@ -609,6 +644,19 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
             ]}
             onOpenSaveAsModal={() => {}}
             onOpenJsonDownloadModal={() => {}}
+            driveBackupHandlers={{
+              getEditableBlob: async () => {
+                await flush();
+                const envelope = await loadEnvelope();
+                if (!envelope) return null;
+                const blob = await exportPortablePackage(envelope);
+                return { blob, fileName: 'FacturLee-Respaldo.leecv-fact' };
+              },
+              onRestoreEditableFile: async (file: File) => {
+                setRestorePassword('');
+                setPendingRestoreFile(file);
+              },
+            }}
             onPrint={handleExportPDF}
             isSaving={isExporting}
             onOpenCreditsModal={onOpenCreditsModal}
@@ -640,6 +688,16 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
         }
         panelSlot={
           <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
+            <LocalBackupShieldBanner
+              visible={isBackupDue(vault.backup)}
+              title="Resguardá tu bóveda fuera del navegador"
+              description="Exportá una copia cifrada .leecv-fact en tu equipo o Google Drive para proteger clientes e historial."
+              onBackupNow={() => {
+                setActiveStepTab('fact_respaldo');
+                setIsPanelOpen(true);
+              }}
+              dismissKey="leecv_facturlee_shield_dismissed"
+            />
             {activeStepTab === 'fact_emisor' && <FactEmisorStep {...stepProps} />}
             {activeStepTab === 'fact_comprobante' && <FactComprobanteStep {...stepProps} />}
             {activeStepTab === 'fact_items' && (
@@ -758,11 +816,55 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        docType="invoice"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           void handleExportPDF();
         }}
       />
+      <Modal
+        isOpen={Boolean(pendingRestoreFile)}
+        onClose={() => setPendingRestoreFile(null)}
+        title="Abrir copia cifrada de FacturLee"
+        size="sm"
+        footer={
+          <div className="w-full flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingRestoreFile(null)}
+              className={`${button.base} ${button.secondary}`}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={!restorePassword.trim()}
+              onClick={() => {
+                if (!pendingRestoreFile) return;
+                const file = pendingRestoreFile;
+                setPendingRestoreFile(null);
+                void handleImportPortable(file, restorePassword);
+              }}
+              className={`${button.base} ${button.primary}`}
+            >
+              Abrir bóveda
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-xs text-[var(--ui-text-primary)]">
+          <p className="text-[var(--ui-text-secondary)]">
+            Ingresá la contraseña con la que creaste la copia <strong>{pendingRestoreFile?.name}</strong>:
+          </p>
+          <Field
+            label="Contraseña de la bóveda"
+            type="password"
+            value={restorePassword}
+            onChange={setRestorePassword}
+            placeholder="Tu contraseña de bóveda"
+          />
+        </div>
+      </Modal>
     </>
   );
 };

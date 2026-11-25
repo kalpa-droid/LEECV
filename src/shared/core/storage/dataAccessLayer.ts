@@ -603,5 +603,67 @@ export const dal = {
       const used = tokens.filter(t => t.consumed).length;
       return { total, used, available: total - used };
     }
+  },
+
+  userAppPasses: {
+    async listActive(userId: string): Promise<Array<{ id: string; pass_id: string; doc_type: string; is_permanent: boolean; expires_at: string | null }>> {
+      if (!supabase || !userId) return [];
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('user_app_passes')
+          .select('id, pass_id, doc_type, is_permanent, expires_at')
+          .eq('user_id', userId)
+          .is('revoked_at', null)
+      , []);
+      const rows = (res.data as any[]) || [];
+      const nowMs = Date.now();
+      return rows.filter((row) => row.is_permanent || !row.expires_at || new Date(row.expires_at).getTime() > nowMs);
+    }
+  },
+
+  editorialTeams: {
+    subscribeToRoom(
+      projectId: string,
+      memberEmail: string,
+      onSectionUpdated: (sectionRow: any) => void,
+      onPresenceChange: (onlineEmails: string[]) => void
+    ): () => void {
+      if (!supabase || !projectId) return () => {};
+
+      const channel = supabase
+        .channel(`editorial-team-${projectId}`, {
+          config: { presence: { key: memberEmail || `anon-${Date.now()}` } },
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'editorial_team_sections',
+            filter: `project_id=eq.${projectId}`,
+          },
+          (payload: any) => {
+            if (payload?.new) onSectionUpdated(payload.new);
+          }
+        )
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const emails = Object.keys(state || {});
+          onPresenceChange(emails);
+        })
+        .subscribe(async (status: string) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ email: memberEmail, online_at: new Date().toISOString() });
+          }
+        });
+
+      return () => {
+        try {
+          void supabase.removeChannel(channel);
+        } catch {
+          // Ignorar al desmontar
+        }
+      };
+    }
   }
 };

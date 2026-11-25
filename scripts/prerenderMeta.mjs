@@ -16,9 +16,12 @@ export const ROUTES = [
 
 const metaMap = {
   '/': {
-    title: 'LEECV — Creador de Currículum Vitae listo para imprimir',
-    description: 'Crea tu Currículum Vitae en minutos y ten tu PDF listo para imprimir en casa o llevar a una imprenta. Plantillas profesionales, diseño de tarjetas, 100% privacidad y sin marca de agua.',
-    content: [],
+    title: 'LEECV — CV, Tesis, Libros, FacturLee y Agendas en tu navegador',
+    description: '5 herramientas gratis para diseñar en tu navegador sin cuenta ni tarjeta: Creador de CV (con Carta de Presentación y Tarjeta con QR gratis), EditorLee, Libros para doblar, FacturLee local y Agendas.',
+    content: [
+      '<h1>Creá tu CV, tesis, libros, agendas o presupuestos en minutos</h1>',
+      '<p>Empezá gratis sin cuenta ni tarjeta. Creador de CV incluye Carta de Presentación y Tarjeta con QR gratis.</p>'
+    ],
     type: 'WebPage'
   },
   '/crear-cv': {

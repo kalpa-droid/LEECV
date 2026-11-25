@@ -3,9 +3,8 @@ import { requireAdmin } from './_lib/authMiddleware.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { diagnoseAllProviders } from './_lib/paymentProviders/registry.js';
-import type { ProviderStatus } from './_lib/paymentProviders/types.js';
 import { AI_PROVIDERS } from './_lib/aiProviders/registry.js';
-import { getAiKeyCooldownSummary, clearExpiredCooldowns } from './_lib/aiProviders/keyRotation.js';
+import * as keyRotation from './_lib/aiProviders/keyRotation.js';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { validateBody } from './_lib/validateBody.js';
 import { serverDal } from './_lib/serverDal.js';
@@ -13,8 +12,12 @@ import { applyPayment } from './_lib/applyPayment.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
 import { reconcilePendingPayments } from './_lib/paymentReconciler.js';
 import { sendUnclaimedCreditsReminder } from './_lib/emails/sendUnclaimedCreditsReminder.js';
+import { sendPassActivatedEmail } from './_lib/emails/lifecycleEmails.js';
+import { getTelegramStatus, sendTelegramAdminAlert } from './_lib/telegramAlert.js';
+import { getResendStatus } from './_lib/adminNotifier.js';
+import { BILLING_CONFIG } from './_lib/config/limits.js';
 
-let cachedStatus: { data: Record<string, ProviderStatus>; timestamp: number } | null = null;
+let cachedStatus: { data: Record<string, unknown>; timestamp: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 // Cache del diagnóstico IA: cada poll del panel no debe re-pegar a Groq/Gemini
 // más de una vez cada 5 minutos (ahorra cuota real de las keys rotadas).
@@ -46,7 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const resultData = await diagnoseAllProviders(forcePing);
+    const gatewayData = await diagnoseAllProviders(forcePing);
+    const resultData: Record<string, unknown> = {
+      ...gatewayData,
+      telegram: getTelegramStatus(),
+      resend: getResendStatus(),
+    };
     cachedStatus = { data: resultData, timestamp: now };
 
     return successResponse(res, {
@@ -88,7 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           label: `Sin respuesta de ${provider.displayName}`,
           model: provider.defaultModel,
         }));
-        const cooldown = await getAiKeyCooldownSummary(provider.id);
+        const cooldown = await keyRotation.getAiKeyCooldownSummary(provider.id);
         return { id: provider.id, ...pingResult, ...cooldown };
       })
     );
@@ -110,6 +118,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       }
     });
+
+    // 4to pool: Gemini Pro separado (gemini_pro) + diagnóstico de separación de claves
+    try {
+      const geminiProCooldown = await keyRotation.getAiKeyCooldownSummary('gemini_pro');
+      const geminiBase = (out.gemini as Record<string, unknown>) || {};
+      const proConfigured = Number(geminiProCooldown?.configuredKeys ?? 0);
+      out.gemini_pro = {
+        id: 'gemini_pro',
+        status: proConfigured > 0 ? (geminiBase.status || 'active') : 'missing_vars',
+        label:
+          proConfigured > 0
+            ? `Pool Pro exclusivo (${proConfigured} clave(s))`
+            : 'Sin GEMINI_PRO_API_KEYS dedicado (usa respaldo ágil)',
+        model: 'gemini-2.5-pro / flash',
+        ...geminiProCooldown,
+      };
+    } catch {
+      // Fail-safe si un test unitario no contempla gemini_pro
+    }
+
+    try {
+      const diagFn = (keyRotation as Record<string, unknown>).getGeminiKeyPoolDiagnostics;
+      if (typeof diagFn === 'function') {
+        out.poolDiagnostics = diagFn();
+      }
+    } catch {
+      // Ignorar en mocks parciales de Vitest
+    }
 
     cachedAiStatus = { data: out, timestamp: now };
 
@@ -133,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Solo borra pausas YA EXPIRADAS (filas que el cron diario todavía no
       // limpió): una pausa activa de rate-limit real NO se cancela desde el
       // panel, porque eso re-forzaría una key que sigue en 429 en el proveedor.
-      const cleared = await clearExpiredCooldowns();
+      const cleared = await keyRotation.clearExpiredCooldowns();
       if (!cleared) {
         return errorResponse(res, 503, 'La base de datos no respondió; las pausas quedaron sin cambios');
       }
@@ -345,7 +381,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.userId)) {
       return errorResponse(res, 400, 'Identificador de usuario no válido');
     }
-    if (body.plan !== 'free' && body.plan !== 'pro') {
+    if (!['free', 'pro', 'pass_30d'].includes(body.plan)) {
       return errorResponse(res, 400, 'Plan no válido');
     }
 
@@ -503,14 +539,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return errorResponse(res, 400, 'La venta individual no tiene un token de exportación asociado');
         }
       } else {
-        targetEmail = (body.targetEmail || '').trim().toLowerCase();
+        targetEmail = (body.targetEmail || payerEmail || '').trim().toLowerCase();
         if (!payerEmail || targetEmail !== payerEmail) {
           return errorResponse(res, 400, 'La cuenta de destino debe coincidir con el email registrado en el pago');
         }
 
         const profile = await serverDal.profiles.getByEmail(targetEmail);
-        if (!profile) return errorResponse(res, 404, 'No hay una cuenta registrada con el email del pago');
-        profileId = profile.id;
+        // Si el comprador todavía no creó cuenta, profileId queda null para que
+        // applyPayment acredite en unclaimed_email_credits y se reclame al ingresar.
+        profileId = profile?.id || null;
       }
 
       const result = await applyPayment(supabaseAdmin, {
@@ -741,6 +778,269 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('[CRITICAL ADMIN API ERROR - list-ai-cooldowns]:', err?.message || err, err?.stack);
       await captureBackendException(err, 'admin-api:list-ai-cooldowns');
       return errorResponse(res, 500, 'Error al consultar las pausas de claves de IA');
+    }
+  }
+
+  if (action === 'grant-app-pass') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:grant-app-pass`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      userId: string;
+      passId: string;
+      days?: number | null;
+      reason?: string;
+    }>(req, res, ['userId', 'passId']);
+    if (!body) return;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(body.userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+    if (!['pass_30d', 'pass_editorlee', 'pass_facturlee', 'pass_editorial_team_30d'].includes(body.passId)) {
+      return errorResponse(res, 400, 'Pase no válido');
+    }
+    const reason = (typeof body.reason === 'string' ? body.reason : '').trim().slice(0, 500) || 'Habilitado manualmente desde Admin';
+    const requestedDays =
+      typeof body.days === 'number' && Number.isInteger(body.days) && body.days >= 1 && body.days <= 3650
+        ? body.days
+        : null;
+
+    try {
+      const profile = await serverDal.profiles.getById(body.userId);
+      if (!profile) return errorResponse(res, 404, 'Usuario no encontrado');
+
+      const paymentId = `admin:pass:${admin.user.id}:${body.userId}:${body.passId}:${Date.now()}`;
+      if (body.passId === 'pass_30d') {
+        const { error: proErr } = await supabaseAdmin.rpc('grant_pro_subscription', {
+          p_payment_id: paymentId,
+          p_user_id: body.userId,
+          p_days: requestedDays || BILLING_CONFIG.PRO_PLAN_DAYS,
+        });
+        if (proErr) throw proErr;
+        await supabaseAdmin.from('profiles').update({ plan: 'pass_30d' }).eq('id', body.userId);
+      } else {
+        const defaultDays = body.passId === 'pass_editorial_team_30d' ? 30 : null;
+        const { error: passErr } = await supabaseAdmin.rpc('grant_app_pass', {
+          p_payment_id: paymentId,
+          p_user_id: body.userId,
+          p_pass_id: body.passId,
+          p_days: requestedDays ?? defaultDays,
+          p_source: 'admin_manual',
+        });
+        if (passErr) throw passErr;
+      }
+
+      if (profile.email) {
+        sendPassActivatedEmail(profile.email, body.passId, reason).catch(() => {});
+      }
+
+      await serverDal.adminAuditLogs.log(admin.user.id, 'grant_app_pass', body.userId, {
+        passId: body.passId,
+        days: requestedDays,
+        reason,
+        payment_id: paymentId,
+      });
+
+      return successResponse(res, { success: true, userId: body.userId, passId: body.passId });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - grant-app-pass]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:grant-app-pass');
+      return errorResponse(res, 500, 'Error al asignar el pase al usuario');
+    }
+  }
+
+  if (action === 'revoke-app-pass') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:revoke-app-pass`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      userId: string;
+      passId: string;
+      reason: string;
+    }>(req, res, ['userId', 'passId', 'reason']);
+    if (!body) return;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(body.userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+    if (!['pass_30d', 'pass_editorlee', 'pass_facturlee', 'pass_editorial_team_30d'].includes(body.passId)) {
+      return errorResponse(res, 400, 'Pase no válido');
+    }
+    const reason = body.reason.trim();
+    if (reason.length < 5 || reason.length > 500) {
+      return errorResponse(res, 400, 'El motivo debe tener entre 5 y 500 caracteres');
+    }
+
+    try {
+      if (body.passId === 'pass_30d') {
+        await serverDal.profiles.updateSubscription({ id: body.userId }, {
+          plan: 'free',
+          plan_vence: null,
+          premium_activo: false,
+        });
+      } else {
+        const { error: revErr } = await supabaseAdmin
+          .from('user_app_passes')
+          .update({
+            revoked_at: new Date().toISOString(),
+            revoke_reason: reason,
+          })
+          .eq('user_id', body.userId)
+          .eq('pass_id', body.passId)
+          .is('revoked_at', null);
+        if (revErr) throw revErr;
+      }
+
+      await serverDal.adminAuditLogs.log(admin.user.id, 'revoke_app_pass', body.userId, {
+        passId: body.passId,
+        reason,
+      });
+
+      return successResponse(res, { success: true, userId: body.userId, passId: body.passId });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - revoke-app-pass]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:revoke-app-pass');
+      return errorResponse(res, 500, 'Error al revocar el pase del usuario');
+    }
+  }
+
+  if (action === 'list-user-passes') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-user-passes`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const userId = String(req.query.userId || '').trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+
+    try {
+      const { data: passes, error } = await supabaseAdmin
+        .from('user_app_passes')
+        .select('id, pass_id, doc_type, is_permanent, expires_at, source, revoked_at, revoke_reason, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return successResponse(res, { passes: passes || [] });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-user-passes]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-user-passes');
+      return errorResponse(res, 500, 'Error al consultar los pases del usuario');
+    }
+  }
+
+  if (action === 'funnel-metrics') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:funnel-metrics`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const eventsByKey: Record<string, number> = {};
+      const activePassesById: Record<string, number> = {};
+      let editorialTeamsCount = 0;
+
+      try {
+        const { data: funnelRows } = await supabaseAdmin
+          .from('funnel_daily_counters')
+          .select('event_key, doc_type, count')
+          .gte('day', since);
+        for (const r of (funnelRows || []) as any[]) {
+          const key = String(r.event_key || 'other');
+          eventsByKey[key] = (eventsByKey[key] || 0) + Number(r.count || 0);
+        }
+      } catch {
+        // Tolerante si la migración aún no se aplicó en desarrollo
+      }
+
+      try {
+        const nowIso = new Date().toISOString();
+        const { data: passRows } = await supabaseAdmin
+          .from('user_app_passes')
+          .select('pass_id, is_permanent, expires_at')
+          .is('revoked_at', null);
+        for (const r of (passRows || []) as any[]) {
+          const isAlive = r.is_permanent || !r.expires_at || String(r.expires_at) > nowIso;
+          if (!isAlive) continue;
+          const pid = String(r.pass_id || 'other');
+          activePassesById[pid] = (activePassesById[pid] || 0) + 1;
+        }
+      } catch {
+        // Tolerante en dev
+      }
+
+      try {
+        const { count } = await supabaseAdmin
+          .from('editorial_team_projects')
+          .select('id', { count: 'exact', head: true });
+        editorialTeamsCount = Number(count || 0);
+      } catch {
+        // Tolerante en dev
+      }
+
+      return successResponse(res, {
+        eventsByKey,
+        activePassesById,
+        editorialTeamsCount,
+        since,
+      });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - funnel-metrics]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:funnel-metrics');
+      return errorResponse(res, 500, 'Error al consultar métricas de embudo y pases');
+    }
+  }
+
+  if (action === 'test-telegram-alert') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:test-telegram-alert`, {
+      maxRequests: 5,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      const result = await sendTelegramAdminAlert('Prueba manual desde el Panel Admin de LEECV', {
+        adminId: admin.user.id,
+        at: new Date().toISOString(),
+      });
+      await serverDal.adminAuditLogs.log(admin.user.id, 'test_telegram_alert', null, {
+        sent: result.sent,
+        reason: result.reason || null,
+      });
+      if (!result.sent) {
+        const msg =
+          result.reason === 'missing_env'
+            ? 'Configurá TELEGRAM_BOT_TOKEN y TELEGRAM_ADMIN_CHAT_ID en las variables de Vercel.'
+            : `No se pudo enviar el mensaje a Telegram (${result.reason || 'error'}).`;
+        return errorResponse(res, result.reason === 'missing_env' ? 400 : 502, msg);
+      }
+      return successResponse(res, { success: true, sent: true });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - test-telegram-alert]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:test-telegram-alert');
+      return errorResponse(res, 500, 'Error al probar el Bot de Telegram');
     }
   }
 

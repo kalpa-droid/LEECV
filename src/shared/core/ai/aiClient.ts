@@ -9,6 +9,8 @@ export interface AiTaskParams<T = any> {
   temperature?: number;
   /** Callback opcional y NO bloqueante: se invoca antes de cada reintento automático (1, 2, ...). Por defecto silencioso. */
   onRetry?: (attempt: number) => void;
+  /** Permite activar/desactivar explícitamente la caché local de deduplicación (10 min). */
+  useCache?: boolean;
 }
 
 export interface AiTaskResult<T = any> {
@@ -19,6 +21,54 @@ export interface AiTaskResult<T = any> {
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [500, 1200];
 const TRANSIENT_STATUSES = new Set([0, 408, 429, 500, 502, 503, 504]);
+const AI_CACHE_TTL_MS = 10 * 60 * 1000;
+const AI_CACHE_MAX_ENTRIES = 50;
+const AI_CACHE_MAX_KEY_CHARS = 20_000;
+
+const aiTaskCache = new Map<string, { value: AiTaskResult<any>; expiresAt: number }>();
+
+/** Limpia la caché en memoria de tareas IA (útil en tests o tras cerrar sesión). */
+export function clearAiTaskCache(): void {
+  aiTaskCache.clear();
+}
+
+function shouldUseAiCache(params: AiTaskParams<any>): boolean {
+  if (params.useCache === false) return false;
+  const isVitest = typeof process !== 'undefined' && Boolean(process.env?.VITEST);
+  if (isVitest && params.useCache !== true) return false;
+  if (Array.isArray((params.payload as any)?.images) && (params.payload as any).images.length > 0) {
+    return false;
+  }
+  return true;
+}
+
+function buildAiCacheKey(params: AiTaskParams<any>): string | null {
+  try {
+    const serialized = JSON.stringify({
+      taskId: params.taskId,
+      payload: params.payload ?? null,
+      cvId: params.cvData?.id || '',
+      format: (params.cvData as any)?.activeFormatId || '',
+      maxTokens: params.maxTokens ?? null,
+      temperature: params.temperature ?? null,
+    });
+    if (!serialized || serialized.length >= AI_CACHE_MAX_KEY_CHARS) return null;
+    return serialized;
+  } catch {
+    return null;
+  }
+}
+
+function storeAiCacheEntry(key: string, value: AiTaskResult<any>): void {
+  const now = Date.now();
+  if (aiTaskCache.size >= AI_CACHE_MAX_ENTRIES) {
+    const oldestKey = aiTaskCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      aiTaskCache.delete(oldestKey);
+    }
+  }
+  aiTaskCache.set(key, { value, expiresAt: now + AI_CACHE_TTL_MS });
+}
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -36,11 +86,9 @@ function tryParseAiJson<T>(rawText: string): T {
     const firstObj = cleanJson.indexOf('{');
     const firstArr = cleanJson.indexOf('[');
     let start = -1;
-    let open = '{';
     let close = '}';
     if (firstArr !== -1 && (firstObj === -1 || firstArr < firstObj)) {
       start = firstArr;
-      open = '[';
       close = ']';
     } else if (firstObj !== -1) {
       start = firstObj;
@@ -64,6 +112,19 @@ function tryParseAiJson<T>(rawText: string): T {
  */
 export async function executeAiTask<T = any>(params: AiTaskParams): Promise<AiTaskResult<T>> {
   const { taskId, payload, cvData, maxTokens, temperature, onRetry } = params;
+  const cacheable = shouldUseAiCache(params);
+  const cacheKey = cacheable ? buildAiCacheKey(params) : null;
+
+  if (cacheKey) {
+    const cached = aiTaskCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.value as AiTaskResult<T>;
+    }
+    if (cached) {
+      aiTaskCache.delete(cacheKey);
+    }
+  }
+
   let lastError: Error = new Error('Error al comunicarse con el servicio de IA.');
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -72,10 +133,14 @@ export async function executeAiTask<T = any>(params: AiTaskParams): Promise<AiTa
     if (res.ok && res.data?.success) {
       try {
         const parsedData = tryParseAiJson<T>(res.data.text);
-        return {
+        const result: AiTaskResult<T> = {
           data: parsedData,
           providerUsed: res.data.providerUsed,
         };
+        if (cacheKey) {
+          storeAiCacheEntry(cacheKey, result);
+        }
+        return result;
       } catch (e: any) {
         // JSON inválido en 200 OK → fallo transitorio, reintentar automáticamente
         lastError = e instanceof Error ? e : new Error('La respuesta de la IA no tiene el formato esperado.');

@@ -22,7 +22,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       size="4xl"
       footer={
         <div className="w-full flex items-center justify-between">
-          <span className="text-[10px] text-[var(--ui-text-secondary)]">Última actualización: Septiembre 2026 — LEECV Inc.</span>
+          <span className="text-[10px] text-[var(--ui-text-secondary)]">Última actualización: Noviembre 2026 — LEECV</span>
           <button
             onClick={onClose}
             className={`${button.primary} px-4 py-1.5 font-extrabold text-xs`}
@@ -34,10 +34,14 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     >
       <div className="space-y-4 text-xs text-[var(--ui-text-secondary)] leading-relaxed font-normal">
         {/* Tab Selector */}
-        <div className={`flex border-b border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1 rounded-[${radius.card}] mb-4 flex-nowrap overflow-x-auto no-scrollbar gap-1`}>
+        <div
+          style={{ borderRadius: radius.card }}
+          className="flex border-b border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1 mb-4 flex-nowrap overflow-x-auto no-scrollbar gap-1"
+        >
           <button
             onClick={() => setActiveTab('privacy')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-[${radius.control}] cursor-pointer whitespace-nowrap ${
+            style={{ borderRadius: radius.control }}
+            className={`px-3 sm:px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap ${
               activeTab === 'privacy'
                 ? `bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/40 ${elevationSystem.raised}`
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
@@ -47,7 +51,8 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           </button>
           <button
             onClick={() => setActiveTab('terms')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-[${radius.control}] cursor-pointer whitespace-nowrap ${
+            style={{ borderRadius: radius.control }}
+            className={`px-3 sm:px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap ${
               activeTab === 'terms'
                 ? `bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/40 ${elevationSystem.raised}`
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'

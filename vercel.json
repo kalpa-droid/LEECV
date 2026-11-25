@@ -103,6 +103,34 @@
       "destination": "/api/editorial-doc-api?action=export-docx"
     },
     {
+      "source": "/api/editorial/team-create",
+      "destination": "/api/editorial-doc-api?action=team-create"
+    },
+    {
+      "source": "/api/editorial/team-join",
+      "destination": "/api/editorial-doc-api?action=team-join"
+    },
+    {
+      "source": "/api/editorial/team-list",
+      "destination": "/api/editorial-doc-api?action=team-list"
+    },
+    {
+      "source": "/api/editorial/team-load",
+      "destination": "/api/editorial-doc-api?action=team-load"
+    },
+    {
+      "source": "/api/editorial/team-invite",
+      "destination": "/api/editorial-doc-api?action=team-invite"
+    },
+    {
+      "source": "/api/editorial/team-lock-section",
+      "destination": "/api/editorial-doc-api?action=team-lock-section"
+    },
+    {
+      "source": "/api/editorial/team-save-section",
+      "destination": "/api/editorial-doc-api?action=team-save-section"
+    },
+    {
       "source": "/api/cv-import/start",
       "destination": "/api/cv-import-api?action=start"
     },
@@ -129,6 +157,14 @@
     {
       "source": "/api/capture-paypal-order",
       "destination": "/api/paypal-order?action=capture"
+    },
+    {
+      "source": "/api/entitlements/redeem-pass",
+      "destination": "/api/entitlements-api?action=redeem-pass"
+    },
+    {
+      "source": "/api/funnel-track",
+      "destination": "/api/entitlements-api?action=funnel-track"
     },
     {
       "source": "/api/admin/integrations-status",
@@ -169,6 +205,26 @@
     {
       "source": "/api/admin/clear-ai-cooldowns",
       "destination": "/api/admin-api?action=clear-ai-cooldowns"
+    },
+    {
+      "source": "/api/admin/grant-app-pass",
+      "destination": "/api/admin-api?action=grant-app-pass"
+    },
+    {
+      "source": "/api/admin/revoke-app-pass",
+      "destination": "/api/admin-api?action=revoke-app-pass"
+    },
+    {
+      "source": "/api/admin/list-user-passes",
+      "destination": "/api/admin-api?action=list-user-passes"
+    },
+    {
+      "source": "/api/admin/funnel-metrics",
+      "destination": "/api/admin-api?action=funnel-metrics"
+    },
+    {
+      "source": "/api/admin/test-telegram-alert",
+      "destination": "/api/admin-api?action=test-telegram-alert"
     },
     {
       "source": "/api/approve-manual-claim",

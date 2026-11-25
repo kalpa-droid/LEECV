@@ -19,10 +19,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const identity = await resolveCheckoutIdentity(req, res);
   if (!identity) return; // la respuesta de error ya fue enviada
 
-  const { providerId, plan, emailToUse, exportToken, userId } = identity;
+  const { providerId, plan, emailToUse, exportToken, userId, returnPath } = identity;
 
   try {
-    const result = await createCheckoutForProvider(providerId, plan, exportToken, emailToUse, userId);
+    const result = returnPath
+      ? await createCheckoutForProvider(providerId, plan, exportToken, emailToUse, userId, returnPath)
+      : await createCheckoutForProvider(providerId, plan, exportToken, emailToUse, userId);
     return successResponse(res, { checkoutUrl: result.checkoutUrl });
   } catch (err: any) {
     console.error(`Error creando checkout [${providerId}]:`, err);

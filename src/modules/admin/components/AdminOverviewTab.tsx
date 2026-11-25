@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   Bell, Check, CheckCircle2, AlertTriangle, XCircle, Clock, AlertCircle,
-  RefreshCw, CreditCard, Sparkles, Eraser, BarChart3, FileText, Download, Banknote
+  RefreshCw, CreditCard, Sparkles, Eraser, BarChart3, FileText, Download, Banknote, Send, Layers
 } from 'lucide-react';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { PAYMENT_PROVIDER_CATALOG } from '../../../shared/core/payments/paymentProviderCatalog';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
-import { clearAiCooldowns, metricsByProduct } from '../adminService';
-import type { ProductMetrics } from '../adminService';
+import {
+  clearAiCooldowns,
+  metricsByProduct,
+  getFunnelMetrics,
+  sendTestTelegramAlert,
+} from '../adminService';
+import type { ProductMetrics, FunnelMetricsSummary } from '../adminService';
 
 import { DOCUMENT_TYPE_REGISTRY } from '../../../shared/core/capabilities/capabilityRegistry';
 
@@ -109,15 +114,18 @@ export function AdminOverviewTab({
   const { showError, showSuccess } = useToast();
   const [notifFilter, setNotifFilter] = useState<'unread' | 'all'>('unread');
   const [clearingCooldowns, setClearingCooldowns] = useState(false);
+  const [testingTelegram, setTestingTelegram] = useState(false);
   const [metrics, setMetrics] = useState<ProductMetrics | null>(null);
+  const [funnelMetrics, setFunnelMetrics] = useState<FunnelMetricsSummary | null>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = await metricsByProduct();
+      const [result, funnel] = await Promise.all([metricsByProduct(), getFunnelMetrics()]);
       if (cancelled) return;
       setMetrics(result);
+      setFunnelMetrics(funnel);
       setLoadingMetrics(false);
     })();
     return () => { cancelled = true; };
@@ -147,6 +155,22 @@ export function AdminOverviewTab({
     setClearingCooldowns(false);
   }
 
+  async function handleTestTelegram() {
+    setTestingTelegram(true);
+    await withErrorHandling(
+      async () => {
+        await sendTestTelegramAlert();
+        showSuccess('Alerta de prueba enviada a tu Bot de Telegram.');
+      },
+      {
+        context: 'Prueba de Bot de Telegram',
+        errorMessage: 'No se pudo enviar la prueba de Telegram.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setTestingTelegram(false);
+  }
+
   return (
     <div className="space-y-6">
 
@@ -165,33 +189,47 @@ export function AdminOverviewTab({
             </div>
           </div>
 
-          <button
-            onClick={onRecheckIntegrations}
-            disabled={loadingIntegrations}
-            className={`px-3 py-1.5 text-xs font-bold bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50`} style={{ borderRadius: radius.card }}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingIntegrations ? 'animate-spin' : ''}`} />
-            <span>{loadingIntegrations ? 'Verificando...' : 'Re-comprobar'}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleTestTelegram}
+              disabled={testingTelegram}
+              className={`${button.secondary} px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50`}
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{testingTelegram ? 'Enviando...' : 'Probar Telegram'}</span>
+            </button>
+            <button
+              onClick={onRecheckIntegrations}
+              disabled={loadingIntegrations}
+              className={`px-3 py-1.5 text-xs font-bold bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50`} style={{ borderRadius: radius.card }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingIntegrations ? 'animate-spin' : ''}`} />
+              <span>{loadingIntegrations ? 'Verificando...' : 'Re-comprobar'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           {PAYMENT_PROVIDER_CATALOG.map((p) => (
             <React.Fragment key={p.id}>
               {renderGatewayCard(p.name, p.defaultCurrency, integrations?.[p.id])}
             </React.Fragment>
           ))}
+          {renderGatewayCard('Telegram Bot Admin', 'Alertas', integrations?.telegram)}
+          {renderGatewayCard('Resend Email', 'leecv.app', integrations?.resend)}
         </div>
 
         {/* Motores de IA: ping + pausas de claves calculados en el servidor */}
         <div className="pt-3 border-t border-[var(--color-neutral-border)]/50 mt-3">
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-            <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Motores de Inteligencia Artificial (Créditos & Redacción) — diagnóstico en el servidor</p>
+            <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Motores de Inteligencia Artificial (4 pools) — diagnóstico en el servidor</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {renderGatewayCard('Groq Cloud (GPT-OSS 120B + Visión)', 'IA', aiProviders?.groq)}
-            {renderGatewayCard('Google AI Studio (Gemini)', 'IA', aiProviders?.gemini)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {renderGatewayCard('Groq Cloud', 'Ágil', aiProviders?.groq)}
+            {renderGatewayCard('Gemini Ágil', 'Flash', aiProviders?.gemini)}
+            {renderGatewayCard('Gemini Pro Exclusivo', 'Pesado', aiProviders?.gemini_pro)}
+            {renderGatewayCard('OpenRouter', 'Respaldo', aiProviders?.openrouter)}
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2">
@@ -289,6 +327,35 @@ export function AdminOverviewTab({
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {funnelMetrics && (
+          <div className="pt-3 border-t border-[var(--color-neutral-border)]/50 space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+              <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">
+                Pases activos, Salas EditorLee y embudo (últimos 30 días)
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+              <div className="p-2 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]" style={{ borderRadius: radius.control }}>
+                <p className="text-[10px] text-[var(--color-neutral-text-secondary)]">Pase EditorLee</p>
+                <p className="font-black text-[var(--color-neutral-text-primary)]">{funnelMetrics.activePassesById.pass_editorlee || 0}</p>
+              </div>
+              <div className="p-2 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]" style={{ borderRadius: radius.control }}>
+                <p className="text-[10px] text-[var(--color-neutral-text-secondary)]">Pase FacturLee</p>
+                <p className="font-black text-[var(--color-neutral-text-primary)]">{funnelMetrics.activePassesById.pass_facturlee || 0}</p>
+              </div>
+              <div className="p-2 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]" style={{ borderRadius: radius.control }}>
+                <p className="text-[10px] text-[var(--color-neutral-text-secondary)]">Salas de Equipo</p>
+                <p className="font-black text-[var(--color-neutral-text-primary)]">{funnelMetrics.editorialTeamsCount}</p>
+              </div>
+              <div className="p-2 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]" style={{ borderRadius: radius.control }}>
+                <p className="text-[10px] text-[var(--color-neutral-text-secondary)]">Guardados en Drive</p>
+                <p className="font-black text-[var(--color-neutral-text-primary)]">{funnelMetrics.eventsByKey.drive_saved || 0}</p>
+              </div>
             </div>
           </div>
         )}

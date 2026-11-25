@@ -206,7 +206,7 @@ describe('gemini.ts — header x-goog-api-key, rotación inmediata 429 y thinkin
         status: 200,
         text: async () => '',
         json: async () => ({
-          candidates: [{ content: { parts: [{ text: '{"summary":"Extracto OK"}' }] } }],
+          candidates: [{ content: { parts: [{ text: '{"semanticScore":85,"findings":[]}' }] } }],
         }),
       } as any;
     });
@@ -233,10 +233,10 @@ describe('gemini.ts — header x-goog-api-key, rotación inmediata 429 y thinkin
       },
     };
 
-    // Usar una tarea tier pro (cover_letter) para activar AI_PROVIDER_PRO_ORDER y gemini_pro
+    // Usar una tarea tier pro (ats_analysis) para activar AI_PROVIDER_PRO_ORDER y gemini_pro
     req.body = {
-      taskId: 'cover_letter',
-      payload: { jobTargetText: 'Dev' },
+      taskId: 'ats_analysis',
+      payload: { cvText: 'Desarrollador TypeScript', jobDescription: 'Dev TypeScript' },
       cvData: {},
     };
     // Si la primera clave elegida al azar fue rot-401-key-2, al menos verificamos éxito y que nunca aborte por 403 si tocó la 1

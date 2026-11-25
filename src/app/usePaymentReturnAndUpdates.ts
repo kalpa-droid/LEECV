@@ -80,6 +80,17 @@ export function usePaymentReturnAndUpdates({
       }
 
       navigation.cleanQueryParams();
+
+      if (typeof sessionStorage !== 'undefined') {
+        const savedReturn = sessionStorage.getItem('leecv_checkout_return') || '';
+        sessionStorage.removeItem('leecv_checkout_return');
+        if (
+          /^\/crear-(cv|editor|libro|factura|agenda)$/.test(savedReturn) &&
+          navigation.getPathname() === '/'
+        ) {
+          navigation.replace(savedReturn);
+        }
+      }
     };
 
     procesar().catch((err) => {

@@ -23,6 +23,7 @@ export interface CheckoutIdentity {
   /** exportToken ya trimmed — usar esta, no la del body. */
   exportToken: string;
   userId: string | undefined;
+  returnPath?: string;
 }
 
 export async function resolveCheckoutIdentity(
@@ -50,7 +51,7 @@ export async function resolveCheckoutIdentity(
     sessionUser = { id: user.id, email: user.email ?? undefined };
   }
 
-  const { providerId: bodyProviderId, plan = 'single_pdf', email, exportToken } = req.body || {};
+  const { providerId: bodyProviderId, plan = 'single_pdf', email, exportToken, returnPath } = req.body || {};
 
   let providerId: 'mercadopago' | 'paypal';
   if (opts.forcedProvider) {
@@ -121,7 +122,13 @@ export async function resolveCheckoutIdentity(
       userId = sessionUser?.id;
     }
 
-    return { providerId, plan, emailToUse, exportToken: token, userId };
+    const ALLOWED_RETURN_PATH_REGEX = /^\/crear-(cv|editor|libro|factura|agenda)$/;
+    const safeReturnPath =
+      typeof returnPath === 'string' && ALLOWED_RETURN_PATH_REGEX.test(returnPath.trim())
+        ? returnPath.trim()
+        : undefined;
+
+    return { providerId, plan, emailToUse, exportToken: token, userId, returnPath: safeReturnPath };
   } catch (err) {
     console.error('Error validando token de exportación en resolveCheckoutIdentity:', err);
     errorResponse(res, 500, 'No se pudo validar el token de exportación');

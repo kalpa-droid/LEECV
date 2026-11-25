@@ -3,6 +3,14 @@ import { AppShell } from '../../shared/core/ui/AppShell';
 import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
+import { Users, Lock, Save } from 'lucide-react';
+import { dal } from '../../shared/core/storage/dataAccessLayer';
+import { useAuth } from '../../shared/core/auth/AuthContext';
+import { ActiveTeamRoomContext, EditorialTeamModal } from './ui/EditorialTeamModal';
+import {
+  EditorialTeamSectionRow,
+  saveEditorialTeamSection,
+} from './domain/editorialTeamClient';
 import { EditorialPdfDocument } from './pdf/EditorialPdfDocument';
 import { getEditorialPdfPreset } from './pdf/editorialPresets';
 import { DEFAULT_EDITORIAL_PRESET } from './domain/editorialPresetCatalog';
@@ -21,6 +29,8 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
 import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
+import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldBanner';
+import { getLastExternalBackupTimestamp } from '../../shared/core/storage/storageResilienceEngine';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
@@ -184,7 +194,12 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
 
   const { showSuccess, showError, showInfo } = useToast();
-  const { consumeCreditIfNeeded } = useExportEntitlement();
+  const { user } = useAuth();
+  const { consumeCreditIfNeeded } = useExportEntitlement('editorial');
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [activeTeamRoom, setActiveTeamRoom] = useState<ActiveTeamRoomContext | null>(null);
+  const [onlineTeamEmails, setOnlineTeamEmails] = useState<string[]>([]);
+  const localDraftBackupRef = useRef<any | null>(null);
 
   const editorialId = useMemo(
     () => resolveDocumentIdWithHandoff(activeTabId, 'editorial'),
@@ -318,7 +333,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   }, [editorialId]);
 
   useEffect(() => {
-    if (hydratedIdRef.current !== editorialId || !hasEditedRef.current || !draft) return;
+    if (hydratedIdRef.current !== editorialId || !hasEditedRef.current || !draft || activeTeamRoom) return;
     const timer = window.setTimeout(() => {
       const fullDoc = {
         ...draft,
@@ -329,7 +344,146 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       void saveDocumentDraftLocal(fullDoc, 'editorial');
     }, AUTOSAVE_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [draft, editorialId]);
+  }, [draft, editorialId, activeTeamRoom]);
+
+  useEffect(() => {
+    if (!activeTeamRoom?.project?.id || !user?.email) {
+      setOnlineTeamEmails([]);
+      return;
+    }
+    const unsub = dal.editorialTeams.subscribeToRoom(
+      activeTeamRoom.project.id,
+      user.email,
+      (updatedRow: EditorialTeamSectionRow) => {
+        setActiveTeamRoom((prev) => {
+          if (!prev) return prev;
+          const nextSections = prev.sections.map((s) =>
+            s.section_key === updatedRow.section_key ? updatedRow : s
+          );
+          return { ...prev, sections: nextSections };
+        });
+        setDraft((prevDraft: any) => {
+          if (!prevDraft || !Array.isArray(prevDraft.sections)) return prevDraft;
+          return {
+            ...prevDraft,
+            sections: prevDraft.sections.map((s: any) =>
+              s.id === updatedRow.section_key
+                ? {
+                    ...s,
+                    title: updatedRow.title,
+                    records: Array.isArray(updatedRow.records_json) ? updatedRow.records_json : s.records,
+                  }
+                : s
+            ),
+          };
+        });
+      },
+      (emails) => setOnlineTeamEmails(emails),
+    );
+    return () => unsub();
+  }, [activeTeamRoom?.project?.id, user?.email]);
+
+  const handleEnterTeamRoom = useCallback(
+    (ctx: ActiveTeamRoomContext, focusSectionKey?: string) => {
+      if (!activeTeamRoom) {
+        localDraftBackupRef.current = draft;
+      }
+      setActiveTeamRoom(ctx);
+      hasEditedRef.current = false;
+      const mappedSections = ctx.sections.map((sec, idx) => ({
+        id: sec.section_key,
+        sectionKey: sec.section_key,
+        title: sec.title,
+        category: sec.section_meta?.category || 'cuerpo',
+        visible: sec.section_meta?.visible !== false,
+        includeInToc: sec.section_meta?.includeInToc !== false,
+        startNewPage: sec.section_meta?.startNewPage !== false,
+        position: typeof sec.sort_order === 'number' ? sec.sort_order : idx,
+        records: Array.isArray(sec.records_json) ? sec.records_json : [],
+      }));
+      setDraft((prev: any) => ({
+        ...(prev || createEmptyEditorial()),
+        id: `team_${ctx.project.id}`,
+        cover: { ...(prev?.cover || {}), title: ctx.project.title },
+        metadata: { ...(prev?.metadata || {}), title: ctx.project.title },
+        sections: mappedSections.length > 0 ? mappedSections : prev?.sections || [],
+      }));
+      if (focusSectionKey) {
+        setActiveStepTab(focusSectionKey);
+        setIsPanelOpen(true);
+      }
+    },
+    [activeTeamRoom, draft]
+  );
+
+  const handleExitTeamRoom = useCallback(() => {
+    setActiveTeamRoom(null);
+    if (localDraftBackupRef.current) {
+      setDraft(localDraftBackupRef.current);
+      localDraftBackupRef.current = null;
+    }
+    hasEditedRef.current = false;
+    setActiveStepTab('editorial_inicio');
+    showInfo('Volviste a tus borradores locales sin mezclar cambios del equipo.');
+  }, [showInfo]);
+
+  const handleSaveTeamChapter = useCallback(
+    async (releaseAfterSave: boolean = false) => {
+      const targetSec: EditorialSection | null = Array.isArray(draft?.sections)
+        ? draft.sections.find((s: EditorialSection) => s.id === activeStepTab) || null
+        : null;
+      if (!activeTeamRoom || !targetSec) return;
+      const teamSec = activeTeamRoom.sections.find(
+        (s) => s.section_key === targetSec.id
+      );
+      if (!teamSec) return;
+      try {
+        const saved = await saveEditorialTeamSection({
+          projectId: activeTeamRoom.project.id,
+          sectionKey: teamSec.section_key,
+          title: targetSec.title,
+          records: targetSec.records || [],
+          expectedVersion: teamSec.version,
+          releaseAfterSave,
+        });
+        setActiveTeamRoom((prev) =>
+          prev
+            ? {
+                ...prev,
+                sections: prev.sections.map((s) =>
+                  s.section_key === saved.section_key ? saved : s
+                ),
+              }
+            : prev
+        );
+        showSuccess(
+          releaseAfterSave
+            ? `Capítulo "${saved.title}" guardado y liberado para el equipo.`
+            : `Cambios guardados en vivo para el equipo (v${saved.version}).`
+        );
+      } catch (err: any) {
+        showError(err?.message || 'No se pudieron guardar los cambios en el equipo.');
+      }
+    },
+    [activeTeamRoom, draft?.sections, activeStepTab, showSuccess, showError]
+  );
+
+  const handleSaveTeamCopyLocally = useCallback(async () => {
+    if (!draft) return;
+    const copyId = `ed_teamcopy_${Date.now()}`;
+    const res = await saveDocumentDraftLocal(
+      {
+        ...draft,
+        id: copyId,
+        title: `${activeTeamRoom?.project.title || 'Equipo'} (Copia local)`,
+        updatedAt: Date.now(),
+      },
+      'editorial'
+    );
+    if (res?.success) {
+      showSuccess('Copia local independiente guardada en tu dispositivo.');
+    }
+  }, [draft, activeTeamRoom, showSuccess]);
 
   const updateDraft = useCallback((updater: (prev: any) => any) => {
     hasEditedRef.current = true;
@@ -385,7 +539,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         }
       }
 
-      const allowed = await consumeCreditIfNeeded();
+      const allowed = await consumeCreditIfNeeded('editorial');
       if (!allowed) {
         setIsCheckoutOpen(true);
         return;
@@ -604,7 +758,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         navbarSlot={
           <StudioNavbar
             docType="editorial"
-            currentCvData={{}}
+            currentCvData={draft}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={() => {
               setActiveStepTab('editorial_historial');
@@ -654,6 +808,17 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             setZoomLevel={viewport.setZoomLevel}
             triggerAutoFit={viewport.fitAndCenter}
             cycleUITheme={cycleUITheme}
+            globalActions={[
+              {
+                id: 'editorial_team_room',
+                label: activeTeamRoom ? 'Equipo en Vivo' : 'Equipo (10)',
+                tooltip: 'Sala de Equipo en vivo hasta 10 personas en EditorLee',
+                icon: <Users className="w-3.5 h-3.5 shrink-0" />,
+                tone: activeTeamRoom ? 'success' : 'secondary',
+                active: Boolean(activeTeamRoom),
+                onClick: () => setIsTeamModalOpen(true),
+              },
+            ]}
           />
         }
         dockSlot={
@@ -672,6 +837,70 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         }
         panelSlot={
           <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
+            {activeTeamRoom && (
+              <div
+                className="p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] space-y-2 text-xs"
+                style={{ borderRadius: radius.card }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-black">
+                    👥 Sala en Vivo: {activeTeamRoom.project.title} ({onlineTeamEmails.length || 1} conectados)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsTeamModalOpen(true)}
+                    className="underline font-bold cursor-pointer"
+                  >
+                    Administrar
+                  </button>
+                </div>
+                {activeDynamicSection && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveTeamChapter(false)}
+                      className="px-2.5 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      <Save className="w-3 h-3" />
+                      <span>Guardar capítulo en equipo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveTeamChapter(true)}
+                      className="px-2.5 py-1 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      <Lock className="w-3 h-3" />
+                      <span>Guardar y soltar</span>
+                    </button>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-3 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveTeamCopyLocally()}
+                    className="underline font-bold cursor-pointer"
+                  >
+                    Guardar copia local en este equipo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExitTeamRoom}
+                    className="underline font-bold cursor-pointer"
+                  >
+                    Salir a borradores locales
+                  </button>
+                </div>
+              </div>
+            )}
+            <LocalBackupShieldBanner
+              visible={!getLastExternalBackupTimestamp() && Array.isArray(draft?.sections) && draft.sections.length >= 2}
+              title="Resguardá tu obra fuera del navegador"
+              description="Guardá una copia en tu dispositivo o en tu Google Drive personal desde Archivo → Abrir / Guardar."
+              onBackupNow={() => void handleSaveToDisk(true)}
+              dismissKey="leecv_editorial_shield_dismissed"
+            />
             {activeStepTab === 'editorial_inicio' && (
               <EditorialPresetInicioPanel
                 draft={draft}
@@ -826,6 +1055,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        docType="editorial"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           void handleExportPDF({ skipPreflight: true });
@@ -851,6 +1081,18 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           updateDraft((prev) => applyEditorialGlobalConfig(prev, params));
           showSuccess('Configuración global aplicada.');
         }}
+      />
+      <EditorialTeamModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        draft={draft}
+        activeTeamRoom={activeTeamRoom}
+        onlineEmails={onlineTeamEmails}
+        onEnterTeamRoom={handleEnterTeamRoom}
+        onExitTeamRoom={handleExitTeamRoom}
+        onSyncTeamSections={(nextSections) =>
+          setActiveTeamRoom((prev) => (prev ? { ...prev, sections: nextSections } : prev))
+        }
       />
     </>
   );
