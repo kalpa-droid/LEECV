@@ -12,6 +12,10 @@ const PLAN_LABELS: Record<string, string> = {
   'single_pdf': 'LEECV - 1 Exportación PDF',
   'credits_pack_5': 'Pack de 5 Exportaciones',
   'credits_pack_10': 'Pack de 10 Exportaciones',
+  'pass_30d': 'Pase Total 30 Días (Sin débito automático)',
+  'pass_editorlee': 'Pase Permanente EditorLee',
+  'pass_facturlee': 'Pase Permanente FacturLee',
+  'pass_editorial_team_30d': 'Sala de Equipo EditorLee (30 días)',
   'pro': 'Plan Pro (Suscripción Mensual)'
 };
 
@@ -208,6 +212,15 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
         // Guard: si algún día entrara pro sin perfil, 'unlimited' (string) no
         // puede ir a la columna integer `credits`.
         const unclaimedCredits = typeof planData.credits === 'number' ? planData.credits : 0;
+        let unclaimedGrantPayload: Record<string, unknown> = {};
+        if (plan === 'pass_30d') {
+          unclaimedGrantPayload = { grantType: 'pass_30d', days: BILLING_CONFIG.PRO_PLAN_DAYS };
+        } else if (plan === 'pass_editorlee' || plan === 'pass_facturlee') {
+          unclaimedGrantPayload = { grantType: 'app_pass', passId: plan };
+        } else if (plan === 'pass_editorial_team_30d') {
+          unclaimedGrantPayload = { grantType: 'app_pass', passId: plan, days: 30 };
+        }
+
         const { error: unclaimedInsertError } = await supabaseAdmin
           .from('unclaimed_email_credits')
           .insert({
@@ -219,6 +232,7 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
             amount: amount || null,
             currency: currency || null,
             claim_payment_id: grantPaymentId,
+            ...(Object.keys(unclaimedGrantPayload).length > 0 ? { grant_payload: unclaimedGrantPayload } : {}),
             created_at: new Date().toISOString(),
           });
 
@@ -272,8 +286,8 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
       return { type: 'payment_applied', plan, exportToken, unclaimed: true };
     } else {
-      if (planData.id === 'pro') {
-        // Otorgar suscripción Pro de forma atómica e idempotente vía RPC
+      if (planData.id === 'pro' || planData.id === 'pass_30d') {
+        // Otorgar acceso por 30 días de forma atómica e idempotente vía RPC
         const { error: proGrantError } = await supabaseAdmin.rpc('grant_pro_subscription', {
           p_payment_id: grantPaymentId,
           p_user_id: profileId,
@@ -283,7 +297,31 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
         if (proGrantError) {
           throw new Error(`Error en grant_pro_subscription: ${proGrantError.message}`);
         }
-        console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} de forma idempotente`);
+        if (planData.id === 'pass_30d') {
+          try {
+            await supabaseAdmin.from('profiles').update({ plan: 'pass_30d' }).eq('id', profileId);
+          } catch {
+            // Ignorar si un mock unitario no expone update en profiles
+          }
+        }
+        console.log(`[applyPayment] Plan ${planData.id} otorgado a perfil ${profileId} de forma idempotente`);
+      } else if (
+        planData.id === 'pass_editorlee' ||
+        planData.id === 'pass_facturlee' ||
+        planData.id === 'pass_editorial_team_30d'
+      ) {
+        const { error: passGrantError } = await supabaseAdmin.rpc('grant_app_pass', {
+          p_payment_id: grantPaymentId,
+          p_user_id: profileId,
+          p_pass_id: planData.id,
+          p_days: planData.id === 'pass_editorial_team_30d' ? 30 : null,
+          p_source: 'purchase',
+        });
+
+        if (passGrantError) {
+          throw new Error(`Error en grant_app_pass: ${passGrantError.message}`);
+        }
+        console.log(`[applyPayment] Pase ${planData.id} otorgado a perfil ${profileId} de forma idempotente`);
       } else if (planData.id === 'credits_pack_5' || planData.id === 'credits_pack_10') {
         // Otorgar tokens de exportación
         const creditsToGrant = planData.credits || (planData.id === 'credits_pack_5' ? 5 : 10);

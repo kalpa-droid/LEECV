@@ -131,6 +131,14 @@
       "destination": "/api/paypal-order?action=capture"
     },
     {
+      "source": "/api/entitlements/redeem-pass",
+      "destination": "/api/entitlements-api?action=redeem-pass"
+    },
+    {
+      "source": "/api/funnel-track",
+      "destination": "/api/entitlements-api?action=funnel-track"
+    },
+    {
       "source": "/api/admin/integrations-status",
       "destination": "/api/admin-api?action=integrations-status"
     },

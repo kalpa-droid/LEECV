@@ -184,7 +184,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
 
   const { showSuccess, showError, showInfo } = useToast();
-  const { consumeCreditIfNeeded } = useExportEntitlement();
+  const { consumeCreditIfNeeded } = useExportEntitlement('editorial');
 
   const editorialId = useMemo(
     () => resolveDocumentIdWithHandoff(activeTabId, 'editorial'),
@@ -385,7 +385,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         }
       }
 
-      const allowed = await consumeCreditIfNeeded();
+      const allowed = await consumeCreditIfNeeded('editorial');
       if (!allowed) {
         setIsCheckoutOpen(true);
         return;
@@ -826,6 +826,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        docType="editorial"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           void handleExportPDF({ skipPreflight: true });

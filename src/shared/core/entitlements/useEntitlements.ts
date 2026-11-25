@@ -27,6 +27,17 @@ export const PLAN_FEATURES = {
       'agencyOneClickShareFeature',
     ],
   },
+  pass_30d: {
+    unlimitedExports: true,
+    cloudStorageGB: 0,
+    label: 'Pase Total 30 Días',
+    badgeClass: 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border-[var(--color-status-success-base)]/30',
+    marketingBullets: [
+      'pass30dFeatureAllApps',
+      'pass30dFeatureNoAutoRenew',
+      'agencyDriveBackupFeature',
+    ],
+  },
 };
 
 export function getPlanLabel(plan?: string | null): string {
@@ -38,7 +49,11 @@ export function getPlanBadgeClass(plan?: string | null): string {
 }
 
 export function isPro(plan?: string | null): boolean {
-  return plan === 'pro';
+  return plan === 'pro' || plan === 'pass_30d';
+}
+
+export function isProOrEnterprise(plan?: string | null): boolean {
+  return plan === 'pro' || plan === 'pass_30d' || plan === 'enterprise';
 }
 
 export function isAdminRole(role?: string | null): boolean {
@@ -51,17 +66,22 @@ export function useEntitlements() {
   const { profile, user } = useAuth();
   const [pdfTokens, setPdfTokens] = useState(0);
   const [tokenStats, setTokenStats] = useState({ total: 0, used: 0, available: 0 });
+  const [appPasses, setAppPasses] = useState<Array<{ id: string; pass_id: string; doc_type: string; is_permanent: boolean; expires_at: string | null }>>([]);
   const exportEntitlement = useExportEntitlement();
 
   const fetchStats = useCallback(async () => {
     if (user?.id || user?.email) {
       try {
-        const stats = await dal.pdfExportTokens.getTokenStats({
-          userId: user.id,
-          email: user.email || undefined
-        });
+        const [stats, activePasses] = await Promise.all([
+          dal.pdfExportTokens.getTokenStats({
+            userId: user.id,
+            email: user.email || undefined
+          }),
+          user.id ? dal.userAppPasses.listActive(user.id) : Promise.resolve([]),
+        ]);
         setTokenStats(stats);
         setPdfTokens(stats.available);
+        setAppPasses(activePasses);
       } catch (err) {
         console.error('Error fetching token stats:', err);
       }
@@ -76,24 +96,29 @@ export function useEntitlements() {
   }, [fetchStats]);
 
   const plan = profile?.plan || 'free';
+  const planVence = profile?.plan_vence ? new Date(profile.plan_vence) : null;
+  const isGlobalPassActive = (plan === 'pro' || plan === 'pass_30d') && (!planVence || planVence > new Date());
   const features = PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.free;
   
   return {
     plan,
-    isPro: plan === 'pro',
+    isPro: isGlobalPassActive,
     pdfTokens,
     tokenStats,
+    appPasses,
+    hasActivePassForDocType: (dt: string) => isGlobalPassActive || appPasses.some(p => p.doc_type === dt),
+    hasEditorialTeamPass: isGlobalPassActive || appPasses.some(p => p.pass_id === 'pass_editorial_team_30d'),
     loading: exportEntitlement.loading,
     features,
-    isPremium: plan === 'pro',
+    isPremium: isGlobalPassActive,
     inGracePeriod: false,
     graceEndsAt: null,
     canEmergencyExport: false,
     unlimitedExports: features.unlimitedExports,
     cloudStorageGB: features.cloudStorageGB,
     canExport: exportEntitlement.canExport,
-    consumeExport: async () => {
-      const res = await exportEntitlement.consumeCreditIfNeeded();
+    consumeExport: async (dt?: string) => {
+      const res = await exportEntitlement.consumeCreditIfNeeded(dt);
       await fetchStats();
       return res;
     },

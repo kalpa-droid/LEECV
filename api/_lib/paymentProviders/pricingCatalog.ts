@@ -12,7 +12,15 @@
  * de dos números que alguien tiene que acordarse de mantener iguales.
  */
 
-export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro';
+export type PlanId =
+  | 'single_pdf'
+  | 'credits_pack_5'
+  | 'credits_pack_10'
+  | 'pass_30d'
+  | 'pass_editorlee'
+  | 'pass_facturlee'
+  | 'pass_editorial_team_30d'
+  | 'pro';
 
 export interface PricingCatalogEntry {
   id: PlanId;
@@ -26,6 +34,10 @@ export const PRICING_CATALOG: PricingCatalogEntry[] = [
   { id: 'single_pdf', usd: 2.6, ars: 3200, credits: 1, recurring: false },
   { id: 'credits_pack_5', usd: 10.0, ars: 12500, credits: 5, recurring: false },
   { id: 'credits_pack_10', usd: 17.0, ars: 21000, credits: 10, recurring: false },
+  { id: 'pass_30d', usd: 10.0, ars: 12500, credits: 'unlimited', recurring: false },
+  { id: 'pass_editorlee', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
+  { id: 'pass_facturlee', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
+  { id: 'pass_editorial_team_30d', usd: 17.0, ars: 21000, credits: 'unlimited', recurring: false },
   { id: 'pro', usd: 22.0, ars: 27000, credits: 'unlimited', recurring: true }
 ];
 

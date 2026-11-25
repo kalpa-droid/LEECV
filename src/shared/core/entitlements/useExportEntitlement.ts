@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../auth/AuthContext';
 
-export function useExportEntitlement() {
+export function useExportEntitlement(docType?: string) {
   const { profile, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [canExport, setCanExport] = useState(false);
@@ -28,7 +28,7 @@ export function useExportEntitlement() {
           return;
         }
 
-        if (profile?.plan === 'pro') {
+        if (profile?.plan === 'pro' || profile?.plan === 'pass_30d') {
           const planVence = profile.plan_vence ? new Date(profile.plan_vence) : null;
           const planVigente = !planVence || planVence > new Date();
           if (planVigente) {
@@ -37,11 +37,27 @@ export function useExportEntitlement() {
             setCredits(999);
             return;
           }
-          // Plan Pro vencido: no se habilita exportación ilimitada.
-          setCanExport(false);
-          setReason('plan_vencido');
-          setCredits(0);
-          return;
+          // Plan vencido: continuar verificando si posee pases permanentes o créditos sueltos.
+        }
+
+        if (docType && supabase) {
+          const { data: appPasses } = await supabase
+            .from('user_app_passes')
+            .select('id, is_permanent, expires_at, revoked_at')
+            .eq('user_id', user.id)
+            .eq('doc_type', docType)
+            .is('revoked_at', null);
+
+          const nowMs = Date.now();
+          const hasAppPass = Array.isArray(appPasses) && appPasses.some(
+            (p: any) => p.is_permanent || !p.expires_at || new Date(p.expires_at).getTime() > nowMs
+          );
+          if (hasAppPass) {
+            setCanExport(true);
+            setReason(null);
+            setCredits(999);
+            return;
+          }
         }
         
         // Count unconsumed paid tokens: por user_id directo O por email cuando
@@ -94,17 +110,21 @@ export function useExportEntitlement() {
     } finally {
       setLoading(false);
     }
-  }, [user, profile]);
+  }, [user, profile, docType]);
 
   useEffect(() => {
     checkEntitlement();
   }, [checkEntitlement]);
 
-  const consumeEntitlementIfNeeded = useCallback(async () => {
+  const consumeEntitlementIfNeeded = useCallback(async (docTypeOverride?: string) => {
     if (!supabase) return false;
 
+    const effectiveDocType = docTypeOverride || docType;
+
     if (user) {
-      const { data, error } = await supabase.rpc('check_and_consume_export_entitlement', { p_user_id: user.id });
+      const rpcParams: { p_user_id: string; p_doc_type?: string } = { p_user_id: user.id };
+      if (effectiveDocType) rpcParams.p_doc_type = effectiveDocType;
+      const { data, error } = await supabase.rpc('check_and_consume_export_entitlement', rpcParams);
       if (error || !data) return false;
       return true;
     } else {

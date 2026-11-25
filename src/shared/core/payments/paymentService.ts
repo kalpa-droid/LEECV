@@ -6,6 +6,14 @@ import { PaymentClaim, PaymentGateway } from '../../../types/payments';
 import { ProviderId, getPaymentProvider } from './paymentProviderCatalog';
 import { PlanId } from './pricingCatalog';
 
+const STUDIO_RETURN_PATH_REGEX = /^\/crear-(cv|editor|libro|factura|agenda)$/;
+
+function detectStudioReturnPath(): string | undefined {
+  const pathname = navigation.getPathname();
+  if (STUDIO_RETURN_PATH_REGEX.test(pathname)) return pathname;
+  return undefined;
+}
+
 /**
  * Iniciador unificado de pagos (Mercado Pago, PayPal) para Guest Checkout.
  */
@@ -21,12 +29,25 @@ export async function iniciarPago(
     throw new Error(`${provider?.name || providerId} no soporta inicio de pago automático todavía`);
   }
 
+  const returnPath = detectStudioReturnPath();
+  if (typeof sessionStorage !== 'undefined') {
+    if (returnPath) {
+      sessionStorage.setItem('leecv_checkout_return', returnPath);
+    }
+    try {
+      if (email) localStorage.setItem('leecv_last_checkout_email', email.trim().toLowerCase());
+    } catch {
+      // Ignorar storage lleno o restringido
+    }
+  }
+
   const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-checkout', {
     providerId,
     plan,
     email,
     exportToken,
     userId,
+    ...(returnPath ? { returnPath } : {}),
   });
 
   if (!ok || !data?.checkoutUrl) {
@@ -130,4 +151,38 @@ export async function enviarComprobanteManual({
   });
 
   return claim;
+}
+
+/** Canjea créditos disponibles de la billetera por un Pase (Pase 30d = 5 cr, Permanente = 10 cr). */
+export async function redeemCreditsForPass(
+  passId: 'pass_30d' | 'pass_editorlee' | 'pass_facturlee' | 'pass_editorial_team_30d'
+): Promise<{ success: boolean; pass_id: string; credits_spent?: number }> {
+  const { ok, data, error } = await apiClient.post<{ success: boolean; pass_id: string; credits_spent?: number }>(
+    '/api/entitlements/redeem-pass',
+    { passId }
+  );
+  if (!ok || !data?.success) {
+    throw new Error(error || 'No se pudieron canjear tus créditos');
+  }
+  return data;
+}
+
+/** Telemetría anónima no bloqueante de embudo comercial (sin PII). */
+export function trackFunnelEvent(
+  eventKey:
+    | 'landing_app_selected'
+    | 'studio_opened'
+    | 'free_proof_used'
+    | 'checkout_opened'
+    | 'checkout_started'
+    | 'pass_redeemed'
+    | 'drive_saved'
+    | 'team_created',
+  docType: string = 'all'
+): void {
+  try {
+    void apiClient.post('/api/funnel-track', { eventKey, docType });
+  } catch {
+    // Nunca interrumpir flujo principal por analítica de embudo
+  }
 }

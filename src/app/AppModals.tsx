@@ -257,6 +257,7 @@ export function AppModals(props: AppModalsProps) {
           onConfirm={proceedWithExport}
           onExportJson={() => exportCVToJson(cvData)}
           purpose={pdfCheckoutPurpose}
+          docType={activeDocType || 'cv'}
         />
       )}
 

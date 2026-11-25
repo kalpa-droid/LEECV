@@ -69,10 +69,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const identity = await resolveCheckoutIdentity(req, res, { forcedProvider: 'paypal' });
     if (!identity) return; // la respuesta de error ya fue enviada
 
-    const { plan, emailToUse, exportToken, userId } = identity;
+    const { plan, emailToUse, exportToken, userId, returnPath } = identity;
 
     try {
-      const result = await createCheckoutForProvider('paypal', plan, exportToken, emailToUse, userId);
+      const result = returnPath
+        ? await createCheckoutForProvider('paypal', plan, exportToken, emailToUse, userId, returnPath)
+        : await createCheckoutForProvider('paypal', plan, exportToken, emailToUse, userId);
       return successResponse(res, { checkoutUrl: result.checkoutUrl });
     } catch (err: any) {
       console.error('Error creando orden PayPal:', err);

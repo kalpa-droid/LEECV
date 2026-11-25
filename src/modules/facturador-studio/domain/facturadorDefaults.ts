@@ -55,7 +55,7 @@ export const EMPTY_FACTURADOR_VAULT: FacturadorVaultData = {
     mostrarLogo: true,
     mostrarObservaciones: true,
   },
-  backup: { cadenceDays: 7 },
+  backup: { cadenceDays: 7, freeExportsUsed: 0 },
   draftActual: null,
   updatedAt: new Date().toISOString(),
 };

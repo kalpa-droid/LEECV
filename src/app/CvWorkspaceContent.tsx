@@ -107,10 +107,9 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
   modalsSlot,
 }) => {
   const { showInfo } = useToast();
-  const { consumeCreditIfNeeded } = useExportEntitlement();
-  const { refreshEntitlements } = useEntitlements();
-
   const activeDocType: DocumentTypeId = resolveActiveDocTypeForRoute(currentRoute, cvData);
+  const { consumeCreditIfNeeded } = useExportEntitlement(activeDocType);
+  const { refreshEntitlements } = useEntitlements();
 
   const activePageSizeId =
     (cvData as any)?.layout?.pageSizeId ||
@@ -174,7 +173,7 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
       return;
     }
 
-    const allowed = await consumeCreditIfNeeded();
+    const allowed = await consumeCreditIfNeeded(activeDocType);
     if (!allowed) {
       onOpenPdfCheckoutForExport();
       return;

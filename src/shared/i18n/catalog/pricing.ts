@@ -33,6 +33,11 @@ export const pricingCatalog = {
   mercadoPagoLabel: "Mercado Pago",
   payPalLabel: "PayPal",
   currencyNoticeCompact: "🇦🇷 ARS con Mercado Pago • 💳 USD con PayPal",
+  pass30dFeatureAllApps: "Acceso ilimitado en las 5 apps durante 30 días (sin débito automático)",
+  pass30dFeatureNoAutoRenew: "Pago único anticipado: vos elegís si renovás al vencer",
+  passEditorLeePermanentFeature: "EditorLee ilimitado para uso individual (sin vencimiento)",
+  passFacturLeePermanentFeature: "FacturLee ilimitado en tu dispositivo (sin vencimiento)",
+  passTeam30dFeature: "Sala de Equipo EditorLee hasta 10 personas (30 días)",
 };
 
 export type PricingCatalog = typeof pricingCatalog;

@@ -112,7 +112,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   
-  const { consumeCreditIfNeeded } = useExportEntitlement();
+  const { consumeCreditIfNeeded } = useExportEntitlement('planner');
 
   const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
 
@@ -210,7 +210,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   };
 
   const handlePrint = async () => {
-    const allowed = await consumeCreditIfNeeded();
+    const allowed = await consumeCreditIfNeeded('planner');
     if (!allowed) {
       setIsCheckoutOpen(true);
       return;
@@ -593,6 +593,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        docType="planner"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           handlePrint();

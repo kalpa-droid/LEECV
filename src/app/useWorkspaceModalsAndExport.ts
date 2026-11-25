@@ -48,7 +48,7 @@ export function useWorkspaceModalsAndExport({
   goToLandingPage,
 }: UseWorkspaceModalsAndExportArgs) {
   const { showSuccess, showError } = useToast();
-  const { consumeCreditIfNeeded } = useExportEntitlement();
+  const { consumeCreditIfNeeded } = useExportEntitlement(activeDocType);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -98,7 +98,7 @@ export function useWorkspaceModalsAndExport({
   }, [cvData, showError]);
 
   const handleExportAtsPdf = async (omitSensitiveData: boolean = false) => {
-    const allowed = await consumeCreditIfNeeded();
+    const allowed = await consumeCreditIfNeeded(activeDocType);
     if (!allowed) {
       setPdfCheckoutPurpose('export');
       setIsPdfCheckoutOpen(true);
@@ -136,7 +136,7 @@ export function useWorkspaceModalsAndExport({
   };
 
   const proceedWithExport = async () => {
-    const allowed = await consumeCreditIfNeeded();
+    const allowed = await consumeCreditIfNeeded(activeDocType);
     if (!allowed) {
       setPdfCheckoutPurpose('export');
       setIsPdfCheckoutOpen(true);

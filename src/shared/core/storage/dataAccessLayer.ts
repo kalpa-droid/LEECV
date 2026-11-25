@@ -603,5 +603,21 @@ export const dal = {
       const used = tokens.filter(t => t.consumed).length;
       return { total, used, available: total - used };
     }
+  },
+
+  userAppPasses: {
+    async listActive(userId: string): Promise<Array<{ id: string; pass_id: string; doc_type: string; is_permanent: boolean; expires_at: string | null }>> {
+      if (!supabase || !userId) return [];
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('user_app_passes')
+          .select('id, pass_id, doc_type, is_permanent, expires_at')
+          .eq('user_id', userId)
+          .is('revoked_at', null)
+      , []);
+      const rows = (res.data as any[]) || [];
+      const nowMs = Date.now();
+      return rows.filter((row) => row.is_permanent || !row.expires_at || new Date(row.expires_at).getTime() > nowMs);
+    }
   }
 };

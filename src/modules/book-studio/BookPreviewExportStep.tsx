@@ -45,7 +45,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   sourceProtected = false,
 }) => {
   const t = useText();
-  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
+  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement('book');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
@@ -142,7 +142,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       return;
     }
 
-    const allowed = await consumeCreditIfNeeded();
+    const allowed = await consumeCreditIfNeeded('book');
     if (!allowed) {
       setErrorMsg(t.bookStudio.previewExportStep.insufficientCredits);
       setIsCheckoutOpen(true);
@@ -488,6 +488,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        docType="book"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           handleStartExport();

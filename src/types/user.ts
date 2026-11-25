@@ -1,5 +1,5 @@
 export type UserRole = 'user' | 'admin';
-export type UserPlan = 'free' | 'pro';
+export type UserPlan = 'free' | 'pro' | 'pass_30d';
 export type PdfExportAccessMode = 'automatic' | 'enabled' | 'disabled';
 
 export interface UserProfile {
