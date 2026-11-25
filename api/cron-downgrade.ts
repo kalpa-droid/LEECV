@@ -5,6 +5,7 @@ import { captureBackendException } from './_lib/sentryBackend.js';
 import { BILLING_CONFIG } from './_lib/config/limits.js';
 import { reconcilePendingPayments } from './_lib/paymentReconciler.js';
 import { runUnclaimedCreditsMaintenance } from './_lib/unclaimedCreditsMaintenance.js';
+import { sendCalmExpiryNoticeEmail } from './_lib/emails/lifecycleEmails.js';
 
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -124,6 +125,78 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await captureBackendException(unclaimedErr instanceof Error ? unclaimedErr : new Error(String(unclaimedErr)), 'cron-downgrade:unclaimed');
     }
 
+    // ----------------------------------------------------
+    // PASO D: Vencimiento de pass_30d + avisos tranquilos (5 días antes, sin cobro automático)
+    // ----------------------------------------------------
+    const passesMaintenance = {
+      expiredPass30d: 0,
+      calmNoticesSent: 0,
+    };
+
+    try {
+      const { data: expiredPasses30d } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          plan: 'free',
+          plan_vence: null,
+          premium_activo: false,
+        })
+        .eq('plan', 'pass_30d')
+        .lt('plan_vence', nowIso)
+        .select('id');
+
+      passesMaintenance.expiredPass30d = Array.isArray(expiredPasses30d) ? expiredPasses30d.length : 0;
+
+      const fourDaysAhead = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString();
+      const fiveDaysAhead = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: upcomingProfiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, plan, plan_vence')
+        .in('plan', ['pro', 'pass_30d'])
+        .gte('plan_vence', fourDaysAhead)
+        .lte('plan_vence', fiveDaysAhead);
+
+      if (Array.isArray(upcomingProfiles)) {
+        for (const p of upcomingProfiles) {
+          if (!p?.email || !p?.plan_vence) continue;
+          const label = p.plan === 'pass_30d' ? 'Pase Total 30 Días' : 'Plan Pro';
+          const ok = await sendCalmExpiryNoticeEmail(p.email, label, 5, p.plan_vence);
+          if (ok) passesMaintenance.calmNoticesSent++;
+        }
+      }
+
+      const { data: upcomingTeamPasses } = await supabaseAdmin
+        .from('user_app_passes')
+        .select('user_id, pass_id, expires_at')
+        .eq('is_permanent', false)
+        .is('revoked_at', null)
+        .gte('expires_at', fourDaysAhead)
+        .lte('expires_at', fiveDaysAhead);
+
+      if (Array.isArray(upcomingTeamPasses) && upcomingTeamPasses.length > 0) {
+        const userIds = Array.from(new Set(upcomingTeamPasses.map((u: any) => u.user_id).filter(Boolean)));
+        const { data: passProfiles } = await supabaseAdmin
+          .from('profiles')
+          .select('id, email')
+          .in('id', userIds);
+
+        const emailById = new Map<string, string>(
+          (passProfiles || []).map((r: any) => [String(r.id), String(r.email || '')])
+        );
+
+        for (const row of upcomingTeamPasses as any[]) {
+          const email = emailById.get(String(row.user_id));
+          if (!email || !row.expires_at) continue;
+          const ok = await sendCalmExpiryNoticeEmail(email, 'Sala de Equipo EditorLee (30 días)', 5, row.expires_at);
+          if (ok) passesMaintenance.calmNoticesSent++;
+        }
+      }
+    } catch (passesErr: any) {
+      console.error('Error en mantenimiento de pases y avisos (cron):', passesErr);
+      await captureBackendException(passesErr instanceof Error ? passesErr : new Error(String(passesErr)), 'cron-downgrade:passes');
+    }
+
     return successResponse(res, {
       success: true,
       timestamp: nowIso,
@@ -132,6 +205,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         downgradedToFree: totalDowngraded,
         reconcile,
         unclaimed,
+        passesMaintenance,
       },
     });
   } catch (err: any) {

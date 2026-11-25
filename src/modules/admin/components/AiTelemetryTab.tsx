@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sparkles, RefreshCw, BarChart, KeyRound } from 'lucide-react';
-import { listAiTelemetry, getAiTelemetryStats, listAiCooldowns } from '../adminService';
-import type { AiCooldownRow } from '../adminService';
+import { listAiTelemetry, getAiTelemetryStats, listAiCooldowns, getGeminiPoolDiagnostics } from '../adminService';
+import type { AiCooldownRow, GeminiPoolDiagnosticsUi } from '../adminService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
@@ -37,6 +37,7 @@ export function AiTelemetryTab() {
 
   const [cooldowns, setCooldowns] = useState<AiCooldownRow[]>([]);
   const [loadingCooldowns, setLoadingCooldowns] = useState(false);
+  const [poolDiag, setPoolDiag] = useState<GeminiPoolDiagnosticsUi | null>(null);
 
   /**
    * Desglose agregado sobre las filas cargadas (máx 100, con los filtros
@@ -63,8 +64,9 @@ export function AiTelemetryTab() {
 
   async function loadCooldowns() {
     setLoadingCooldowns(true);
-    const rows = await listAiCooldowns();
+    const [rows, diag] = await Promise.all([listAiCooldowns(), getGeminiPoolDiagnostics()]);
     setCooldowns(rows);
+    setPoolDiag(diag);
     setLoadingCooldowns(false);
   }
 
@@ -190,6 +192,13 @@ export function AiTelemetryTab() {
             <RefreshCw className={`w-4 h-4 ${loadingCooldowns ? 'animate-spin' : ''}`} />
           </button>
         </div>
+        {poolDiag && (
+          <div className="p-2.5 bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)] text-[11px] text-[var(--color-neutral-text-secondary)] flex flex-wrap gap-3" style={{ borderRadius: radius.control }}>
+            <span>Pool ágil Gemini: <strong className="text-[var(--color-neutral-text-primary)]">{poolDiag.fastKeysCount}</strong> clave(s)</span>
+            <span>Pool Pro dedicado: <strong className="text-[var(--color-neutral-text-primary)]">{poolDiag.proKeysCount}</strong> clave(s)</span>
+            <span>Superpuestas aisladas del pool ágil: <strong className="text-[var(--color-neutral-text-primary)]">{poolDiag.overlappingKeysRemovedFromFast}</strong></span>
+          </div>
+        )}
         {cooldowns.length === 0 ? (
           <p className="text-[11px] font-bold text-[var(--color-neutral-text-muted)]">
             {loadingCooldowns ? 'Consultando pausas...' : 'No hay claves pausadas en este momento.'}

@@ -91,6 +91,8 @@ export async function getIntegrationsStatus(forcePing = false) {
   return {
     mercadopago: { status: 'checking', label: 'Sin respuesta del backend (local/offline)' },
     paypal: { status: 'checking', label: 'Sin respuesta del backend (local/offline)' },
+    telegram: { status: 'checking', label: 'Sin respuesta del backend (local/offline)' },
+    resend: { status: 'checking', label: 'Sin respuesta del backend (local/offline)' },
   };
 }
 
@@ -280,21 +282,27 @@ const EMPTY_AI_PROVIDER_STATUS: AiProviderUiStatus = {
   source: 'database-unavailable',
 };
 
-export const AI_PROVIDER_UI_IDS = ['groq', 'gemini'] as const;
+export interface GeminiPoolDiagnosticsUi {
+  fastKeysCount: number;
+  proKeysCount: number;
+  overlappingKeysRemovedFromFast: number;
+  proUsesDedicatedPool: boolean;
+}
+
+export const AI_PROVIDER_UI_IDS = ['groq', 'gemini', 'gemini_pro', 'openrouter'] as const;
+
+let lastPoolDiagnostics: GeminiPoolDiagnosticsUi | null = null;
 
 /**
  * Diagnóstico REAL de los motores de IA, calculado en el servidor
  * (GET /api/admin/ai-providers-status → ai-providers-status en admin-api.ts).
- *
- * Antes esta función "adivinaba" leyendo VITE_GROQ_API_KEY en el navegador:
- * esa variable nunca existe en el cliente, así que el panel siempre mostraba
- * missing_vars aunque el motor estuviera perfecto. El estado real (ping +
- * resumen de pausas de claves por cooldown) solo puede conocerlo el backend.
  */
 export async function getAiProvidersStatus(forcePing = false): Promise<Record<string, AiProviderUiStatus>> {
   const out: Record<string, AiProviderUiStatus> = {
     groq: { ...EMPTY_AI_PROVIDER_STATUS },
     gemini: { ...EMPTY_AI_PROVIDER_STATUS },
+    gemini_pro: { ...EMPTY_AI_PROVIDER_STATUS },
+    openrouter: { ...EMPTY_AI_PROVIDER_STATUS },
   };
   try {
     const { ok, data, error } = await apiClient.get(`/api/admin/ai-providers-status${forcePing ? '?forcePing=true' : ''}`);
@@ -305,6 +313,10 @@ export async function getAiProvidersStatus(forcePing = false): Promise<Record<st
           out[id] = { ...EMPTY_AI_PROVIDER_STATUS, ...(entry as Partial<AiProviderUiStatus>) };
         }
       }
+      const diag = (data as Record<string, unknown>).poolDiagnostics;
+      if (diag && typeof diag === 'object') {
+        lastPoolDiagnostics = diag as GeminiPoolDiagnosticsUi;
+      }
       return out;
     }
     console.warn('[adminService] ai-providers-status API no disponible:', error);
@@ -312,6 +324,13 @@ export async function getAiProvidersStatus(forcePing = false): Promise<Record<st
     console.warn('[adminService] Excepción en getAiProvidersStatus:', err);
   }
   return out;
+}
+
+export async function getGeminiPoolDiagnostics(): Promise<GeminiPoolDiagnosticsUi | null> {
+  if (!lastPoolDiagnostics) {
+    await getAiProvidersStatus(false);
+  }
+  return lastPoolDiagnostics;
 }
 
 /**
@@ -419,4 +438,74 @@ export async function listAiCooldowns(): Promise<AiCooldownRow[]> {
     return [];
   }
   return (data?.cooldowns || []) as AiCooldownRow[];
+}
+
+export interface AdminUserPassRow {
+  id: string;
+  pass_id: string;
+  doc_type: string;
+  is_permanent: boolean;
+  expires_at: string | null;
+  source: string;
+  revoked_at: string | null;
+  revoke_reason: string | null;
+  created_at: string;
+}
+
+export async function listUserAppPasses(userId: string): Promise<AdminUserPassRow[]> {
+  const { ok, data, error } = await apiClient.get(`/api/admin/list-user-passes?userId=${encodeURIComponent(userId)}`);
+  if (!ok) {
+    console.warn('[adminService] list-user-passes no disponible:', error);
+    return [];
+  }
+  return (data?.passes || []) as AdminUserPassRow[];
+}
+
+export async function grantUserAppPass(
+  userId: string,
+  passId: 'pass_30d' | 'pass_editorlee' | 'pass_facturlee' | 'pass_editorial_team_30d',
+  reason?: string,
+  days?: number | null
+): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/grant-app-pass', {
+    userId,
+    passId,
+    ...(reason ? { reason } : {}),
+    ...(typeof days === 'number' ? { days } : {}),
+  });
+  if (!ok) throw new Error(error || 'No se pudo asignar el pase al usuario');
+}
+
+export async function revokeUserAppPass(
+  userId: string,
+  passId: 'pass_30d' | 'pass_editorlee' | 'pass_facturlee' | 'pass_editorial_team_30d',
+  reason: string
+): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/revoke-app-pass', {
+    userId,
+    passId,
+    reason,
+  });
+  if (!ok) throw new Error(error || 'No se pudo revocar el pase');
+}
+
+export interface FunnelMetricsSummary {
+  eventsByKey: Record<string, number>;
+  activePassesById: Record<string, number>;
+  editorialTeamsCount: number;
+  since: string;
+}
+
+export async function getFunnelMetrics(): Promise<FunnelMetricsSummary | null> {
+  const { ok, data, error } = await apiClient.get('/api/admin/funnel-metrics');
+  if (!ok) {
+    console.warn('[adminService] funnel-metrics no disponible:', error);
+    return null;
+  }
+  return (data as FunnelMetricsSummary) || null;
+}
+
+export async function sendTestTelegramAlert(): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/test-telegram-alert', {});
+  if (!ok) throw new Error(error || 'No se pudo enviar la prueba de Telegram');
 }

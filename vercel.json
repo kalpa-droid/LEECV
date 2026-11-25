@@ -207,6 +207,26 @@
       "destination": "/api/admin-api?action=clear-ai-cooldowns"
     },
     {
+      "source": "/api/admin/grant-app-pass",
+      "destination": "/api/admin-api?action=grant-app-pass"
+    },
+    {
+      "source": "/api/admin/revoke-app-pass",
+      "destination": "/api/admin-api?action=revoke-app-pass"
+    },
+    {
+      "source": "/api/admin/list-user-passes",
+      "destination": "/api/admin-api?action=list-user-passes"
+    },
+    {
+      "source": "/api/admin/funnel-metrics",
+      "destination": "/api/admin-api?action=funnel-metrics"
+    },
+    {
+      "source": "/api/admin/test-telegram-alert",
+      "destination": "/api/admin-api?action=test-telegram-alert"
+    },
+    {
       "source": "/api/approve-manual-claim",
       "destination": "/api/admin-api?action=approve-manual-claim"
     },

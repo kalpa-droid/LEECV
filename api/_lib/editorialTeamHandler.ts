@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './supabaseAdmin.js';
 import { successResponse, errorResponse } from './apiResponse.js';
 import { requireRateLimit } from './rateLimiter.js';
+import { sendTeamInviteEmail } from './emails/lifecycleEmails.js';
 
 const LOCK_TTL_MS = 5 * 60 * 1000;
 const MAX_TEAM_MEMBERS = 10;
@@ -360,6 +361,12 @@ export async function handleEditorialTeamAction(
     if (invErr) {
       return errorResponse(res, 500, 'No se pudo registrar la invitación.');
     }
+
+    sendTeamInviteEmail(
+      invitedEmail,
+      caller.email || 'Un colega en LEECV',
+      project.title || 'Documento editorial compartido'
+    ).catch(() => {});
 
     return successResponse(res, { member: inserted });
   }

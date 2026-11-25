@@ -2,8 +2,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { serverDal } from './serverDal.js';
 import { getPrice } from './paymentProviders/pricingCatalog.js';
 import { sendPurchaseReceipt } from './emails/sendPurchaseReceipt.js';
+import { sendPassActivatedEmail } from './emails/lifecycleEmails.js';
 import { BILLING_CONFIG } from './config/limits.js';
 import { dispatchWaAlert } from './whatsappAlert.js';
+import { notifyAdminEvent } from './adminNotifier.js';
 
 export type PlanType = string;
 
@@ -384,22 +386,35 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     await serverDal.processedPayments.updateEntitlementStatus(metodoPago, externalId, 'completed');
   }
 
-  // 2.5 Enviar recibo de compra
+  // 2.5 Enviar recibo de compra y aviso de activación de pase (leecv.app)
   if (email && planData) {
     const label = PLAN_LABELS[planData.id] || planData.id;
     // Fire and forget
     sendPurchaseReceipt(email, label, `${amount || 0} ${currency || ''}`, externalId || 'N/A').catch(e => {
       console.error('Error enviando recibo no bloqueante:', e);
     });
+    if (['pass_30d', 'pass_editorlee', 'pass_facturlee', 'pass_editorial_team_30d'].includes(planData.id)) {
+      sendPassActivatedEmail(email, label).catch(() => {});
+    }
   }
 
-  // 3. Registro único de auditoría
+  // 3. Registro único de auditoría y alerta Telegram/email al admin
+  const notifTitle = `Pago recibido (${plan} via ${metodoPago})`;
+  const notifMsg = `${email ? `Email: ${email} ` : ''}${exportToken ? `Token: ${exportToken}` : ''}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`;
   await serverDal.adminNotifications.create({
     type: 'payment_received',
-    title: `Pago recibido (${plan} via ${metodoPago})`,
-    message: `${email ? `Email: ${email} ` : ''}${exportToken ? `Token: ${exportToken}` : ''}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
+    title: notifTitle,
+    message: notifMsg,
     metadata: { plan, metodoPago, externalId, amount, currency, exportToken, email, userId },
   });
+
+  void notifyAdminEvent({
+    type: 'payment_received',
+    title: notifTitle,
+    message: notifMsg,
+    metadata: { plan, metodoPago, externalId, amount, currency },
+    skipDbInsert: true,
+  }).catch(() => {});
 
   return { type: 'payment_applied', plan, exportToken };
 }

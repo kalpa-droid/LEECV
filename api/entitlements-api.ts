@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { successResponse, errorResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
-import { dispatchWaAlert } from './_lib/whatsappAlert.js';
+import { notifyAdminEvent } from './_lib/adminNotifier.js';
+import { sendPassActivatedEmail } from './_lib/emails/lifecycleEmails.js';
 
 const REDEEMABLE_PASSES = new Set([
   'pass_30d',
@@ -107,22 +108,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const creditsSpent = Number((data as any)?.credits_spent || 0);
-    try {
-      await supabaseAdmin.from('admin_notifications').insert({
-        type: 'pass_redeemed',
-        title: `Canje de Pase: ${targetPass}`,
-        detail: `${authData.user.email || userId} canjeó ${creditsSpent} créditos por ${targetPass}`,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-      });
-    } catch {
-      // Notificación no bloqueante
+    if (authData.user.email) {
+      sendPassActivatedEmail(
+        authData.user.email,
+        targetPass,
+        `Canjeaste ${creditsSpent} crédito(s) desde tu billetera sin pagar un peso extra.`
+      ).catch(() => {});
     }
 
-    dispatchWaAlert(
-      `🎟️ Canje de pase: ${authData.user.email || userId} activó ${targetPass} con ${creditsSpent} créditos.`,
-      { userId, passId: targetPass, creditsSpent }
-    );
+    await notifyAdminEvent({
+      type: 'pass_redeemed',
+      title: `Canje de Pase: ${targetPass}`,
+      message: `${authData.user.email || userId} canjeó ${creditsSpent} créditos por ${targetPass}`,
+      metadata: { userId, passId: targetPass, creditsSpent },
+    }).catch(() => {});
 
     return successResponse(res, data || { success: true, pass_id: targetPass });
   }

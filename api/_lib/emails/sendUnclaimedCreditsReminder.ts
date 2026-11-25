@@ -7,14 +7,18 @@ export async function sendUnclaimedCreditsReminder(
   toEmail: string,
   credits: number
 ): Promise<boolean> {
-  const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+  const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
+  if (!RESEND_API_KEY) {
+    return false;
+  }
+  const from = process.env.RESEND_FROM_EMAIL?.trim() || 'LEECV <hola@leecv.app>';
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
       <h1 style="color: #6a1b9a;">Tenés créditos esperando en LEECV</h1>
       <p>Hola,</p>
       <p>Hace unos días compraste <strong>${credits} crédito(s) de exportación</strong> en LEECV con este correo, pero todavía no los usaste.</p>
-      <p><strong>No tenés que hacer nada especial:</strong> entrá a <a href="https://leecv.com">leecv.com</a> con este mismo email (código de acceso por correo o con tu cuenta) y los créditos se acreditan solos en tu saldo.</p>
+      <p><strong>No tenés que hacer nada especial:</strong> entrá a <a href="https://leecv.app">leecv.app</a> con este mismo email (código de acceso por correo o con tu cuenta) y los créditos se acreditan solos en tu saldo.</p>
       <p>Para que no se pierdan, vas a tenerlos disponibles durante un tiempo; pasado un año sin entrar, los créditos sin reclamar expiran.</p>
       <p>Si tenés alguna consulta, respondé a este correo.</p>
       <p>Saludos,<br>El equipo de LEECV.</p>
@@ -29,7 +33,7 @@ export async function sendUnclaimedCreditsReminder(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'LEECV Pagos <pagos@leecv.com>',
+        from,
         to: [toEmail],
         subject: 'Tus créditos de LEECV están esperando',
         html: htmlContent
