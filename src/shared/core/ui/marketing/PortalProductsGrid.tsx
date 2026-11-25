@@ -1,106 +1,48 @@
-import React from 'react';
-import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail, ReceiptText, BookOpenCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, BookOpen, ArrowRight, Check, CalendarDays, ReceiptText, BookOpenCheck } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
-
 import { useText } from '../../../i18n/useText';
+import { LANDING_APPS_CATALOG, type LandingAppCategory } from './landingAppsCatalog';
 
 export interface PortalProductsGridProps {
   onNavigate: (route: string) => void;
 }
 
+const PORTAL_ROUTE_FALLBACKS: Record<string, string> = {
+  cv: '/crear-cv',
+  editorial: '/crear-editor',
+  book: '/crear-libro',
+  invoice: '/crear-factura',
+  planner: '/crear-agenda',
+};
+
+const PRODUCT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  cv: FileText,
+  editorial: BookOpenCheck,
+  book: BookOpen,
+  invoice: ReceiptText,
+  planner: CalendarDays,
+};
+
+const CATEGORY_FILTERS: ReadonlyArray<{ id: 'all' | LandingAppCategory; label: string }> = [
+  { id: 'all', label: 'Todas (5)' },
+  { id: 'empleo', label: 'Empleo' },
+  { id: 'estudio_libros', label: 'Estudio y Libros' },
+  { id: 'negocio_organizacion', label: 'Negocio y Organización' },
+];
+
 export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNavigate }) => {
   const t = useText();
+  const [selectedCategory, setSelectedCategory] = useState<'all' | LandingAppCategory>('all');
 
-  const products = [
-    {
-      id: 'cv',
-      icon: FileText,
-      badge: t.landing.products.cv.badge,
-      badgeColor: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30',
-      title: t.landing.products.cv.title,
-      tagline: t.landing.products.cv.tagline,
-      description: t.landing.products.cv.description,
-      bullets: [...t.landing.products.cv.bullets],
-      route: '/crear-cv',
-      cta: t.landing.products.cv.cta,
-    },
-    {
-      id: 'tarjetas',
-      icon: CreditCard,
-      badge: t.landing.products.tarjetas.badge,
-      badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
-      title: t.landing.products.tarjetas.title,
-      tagline: t.landing.products.tarjetas.tagline,
-      description: t.landing.products.tarjetas.description,
-      bullets: [...t.landing.products.tarjetas.bullets],
-      route: '/crear-tarjeta',
-      cta: t.landing.products.tarjetas.cta,
-    },
-    {
-      id: 'libros',
-      icon: BookOpen,
-      badge: t.landing.products.libros.badge,
-      badgeColor: 'bg-[var(--color-status-success-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-status-success-bright)]/30',
-      title: t.landing.products.libros.title,
-      tagline: t.landing.products.libros.tagline,
-      description: t.landing.products.libros.description,
-      bullets: [...t.landing.products.libros.bullets],
-      route: '/crear-libro',
-      cta: t.landing.products.libros.cta,
-    },
-    {
-      id: 'agendas',
-      icon: CalendarDays,
-      badge: t.landing.products.agendas.badge,
-      badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
-      title: t.landing.products.agendas.title,
-      tagline: t.landing.products.agendas.tagline,
-      description: t.landing.products.agendas.description,
-      bullets: [...t.landing.products.agendas.bullets],
-      route: '/crear-agenda',
-      cta: t.landing.products.agendas.cta,
-    },
-    {
-      id: 'cartas',
-      icon: Mail,
-      badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
-      badge: 'Listo ATS',
-      title: t.landing.products.cartas.title,
-      tagline: t.landing.products.cartas.tagline,
-      description: t.landing.products.cartas.description,
-      bullets: [...t.landing.products.cartas.bullets],
-      route: '/crear-carta',
-      cta: t.landing.products.cartas.cta,
-    },
-    {
-      id: 'facturas',
-      icon: ReceiptText,
-      badge: t.landing.products.facturas.badge,
-      badgeColor: 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border-[var(--color-status-success-bright)]/30',
-      title: t.landing.products.facturas.title,
-      tagline: t.landing.products.facturas.tagline,
-      description: t.landing.products.facturas.description,
-      bullets: [...t.landing.products.facturas.bullets],
-      route: '/crear-factura',
-      cta: t.landing.products.facturas.cta,
-    },
-    {
-      id: 'editorlee',
-      icon: BookOpenCheck,
-      badge: t.landing.products.editorlee.badge,
-      badgeColor: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30',
-      title: t.landing.products.editorlee.title,
-      tagline: t.landing.products.editorlee.tagline,
-      description: t.landing.products.editorlee.description,
-      bullets: [...t.landing.products.editorlee.bullets],
-      route: '/crear-editor',
-      cta: t.landing.products.editorlee.cta,
-    },
-  ];
+  const filteredProducts =
+    selectedCategory === 'all'
+      ? LANDING_APPS_CATALOG
+      : LANDING_APPS_CATALOG.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-8">
-      <div className="text-center mb-10 space-y-2">
+    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6">
+      <div className="text-center mb-6 space-y-2">
         <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-text)]">
           {t.landing.portalIntro.eyebrow}
         </span>
@@ -112,27 +54,63 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {products.map((p) => {
-          const Icon = p.icon;
+      {/* Filtro rápido por objetivo */}
+      <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto no-scrollbar pb-4 mb-4">
+        {CATEGORY_FILTERS.map((cat) => {
+          const active = selectedCategory === cat.id;
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCategory(cat.id)}
+              aria-pressed={active}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer shrink-0 whitespace-nowrap ${
+                active
+                  ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                  : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)] hover:text-[var(--ui-text-primary)]'
+              }`}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((p) => {
+          const Icon = PRODUCT_ICONS[p.id] || FileText;
+          const targetRoute = p.route || PORTAL_ROUTE_FALLBACKS[p.id] || '/crear-cv';
           return (
             <div
               key={p.id}
-              className={`group relative p-6 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border border-[var(--ui-border)] shadow-[var(--shadow-floating)] hover:border-[var(--color-accent-base)] transition-all flex flex-col justify-between gap-6 hover:-translate-y-1`}
+              style={{ borderRadius: radius.modal }}
+              className="group relative p-5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-[var(--shadow-floating)] hover:border-[var(--color-accent-base)] transition-all flex flex-col justify-between gap-5 hover:-translate-y-1"
             >
-              <div className="space-y-4">
-                {/* Cabecera de la Tarjeta de Producto */}
+              <div className="space-y-3.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-muted)] flex items-center justify-center text-[var(--color-accent-text)] group-hover:scale-110 transition-transform">
-                    <Icon className="w-6 h-6 stroke-[2]" />
+                  <div className="w-11 h-11 rounded-2xl bg-[var(--color-accent-muted)] flex items-center justify-center text-[var(--color-accent-text)] group-hover:scale-105 transition-transform shrink-0">
+                    <Icon className="w-5 h-5 stroke-[2]" />
                   </div>
-                  <span className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${p.badgeColor}`}>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30">
                     {p.badge}
                   </span>
                 </div>
 
+                <div
+                  style={{ borderRadius: radius.card }}
+                  className="aspect-[16/9] w-full overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-panel)]"
+                >
+                  <img
+                    src={p.image}
+                    alt={p.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+
                 <div>
-                  <h3 className="text-xl font-bold text-[var(--ui-text-primary)] group-hover:text-[var(--color-accent-text)] transition-colors">
+                  <h3 className="text-lg font-bold text-[var(--ui-text-primary)] group-hover:text-[var(--color-accent-text)] transition-colors">
                     {p.title}
                   </h3>
                   <p className="text-xs font-semibold text-[var(--color-accent-text)] mt-0.5">
@@ -140,29 +118,28 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
                   </p>
                 </div>
 
-                <p className="text-xs sm:text-sm text-[var(--ui-text-secondary)] leading-relaxed font-normal">
+                <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed font-normal">
                   {p.description}
                 </p>
 
-                {/* Bullets */}
-                <ul className="space-y-2 pt-2 border-t border-[var(--ui-border)]/60">
-                  {p.bullets.map((bullet, i) => (
+                <ul className="space-y-1.5 pt-2 border-t border-[var(--ui-border)]/60">
+                  {p.benefits.map((bullet, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-[var(--ui-text-primary)] font-medium">
-                      <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0 mt-0.5" />
+                      <Check className="w-3.5 h-3.5 text-[var(--color-status-success-bright)] flex-shrink-0 mt-0.5" />
                       <span>{bullet}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Botón CTA Directo */}
               <button
                 type="button"
-                onClick={() => onNavigate(p.route)}
-                className={`w-full py-3 px-4 rounded-[${radius.card}] bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[var(--shadow-floating)] group-hover:scale-[1.02] ${elevationSystem.raised}`}
+                onClick={() => onNavigate(targetRoute)}
+                style={{ borderRadius: radius.card }}
+                className={`w-full py-2.5 px-4 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${elevationSystem.raised}`}
               >
-                <span>{p.cta}</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>{p.ctaLabel}</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
           );

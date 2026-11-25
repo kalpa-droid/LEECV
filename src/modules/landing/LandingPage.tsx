@@ -1,8 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User, ScanLine, Palette, Printer, Brush, ReceiptText, BookOpenCheck } from 'lucide-react';
+import {
+  FileText,
+  Mail,
+  CreditCard,
+  BookOpen,
+  Newspaper,
+  Sparkles,
+  ShieldCheck,
+  Award,
+  Zap,
+  CalendarDays,
+  LogIn,
+  User,
+  ScanLine,
+  Palette,
+  Printer,
+  Brush,
+  ReceiptText,
+  BookOpenCheck,
+  ChevronDown,
+  Check,
+  ArrowRight,
+  Crown,
+} from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
+import { navigation } from '../../shared/core/utils/navigation';
 import { useText } from '../../shared/i18n/useText';
 import { FeatureCard } from '../../shared/core/ui/marketing/FeatureCard';
 import { MarketingSection } from '../../shared/core/ui/marketing/MarketingSection';
@@ -13,6 +37,11 @@ import { PortalProductsGrid } from '../../shared/core/ui/marketing/PortalProduct
 import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetailBlock';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
+import {
+  LANDING_APPS_CATALOG,
+  findLandingAppByQuery,
+  type LandingAppEntry,
+} from '../../shared/core/ui/marketing/landingAppsCatalog';
 import AtsAuditHeroWidget from './components/AtsAuditHeroWidget';
 import TransparencyComparisonTable from './components/TransparencyComparisonTable';
 import { LEECV_VERSION } from '../../shared/core/version';
@@ -25,11 +54,23 @@ interface LandingPageProps {
   onOpenLogin?: () => void;
 }
 
+const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  cv: FileText,
+  editorial: BookOpenCheck,
+  book: BookOpen,
+  invoice: ReceiptText,
+  planner: CalendarDays,
+};
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogin }) => {
   const t = useText();
   const { user, profile } = useAuth();
   const isMobile = useIsMobile();
   const [currentTheme, setCurrentTheme] = useState<string>('day');
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const [exploredApp, setExploredApp] = useState<LandingAppEntry>(() =>
+    findLandingAppByQuery(navigation.getSearchParams().get('app')),
+  );
 
   useEffect(() => {
     setCurrentTheme(getGlobalUiTheme());
@@ -50,91 +91,141 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
   ];
 
   useJsonLd({
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(item => ({
-      "@type": "Question",
-      "name": item.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": item.answer
-      }
-    }))
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
   });
 
   return (
     <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
-      {/* 1. Header sticky */}
-      <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3 cursor-pointer shrink-0" onClick={() => onNavigate('/')}>
-            <Logo layout={isMobile ? 'horizontal' : 'slogan'} animatedRainbow currentUiTheme={currentTheme} className="h-8 sm:h-10" />
+      {/* 1. Header sticky limpio (5 herramientas + blog) */}
+      <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/90 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 relative">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0" onClick={() => onNavigate('/')}>
+            <Logo layout={isMobile ? 'isotipo' : 'slogan'} animatedRainbow currentUiTheme={currentTheme} className="h-8 sm:h-10" />
           </div>
 
-          <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-[var(--ui-text-secondary)]">
-            <button onClick={() => onNavigate('/crear-cv')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.cv}>
-              <FileText className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.cv}</span>}
-            </button>
-            <button onClick={() => onNavigate('/crear-tarjeta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.tarjetas}>
-              <CreditCard className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.tarjetas}</span>}
-            </button>
-            <button onClick={() => onNavigate('/crear-libro')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.libros}>
-              <BookOpen className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.libros}</span>}
-            </button>
-            <button onClick={() => onNavigate('/crear-agenda')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title="Agendas">
-              <CalendarDays className="w-4 h-4" />
-              {!isMobile && <span>Agendas</span>}
-            </button>
-            <button onClick={() => onNavigate('/crear-factura')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.facturas}>
-              <ReceiptText className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.facturas}</span>}
-            </button>
-            <button onClick={() => onNavigate('/crear-editor')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.editorlee}>
-              <BookOpenCheck className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.editorlee}</span>}
-            </button>
-            <button onClick={() => onNavigate('/blog')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.blog}>
-              <Newspaper className="w-4 h-4" />
-              {!isMobile && <span>{t.landing.nav.blog}</span>}
+          {/* Navegación Desktop: 5 apps principales + Blog */}
+          <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-xs lg:text-sm font-semibold text-[var(--ui-text-secondary)]">
+            {LANDING_APPS_CATALOG.map((appItem) => {
+              const Icon = NAV_ICONS[appItem.id] || FileText;
+              return (
+                <button
+                  key={appItem.id}
+                  type="button"
+                  onClick={() => onNavigate(appItem.route)}
+                  className="flex items-center gap-1.5 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer whitespace-nowrap"
+                  title={appItem.title}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{appItem.navLabel}</span>
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => onNavigate('/blog')}
+              className="flex items-center gap-1.5 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer whitespace-nowrap"
+              title={t.landing.nav.blog}
+            >
+              <Newspaper className="w-4 h-4 shrink-0" />
+              <span>{t.landing.nav.blog}</span>
             </button>
           </nav>
+
+          {/* Selector móvil compacto: Herramientas (5) */}
+          <div className="md:hidden relative">
+            <button
+              type="button"
+              onClick={() => setIsToolsMenuOpen((prev) => !prev)}
+              style={{ borderRadius: radius.control }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-bold text-[var(--ui-text-primary)] cursor-pointer"
+            >
+              <span>Herramientas (5)</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+
+            {isToolsMenuOpen && (
+              <div
+                style={{ borderRadius: radius.modal }}
+                className={`absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] ${elevationSystem.floating} p-2 z-50 space-y-1`}
+              >
+                {LANDING_APPS_CATALOG.map((appItem) => {
+                  const Icon = NAV_ICONS[appItem.id] || FileText;
+                  return (
+                    <button
+                      key={appItem.id}
+                      type="button"
+                      onClick={() => {
+                        setIsToolsMenuOpen(false);
+                        onNavigate(appItem.route);
+                      }}
+                      style={{ borderRadius: radius.control }}
+                      className="w-full text-left px-3 py-2 hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 cursor-pointer"
+                    >
+                      <Icon className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+                      <span className="truncate">{appItem.navLabel}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsToolsMenuOpen(false);
+                    onNavigate('/blog');
+                  }}
+                  style={{ borderRadius: radius.control }}
+                  className="w-full text-left px-3 py-2 hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 border-t border-[var(--ui-border)] pt-2 mt-1 cursor-pointer"
+                >
+                  <Newspaper className="w-4 h-4 text-[var(--color-secondary-bright)] shrink-0" />
+                  <span>{t.landing.nav.blog}</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="md" />
 
             {user ? (
               <button
+                type="button"
                 onClick={() => onNavigate('/crear-cv')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-xs font-bold hover:opacity-90 transition cursor-pointer"
-                title="Ir a mi editor de CV"
+                title="Ir a mi cuenta"
               >
                 <User className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{profile?.name || user.email?.split('@')[0] || 'Mi Cuenta'}</span>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={onOpenLogin}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 shadow-sm transition active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 shadow-sm transition active:scale-95 cursor-pointer"
                 title="Iniciar sesión o registrarme"
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>Iniciar sesión</span>
+                <span>Entrar</span>
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* 2. Hero Optimizado con Carrusel y Social Proof */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 shrink-0 overflow-hidden">
+      {/* 2. Hero Multi-App Interactivo con las 5 herramientas arriba sin scroll */}
+      <section className="relative pt-8 pb-12 md:pt-12 md:pb-16 shrink-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--color-accent-muted)] blur-[150px] rounded-full pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-full text-[var(--color-accent-text)] font-semibold text-xs tracking-wider uppercase">
-            <Sparkles className="w-4 h-4 text-[var(--color-accent-text)]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 sm:space-y-5 relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-full text-[var(--color-accent-text)] font-semibold text-xs tracking-wider uppercase">
+            <Sparkles className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
             <span>{t.landing.hero.eyebrow}</span>
           </div>
 
@@ -142,14 +233,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             {t.landing.hero.title}
           </h1>
 
-          <p className={`${displayScale.lead} text-[var(--ui-text-secondary)] max-w-3xl mx-auto font-normal pb-2`}>
+          <p className={`${displayScale.lead} text-[var(--ui-text-secondary)] max-w-3xl mx-auto font-normal`}>
             {t.landing.hero.lead}
           </p>
 
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 pb-2">
-            <MarketingCTA label={t.landing.hero.primaryCta} onClick={() => onNavigate('/crear-cv')} size="lg" variant="primary" />
+          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 pt-1">
+            <MarketingCTA
+              label={exploredApp?.ctaLabel || t.landing.hero.primaryCta}
+              onClick={() => onNavigate(exploredApp?.route || '/crear-cv')}
+              size="lg"
+              variant="primary"
+            />
             {!user && onOpenLogin && (
               <button
+                type="button"
                 onClick={onOpenLogin}
                 className="px-5 py-2.5 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-xs sm:text-sm transition shadow-sm cursor-pointer flex items-center gap-2 active:scale-95"
               >
@@ -159,34 +256,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             )}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 mt-4">
+          <p className="text-xs font-bold text-[var(--color-status-success-text)]">
+            {t.landing.hero.trustSeal}
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-2.5">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
               <ScanLine className="w-3.5 h-3.5" />
-              <span>{t.landing.hero.heroPills?.ats?.title || '100% Compatible con ATS'}</span>
+              <span>{t.landing.hero.heroPills.ats.title}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
               <Award className="w-3.5 h-3.5" />
-              <span>{t.landing.hero.heroPills?.privacy?.title || 'Privacidad Total'}</span>
+              <span>{t.landing.hero.heroPills.privacy.title}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
               <CreditCard className="w-3.5 h-3.5" />
-              <span>{t.landing.hero.heroPills?.pricing?.title || 'Sin Suscripciones Trampa'}</span>
+              <span>{t.landing.hero.heroPills.pricing.title}</span>
             </div>
           </div>
 
-          {/* Barra de Prueba Social */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-full text-xs font-bold text-[var(--ui-text-primary)] shadow-sm">
-            <span className="text-[var(--color-accent-amber-bright)]">⭐</span>
-            <span>{t.landing.socialProof.line}</span>
-            <span className="text-[var(--ui-text-secondary)] font-normal hidden sm:inline">| Privacidad protegida · Sin marcas de agua</span>
-          </div>
-
-          {/* Carrusel Interactivo de Productos */}
-          <HeroCarousel onNavigate={onNavigate} />
+          {/* Selector Interactivo de las 5 Apps */}
+          <HeroCarousel onNavigate={onNavigate} onActiveAppChange={setExploredApp} />
         </div>
       </section>
 
-      {/* Auditor ATS en vivo */}
+      {/* 3. Grilla Portal de las 5 Aplicaciones con filtro por objetivo (arriba) */}
+      <MarketingSection>
+        <PortalProductsGrid onNavigate={onNavigate} />
+      </MarketingSection>
+
+      {/* 3.5 Auditor ATS en vivo (< 60 segundos) */}
       <MarketingSection>
         <AtsAuditHeroWidget />
       </MarketingSection>
@@ -217,24 +316,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
         </div>
       </MarketingSection>
 
-      {/* 4.5. Grilla Portal de Productos (Grilla 2x2 con CTAs directos) */}
-      <MarketingSection>
-        <PortalProductsGrid onNavigate={onNavigate} />
-      </MarketingSection>
-
-      {/* 4.6. Características de Valor (3 cards para resolver dolores de usuarios) */}
+      {/* 4.6. Características de Valor */}
       <MarketingSection className="bg-[var(--ui-bg-card)] border-t border-[var(--ui-border)] py-12">
         <div className="text-center mb-12">
           <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
             ¿Qué te quita el sueño? Nosotros lo resolvemos.
           </h2>
           <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
-            No más capas gráficas rotas, suscripciones trampa ni diseño genérico. 
-            Diseñá con confianza en tu navegador, sin suscripciones ni capas gráficas.
+            No más capas gráficas rotas, suscripciones trampa ni diseño genérico.
+            Diseñá con confianza en tu navegador, guardando también en tu Google Drive personal si querés.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* 4.6.1. Carta que pasa ATS */}
           <FeatureCard
             icon={Mail}
             title={t.landing.features.coverLetter.title}
@@ -253,64 +346,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
         </div>
       </MarketingSection>
 
-      {/* 5. Detalle de Productos en Zigzag */}
+      {/* 5. Detalle de los 5 Productos Principales */}
       <MarketingSection className="bg-[var(--ui-bg-card)]">
-        <div className="text-center mb-16">
+        <div className="text-center mb-14">
           <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)]`}>
             {t.landing.products.sectionTitle}
           </h2>
         </div>
-        
-        <div className="space-y-24">
-          <ProductDetailBlock
-            title={t.landing.products.cv.title}
-            description={t.landing.products.cv.description}
-            bullets={t.landing.products.cv.bullets as any as string[]}
-            image="/marketing/preview-cv-detail.webp"
-            ctaLabel={t.landing.products.cv.cta}
-            onClick={() => onNavigate('/crear-cv')}
-            reverse={false}
-          />
 
-          <ProductDetailBlock
-            title={t.landing.products.tarjetas.title}
-            description={t.landing.products.tarjetas.description}
-            bullets={t.landing.products.tarjetas.bullets as any as string[]}
-            image="/marketing/preview-tarjeta-detail.webp"
-            ctaLabel={t.landing.products.tarjetas.cta}
-            onClick={() => onNavigate('/crear-tarjeta')}
-            reverse={false}
-          />
-
-          <ProductDetailBlock
-            title={t.landing.products.libros.title}
-            description={t.landing.products.libros.description}
-            bullets={t.landing.products.libros.bullets as any as string[]}
-            image="/marketing/preview-libro-detail.webp"
-            ctaLabel={t.landing.products.libros.cta}
-            onClick={() => onNavigate('/crear-libro')}
-            reverse={true}
-          />
-
-          <ProductDetailBlock
-            title={t.landing.products.facturas.title}
-            description={t.landing.products.facturas.description}
-            bullets={t.landing.products.facturas.bullets as any as string[]}
-            image="/marketing/preview-factura-detail.webp"
-            ctaLabel={t.landing.products.facturas.cta}
-            onClick={() => onNavigate('/crear-factura')}
-            reverse={false}
-          />
-
-          <ProductDetailBlock
-            title={t.landing.products.editorlee.title}
-            description={t.landing.products.editorlee.description}
-            bullets={t.landing.products.editorlee.bullets as any as string[]}
-            image="/marketing/preview-editor-detail.webp"
-            ctaLabel={t.landing.products.editorlee.cta}
-            onClick={() => onNavigate('/crear-editor')}
-            reverse={true}
-          />
+        <div className="space-y-20">
+          {LANDING_APPS_CATALOG.map((item, idx) => (
+            <ProductDetailBlock
+              key={item.id}
+              title={item.title}
+              description={item.description}
+              bullets={[...item.benefits]}
+              image={item.detailImage}
+              ctaLabel={item.ctaLabel}
+              onClick={() => onNavigate(item.route)}
+              reverse={idx % 2 === 1}
+            />
+          ))}
         </div>
       </MarketingSection>
 
@@ -318,28 +374,128 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
       <MarketingSection className="bg-[var(--ui-bg-card)] border-y border-[var(--ui-border)]">
         <div className="text-center mb-8">
           <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
-            {t.landing.hero.transparencyTable?.title || 'Transparencia sin trucos'}
+            {t.landing.hero.transparencyTable.title}
           </h2>
           <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
-            {t.landing.hero.transparencyTable?.subtitle || 'Compará cómo funciona LeeCV con los creadores tradicionales'}
+            {t.landing.hero.transparencyTable.subtitle}
           </p>
         </div>
-        <TransparencyComparisonTable rows={t.landing.hero.transparencyTable?.rows || []} />
+        <TransparencyComparisonTable rows={t.landing.hero.transparencyTable.rows} />
       </MarketingSection>
 
-      {/* 6. Precios en Vivo */}
+      {/* 6. Precios Transparentes (3 opciones claras, cero suscripciones trampa) */}
       <MarketingSection id="precios">
         <div className="text-center mb-12">
           <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
-            Planes Simples y Transparentes
+            Precios Claros · Sin Suscripciones Trampa
           </h2>
           <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
-            Comenzá gratis y pagá solo cuando necesites herramientas avanzadas o impresión en alta calidad. Sin suscripciones ocultas.
+            Armá y previsualizá todo gratis. Pagás solo por descarga, o elegís un Pase Permanente o Pase de 30 días sin débitos automáticos.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 max-w-lg mx-auto items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
           <PlanFeatureCard planId="free" onSelectPlan={() => onNavigate('/crear-cv')} />
+
+          <div
+            style={{ borderRadius: radius.modal }}
+            className="flex flex-col justify-between p-6 bg-[var(--ui-bg-card)] border border-[var(--ui-border)]"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xl font-bold text-[var(--ui-text-primary)]">Créditos Prepago</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border border-[var(--color-accent-base)]/30">
+                  No vencen
+                </span>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-[var(--ui-text-primary)]">Desde $2.60 USD</div>
+                <div className="text-xs font-bold text-[var(--color-status-success-text)] mt-0.5">
+                  o $3.200 ARS con Mercado Pago
+                </div>
+                <p className="text-xs text-[var(--ui-text-secondary)] mt-1">
+                  Packs de 1, 5 o 10 créditos reutilizables entre CV, Libros, Agendas, EditorLee y FacturLee.
+                </p>
+              </div>
+              <ul className="space-y-2.5 text-xs text-[var(--ui-text-secondary)]">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span>1 crédito = 1 descarga PDF (y copias en Word/Excel y Drive incluidas)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span>Carta de Presentación y Tarjeta QR gratis en tu CV</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span>Canjeá tus créditos por Pases cuando quieras</span>
+                </li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('/crear-cv')}
+              style={{ borderRadius: radius.card }}
+              className="mt-6 w-full py-3 px-4 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-bold text-xs uppercase tracking-wider cursor-pointer"
+            >
+              Empezar con CV, Libro o Agenda
+            </button>
+          </div>
+
+          <div
+            style={{ borderRadius: radius.modal }}
+            className="flex flex-col justify-between p-6 bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-base)] shadow-[var(--shadow-overlay)]"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xl font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5">
+                  <Crown className="w-5 h-5 text-[var(--color-accent-text)]" />
+                  <span>Pases EditorLee y FacturLee</span>
+                </h3>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-[var(--ui-text-primary)]">10 créditos</div>
+                <div className="text-xs font-bold text-[var(--color-status-success-text)] mt-0.5">
+                  $17 USD / $21.000 ARS (Pase Permanente) · o 5 cr. por 30 días totales
+                </div>
+                <p className="text-xs text-[var(--ui-text-secondary)] mt-1">
+                  Pago único transparente o canje de tus créditos. Cero débitos automáticos.
+                </p>
+              </div>
+              <ul className="space-y-2.5 text-xs text-[var(--ui-text-secondary)]">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span><strong>Pase Permanente EditorLee o FacturLee:</strong> exportaciones ilimitadas</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span><strong>FacturLee incluye 3 comprobantes PDF gratis</strong> para probar primero</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] shrink-0 mt-0.5" />
+                  <span><strong>Pase Total 30 Días (5 cr.):</strong> todas las 5 apps + mayor cuota de IA</span>
+                </li>
+              </ul>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onNavigate('/crear-editor')}
+                style={{ borderRadius: radius.card }}
+                className="py-2.5 px-3 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] font-bold text-xs cursor-pointer"
+              >
+                Abrir EditorLee
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('/crear-factura')}
+                style={{ borderRadius: radius.card }}
+                className="py-2.5 px-3 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-bold text-xs cursor-pointer"
+              >
+                Abrir FacturLee
+              </button>
+            </div>
+          </div>
         </div>
       </MarketingSection>
 
@@ -366,7 +522,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {/* Card 1 */}
           <div onClick={() => onNavigate('/blog/como-estructurar-cv-superar-filtros-ats')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <FileText className="w-5 h-5" />
@@ -375,7 +530,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Cómo estructurar tu CV para superar los filtros ATS</h3>
             <p className="text-sm text-[var(--ui-text-secondary)]">Aprende a maquetar tu currículum con una plantilla de 1 columna y ordenar las secciones correctamente.</p>
           </div>
-          {/* Card 2 */}
           <div onClick={() => onNavigate('/blog/redactar-carta-de-presentacion-con-ia')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <Mail className="w-5 h-5" />
@@ -384,7 +538,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Paso a paso: redactar una carta de presentación con IA</h3>
             <p className="text-sm text-[var(--ui-text-secondary)]">Crea una carta de presentación perfectamente adaptada a los requerimientos del puesto en segundos.</p>
           </div>
-          {/* Card 3 */}
           <div onClick={() => onNavigate('/blog/manual-diseno-impresion-tarjetas-personales')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <CreditCard className="w-5 h-5" />
@@ -393,7 +546,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Manual de diseño e impresión de tarjetas personales</h3>
             <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tus tarjetas en casa o en una imprenta, con códigos QR.</p>
           </div>
-          {/* Card 4 */}
           <div onClick={() => onNavigate('/blog/como-maquetar-doblar-libro-caballete')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <BookOpen className="w-5 h-5" />
@@ -408,24 +560,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
         </div>
       </MarketingSection>
 
-      {/* 9. CTA Final */}
-      <section className="bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] py-20 text-center px-4 shrink-0">
-        <h2 className="text-3xl md:text-5xl font-extrabold mb-6 max-w-3xl mx-auto">
-          Empieza a crear documentos que destaquen.
+      {/* 9. CTA Final con selector de app */}
+      <section className="bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] py-16 sm:py-20 text-center px-4 shrink-0">
+        <h2 className="text-3xl md:text-5xl font-extrabold mb-4 max-w-3xl mx-auto">
+          Elegí tu herramienta y empezá gratis hoy.
         </h2>
-        <p className="text-lg opacity-90 max-w-2xl mx-auto mb-10">
-          No necesitas tarjeta de crédito para empezar a diseñar. Sumate a los miles de profesionales que ya usan LEECV.
+        <p className="text-base sm:text-lg opacity-90 max-w-2xl mx-auto mb-8">
+          Sin tarjeta de crédito para crear ni previsualizar. Tus borradores quedan seguros en tu dispositivo o en tu Google Drive.
         </p>
-        <button
-          onClick={() => onNavigate('/crear-cv')}
-          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-8 py-4 rounded-[${radius.card}] font-bold text-lg hover:scale-105 transition-transform shadow-[var(--shadow-floating)] cursor-pointer`}
-        >
-          {t.landing.nav.cta}
-        </button>
+        <div className="flex flex-wrap justify-center gap-2.5 max-w-4xl mx-auto">
+          {LANDING_APPS_CATALOG.map((appItem) => (
+            <button
+              key={appItem.id}
+              type="button"
+              onClick={() => onNavigate(appItem.route)}
+              style={{ borderRadius: radius.card }}
+              className="bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-5 py-3 font-bold text-sm hover:scale-105 transition-transform shadow-[var(--shadow-floating)] cursor-pointer inline-flex items-center gap-2"
+            >
+              <span>{appItem.navLabel}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* 10. Footer */}
-      <footer className="mt-auto bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] py-10 shrink-0">
+      <footer className="mt-auto bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] pt-10 pb-24 md:pb-10 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--ui-text-secondary)]">
           <div className="flex flex-col items-center sm:items-start gap-2">
             <Logo layout="isotipo" animatedRainbow={true} currentUiTheme={currentTheme} className="h-6" />
@@ -445,6 +605,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
           </div>
         </div>
       </footer>
+
+      {/* Sticky CTA móvil contextual que recuerda la app explorada */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-[var(--ui-bg-panel)]/95 backdrop-blur-lg border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-black text-[var(--ui-text-primary)] truncate">{exploredApp.navLabel}</p>
+          <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">{exploredApp.badge}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigate(exploredApp.route)}
+          style={{ borderRadius: radius.control }}
+          className="px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs shrink-0 flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>{exploredApp.ctaLabel}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 };

@@ -93,7 +93,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
                     }
                   }
                 }}
-                className={`group flex items-center gap-1 px-2 py-0.5 h-6 rounded-[${radius.card}] text-[11px] font-bold transition cursor-pointer shrink-0 border ${
+                style={{ borderRadius: radius.card }}
+                className={`group flex items-center gap-1 px-2 py-0.5 h-6 text-[11px] font-bold transition cursor-pointer shrink-0 border ${
                   isActive
                     ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
                     : 'bg-[var(--ui-bg-card)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] hover:text-[var(--ui-dock-text)]'

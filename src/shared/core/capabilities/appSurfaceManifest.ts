@@ -6,6 +6,7 @@ export interface AppSurfaceFeatures {
   hasPdfPreset: boolean;
   hasStorageAdapter: boolean;
   hasCreditGating: boolean;
+  showInNewDocumentMenu?: boolean;
 }
 
 export interface AppSurfaceSpec {
@@ -38,6 +39,7 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
       hasPdfPreset: true,
       hasStorageAdapter: true,
       hasCreditGating: true,
+      showInNewDocumentMenu: true,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -58,11 +60,12 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
     menuAction: 'onSelectDocument',
     tabsBarAction: 'onNewDocument',
     features: {
-      hasLandingCard: true,
+      hasLandingCard: false,
       hasDockStepSequence: true,
       hasPdfPreset: true,
       hasStorageAdapter: true,
-      hasCreditGating: true,
+      hasCreditGating: false,
+      showInNewDocumentMenu: false,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -88,6 +91,7 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
       hasPdfPreset: true,
       hasStorageAdapter: true,
       hasCreditGating: true,
+      showInNewDocumentMenu: true,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -108,11 +112,12 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
     menuAction: 'onSelectDocument',
     tabsBarAction: 'onNewDocument',
     features: {
-      hasLandingCard: true,
+      hasLandingCard: false,
       hasDockStepSequence: true,
       hasPdfPreset: true,
       hasStorageAdapter: true,
-      hasCreditGating: true,
+      hasCreditGating: false,
+      showInNewDocumentMenu: false,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -138,6 +143,7 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
       hasPdfPreset: true,
       hasStorageAdapter: true,
       hasCreditGating: true,
+      showInNewDocumentMenu: true,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -163,6 +169,7 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
       hasPdfPreset: true,
       hasStorageAdapter: true,
       hasCreditGating: true,
+      showInNewDocumentMenu: true,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
@@ -188,6 +195,7 @@ export const APP_SURFACE_MANIFEST: Record<DocumentTypeId, AppSurfaceSpec> = {
       hasPdfPreset: true,
       hasStorageAdapter: true,
       hasCreditGating: true,
+      showInNewDocumentMenu: true,
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',

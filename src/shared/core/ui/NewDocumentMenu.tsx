@@ -6,6 +6,7 @@ import {
   ALL_DOCUMENT_TYPE_IDS,
   DOCUMENT_TYPE_REGISTRY,
 } from '../capabilities/capabilityRegistry';
+import { APP_SURFACE_MANIFEST } from '../capabilities/appSurfaceManifest';
 import type { MenuBadgeTone } from '../../contracts/appContract';
 import type { DocumentTypeId } from '../../../types/document';
 
@@ -94,7 +95,9 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             ¿Qué querés crear?
           </div>
 
-          {ALL_DOCUMENT_TYPE_IDS.map((docType) => {
+          {ALL_DOCUMENT_TYPE_IDS.filter(
+            (docType) => APP_SURFACE_MANIFEST[docType]?.features.showInNewDocumentMenu !== false,
+          ).map((docType) => {
             const action = legacyHandlers[docType] || (onSelectDocument ? () => onSelectDocument(docType) : undefined);
             if (!action) return null;
             const { ui } = DOCUMENT_TYPE_REGISTRY[docType];

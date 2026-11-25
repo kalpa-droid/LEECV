@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useMemo } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
 import StudioNavbar, { type NavbarGlobalAction } from '../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../shared/core/studio-host/StudioDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
@@ -6,6 +6,7 @@ import { AppShell } from '../shared/core/ui/AppShell';
 import { OpenTab as OpenTabItem } from '../shared/core/documents/tabStore';
 import { hasCapability } from '../shared/core/capabilities/capabilityRegistry';
 import { PRODUCT_ICON_IDS } from '../shared/core/ui/iconCatalog';
+import { navigation } from '../shared/core/utils/navigation';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { useExportEntitlement } from '../shared/core/entitlements/useExportEntitlement';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
@@ -126,6 +127,20 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
     onAtsLiveResultChange?.(atsLive?.result ?? null);
   }, [atsLive?.result, onAtsLiveResultChange]);
 
+  const appliedToolParamRef = useRef(false);
+  useEffect(() => {
+    if (appliedToolParamRef.current) return;
+    const tool = navigation.getSearchParams().get('tool');
+    if (tool === 'carta') {
+      appliedToolParamRef.current = true;
+      setActiveTab('carta');
+      setIsPanelOpen(true);
+    } else if (tool === 'tarjeta') {
+      appliedToolParamRef.current = true;
+      onOpenCardExport();
+    }
+  }, [onOpenCardExport, setActiveTab, setIsPanelOpen]);
+
   const handleExportPDFClick = useCallback(async () => {
     if (cvData?.activePresetId === 'tarjeta-personal') {
       onOpenCardExport();
@@ -194,8 +209,8 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
         id: 'cover_letter_handoff',
         label: 'Carta',
         mobileLabel: 'Carta',
-        tooltip: 'Carta de Presentación (global)',
-        ariaLabel: 'Abrir Carta de Presentación',
+        tooltip: 'Carta de Presentación gratis incluida con tu CV',
+        ariaLabel: 'Abrir Carta de Presentación gratis',
         iconId: PRODUCT_ICON_IDS.carta,
         tone: 'secondary',
         active: activeTab === 'carta' && isPanelOpen,
@@ -204,8 +219,18 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           setIsPanelOpen(true);
         },
       },
+      {
+        id: 'business_card_handoff',
+        label: 'Tarjeta',
+        mobileLabel: 'Tarjeta',
+        tooltip: 'Tarjeta Personal con código QR gratis desde tu CV',
+        ariaLabel: 'Crear Tarjeta Personal gratis',
+        iconId: PRODUCT_ICON_IDS.tarjeta,
+        tone: 'accent',
+        onClick: onOpenCardExport,
+      },
     ];
-  }, [activeDocType, activeTab, isPanelOpen, setActiveTab, setIsPanelOpen]);
+  }, [activeDocType, activeTab, isPanelOpen, onOpenCardExport, setActiveTab, setIsPanelOpen]);
 
   return (
     <AppShell

@@ -202,41 +202,38 @@ export function StudioNavbar({
   }, []);
 
   const resolvedContextPills: NavbarGlobalContextPill[] = (() => {
-    if (globalContextPills && globalContextPills.length > 0) {
-      return globalContextPills.slice(0, TOPBAR_BUDGET.maxGlobalContextPills);
-    }
-    if (globalContextPill) {
-      return [globalContextPill];
-    }
-    if (supportsRegionFormat && activeRegionFormat && typeof onOpenRegionFormat === 'function') {
-      return [
-        {
-          id: 'region_format',
-          shortLabel: activeRegionFormat.shortBadge,
-          tooltip: `Estándar activo: ${activeRegionFormat.name}`,
-          ariaLabel: `Región o estándar del CV: ${activeRegionFormat.shortBadge}`,
-          iconId: UI_ICON_IDS.region,
-          onClick: onOpenRegionFormat,
-        },
-      ];
-    }
-    return [];
-  })();
+    const base: NavbarGlobalContextPill[] =
+      globalContextPills && globalContextPills.length > 0
+        ? [...globalContextPills]
+        : globalContextPill
+          ? [globalContextPill]
+          : supportsRegionFormat && activeRegionFormat && typeof onOpenRegionFormat === 'function'
+            ? [
+                {
+                  id: 'region_format',
+                  shortLabel: activeRegionFormat.shortBadge,
+                  tooltip: `Estándar activo: ${activeRegionFormat.name}`,
+                  ariaLabel: `Región o estándar del CV: ${activeRegionFormat.shortBadge}`,
+                  iconId: UI_ICON_IDS.region,
+                  onClick: onOpenRegionFormat,
+                },
+              ]
+            : [];
 
-  const resolvedActions: NavbarGlobalAction[] = (() => {
-    const base = [...(globalActions || [])];
     if (
       supportsAtsBar &&
       typeof onOpenAtsCheck === 'function' &&
       atsScore !== undefined &&
-      !base.some((a) => a.id === 'ats_check')
+      !base.some((p) => p.id === 'ats_check') &&
+      base.length < TOPBAR_BUDGET.maxGlobalContextPills
     ) {
       base.push({
         id: 'ats_check',
-        label: `ATS ${atsScore}%`,
+        shortLabel: `ATS ${atsScore}%`,
         mobileLabel: `${atsScore}%`,
         tooltip: 'Diagnóstico ATS del CV',
-        tone: atsScore >= 85 ? 'success' : atsScore < 60 ? 'danger' : 'warning',
+        ariaLabel: `Diagnóstico ATS del CV: ${atsScore}%`,
+        iconId: UI_ICON_IDS.ats,
         icon:
           atsScore >= 85 ? (
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--color-status-success-text)]" />
@@ -246,8 +243,14 @@ export function StudioNavbar({
         onClick: onOpenAtsCheck,
       });
     }
-    return base.slice(0, TOPBAR_BUDGET.maxGlobalActions);
+
+    return base.slice(0, TOPBAR_BUDGET.maxGlobalContextPills);
   })();
+
+  const resolvedActions: NavbarGlobalAction[] = (globalActions || []).slice(
+    0,
+    TOPBAR_BUDGET.maxGlobalActions,
+  );
 
   return (
     <header

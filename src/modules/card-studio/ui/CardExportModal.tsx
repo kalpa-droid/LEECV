@@ -22,7 +22,8 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const preset: Preset = getPreset(presetId);
+  const rawPreset: Preset = getPreset(presetId);
+  const preset: Preset = rawPreset.pageCategory === 'tarjeta' ? rawPreset : getPreset('tarjeta-personal');
 
   useEffect(() => {
     if (!isOpen) return;

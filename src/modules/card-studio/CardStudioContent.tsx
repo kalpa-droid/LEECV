@@ -282,7 +282,8 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
           <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-panel)] relative overflow-hidden">
             <div
               ref={sheetRef}
-              className={`flex-1 w-full max-w-4xl overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-card)] rounded-[${radius.card}] ${elevationSystem.floating}`}
+              style={{ borderRadius: radius.card }}
+              className={`flex-1 w-full max-w-4xl overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-card)] ${elevationSystem.floating}`}
             >
               {pdfElement ? (
                 <VectorDocViewer

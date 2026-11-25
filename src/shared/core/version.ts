@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 9,
+  minor: 10,
   patch: 0,
-  label: 'V3.9.0',
+  label: 'V3.10.0',
   lastUpdated: '2026-11-24',
   lastAgent: '@antigravity',
-  stage: 'feat(editor-lee): V3.9.0 — Motor Editorial Pro PR 2: 12 formatos en 3 grupos, normas APA 7/Chicago/MLA exactas (25.4 mm y 36 pt), 7 estilos bibliográficos con cursivas y tabulación IEEE/Vancouver, auditor preflight antes de exportar y controles editoriales completos en estudio.',
+  stage: 'feat(platform): V3.10.0 — Suite de 5 apps con Carta y Tarjeta gratis en CV, blindaje IA Pro/Fast, billetera de créditos con Pases Permanentes y 30 días, guardado local+Drive sin miedos, sala de equipo EditorLee y panel Admin automatizado con Telegram.',
 } as const;
