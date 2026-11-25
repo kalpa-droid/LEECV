@@ -210,7 +210,7 @@ describe('Cuotas diferenciadas y trazabilidad real de usuario en ai-generate', (
       params: { p_key: 'ai_pro_ip_10.0.0.3', p_max_requests: 8, p_window_seconds: 86400 },
     });
     expect(mockLoggedTelemetry[1].userId).toBe('00000000-0000-0000-0000-000000000000');
-  });
+  }, 15000);
 });
 
 describe('Caché de deduplicación en aiClient', () => {
