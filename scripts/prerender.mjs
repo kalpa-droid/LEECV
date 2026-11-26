@@ -84,27 +84,31 @@ for (const route of ROUTES) {
   
   document.head.appendChild(script);
 
-  // Inyectar contenido en el body para accesibilidad
+  // Inyectar contenido semántico accesible oculto visualmente (evita parpadeo inicial antes de hidratar React)
   const root = document.getElementById('root');
   if (root) {
+    root.innerHTML = '';
     const contentDiv = document.createElement('div');
     contentDiv.id = 'prerendered-content';
-    // Hide it from visual view if needed, but it will be replaced by React on hydration
-    // Actually better to just wrap it in a visually hidden class, but React will wipe #root
-    // So if it's inside #root, React replaces it.
+    contentDiv.setAttribute(
+      'style',
+      'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;',
+    );
     let contentHtml = '';
     if (typeof meta.content === 'string') {
-      contentHtml = `<p>${meta.content}</p>`;
+      const trimmed = meta.content.trimStart();
+      contentHtml = trimmed.startsWith('<') ? meta.content : `<p>${meta.content}</p>`;
     } else if (Array.isArray(meta.content)) {
       contentHtml = meta.content.map(p => {
-        if(p.startsWith('<h')) return p;
+        const trimmed = String(p || '').trimStart();
+        if (trimmed.startsWith('<')) return p;
         return `<p>${p}</p>`;
       }).join('');
     }
     let headingHtml = `<h1>${meta.title}</h1>`;
     const contentStartsWithH1 =
       (typeof meta.content === 'string' && meta.content.trimStart().startsWith('<h1')) ||
-      (Array.isArray(meta.content) && meta.content.some(p => p.trimStart().startsWith('<h1')));
+      (Array.isArray(meta.content) && meta.content.some(p => String(p || '').trimStart().startsWith('<h1')));
     if (contentStartsWithH1) headingHtml = '';
     contentDiv.innerHTML = headingHtml + contentHtml;
     root.appendChild(contentDiv);

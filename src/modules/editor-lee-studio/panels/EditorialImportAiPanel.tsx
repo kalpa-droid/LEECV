@@ -33,6 +33,17 @@ interface EditorialImportAiPanelProps {
   onExportPDF?: () => void;
 }
 
+function coerceEditorialMetaString(val: unknown): string {
+  if (typeof val === 'string') return val.trim();
+  if (Array.isArray(val)) {
+    return val
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean)
+      .join(', ');
+  }
+  return '';
+}
+
 export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
   draft,
   updateDraft,
@@ -68,22 +79,28 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     getEditorialPreset(draft?.design?.presetId || '') || DEFAULT_EDITORIAL_PRESET;
 
   const runInstantPresetCheck = async (text: string, fileName?: string) => {
-    const activePresetId = (draft?.design?.presetId as EditorialPresetId) || DEFAULT_EDITORIAL_PRESET.id;
-    const rec = await detectEditorialPresetForText({
-      fullText: text,
-      currentPresetId: activePresetId,
-      fileName,
-    });
-    if (rec && rec.recommendedPresetId !== activePresetId) {
-      setPresetRecommendation(rec);
-      emitLidioMessage({
-        kind: 'state',
-        groupKey: 'editorial-preset-recommend',
-        title: `Detectamos: ${rec.detectedLabel}`,
-        body: `Tu editor está en "${currentPreset.shortLabel}". Te recomendamos cambiar a "${rec.detectedLabel}" arriba en el panel.`,
+    try {
+      const activePresetId = (draft?.design?.presetId as EditorialPresetId) || DEFAULT_EDITORIAL_PRESET.id;
+      const rec = await detectEditorialPresetForText({
+        fullText: text,
+        currentPresetId: activePresetId,
+        fileName,
       });
-    } else {
-      setPresetRecommendation(null);
+      if (rec && rec.recommendedPresetId !== activePresetId) {
+        const safeLabel = coerceEditorialMetaString(rec.detectedLabel) || 'Obra detectada';
+        const safeReason = coerceEditorialMetaString(rec.reason);
+        setPresetRecommendation({ ...rec, detectedLabel: safeLabel, reason: safeReason });
+        emitLidioMessage({
+          kind: 'state',
+          groupKey: 'editorial-preset-recommend',
+          title: `Detectamos: ${safeLabel}`,
+          body: `Tu editor está en "${currentPreset.shortLabel}". Te recomendamos cambiar a "${safeLabel}" arriba en el panel.`,
+        });
+      } else {
+        setPresetRecommendation(null);
+      }
+    } catch {
+      // No interrumpir nunca el flujo principal si falla la recomendación opcional
     }
   };
 
@@ -198,16 +215,19 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
       });
       firstSectionId = normalizedSections[0]?.id || '';
 
-      const currentTitle = String(draft?.metadata?.title || '').trim();
+      const currentTitle = coerceEditorialMetaString(draft?.metadata?.title);
       const isDefaultTitle = !currentTitle || currentTitle === 'Mi obra' || currentTitle === 'Sin título';
+      const aiTitle = coerceEditorialMetaString(result.metadata?.title);
+      const aiSubtitle = coerceEditorialMetaString(result.metadata?.subtitle);
+      const aiAuthor = coerceEditorialMetaString(result.metadata?.author);
 
       setPendingReview({
         sections: normalizedSections,
         mergeMode,
         metadata: {
-          title: (isDefaultTitle && result.metadata?.title) ? result.metadata.title : currentTitle,
-          subtitle: result.metadata?.subtitle || draft?.metadata?.subtitle || '',
-          author: result.metadata?.author || draft?.metadata?.author || '',
+          title: isDefaultTitle && aiTitle ? aiTitle : currentTitle,
+          subtitle: aiSubtitle || coerceEditorialMetaString(draft?.metadata?.subtitle),
+          author: aiAuthor || coerceEditorialMetaString(draft?.metadata?.author),
         },
       });
 
@@ -287,8 +307,8 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
         )}
 
         {presetRecommendation && (
-          <div className="p-3.5 rounded-xl border-2 border-[var(--color-accent-base)] bg-[var(--ui-bg-surface)] space-y-2.5">
-            <div className="space-y-1 bg-[var(--ui-bg-surface)]">
+          <div className="p-3.5 rounded-xl border-2 border-[var(--color-accent-base)] bg-[var(--ui-bg-card)] space-y-2.5">
+            <div className="space-y-1 bg-[var(--ui-bg-card)]">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[10px] font-bold uppercase">
                 <Sparkles className="w-3 h-3" />
                 Sugerencia de tipo de obra
@@ -347,8 +367,12 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
           <Field
             as="textarea"
             rows={7}
+            maxLength={null}
             value={manuscriptText}
-            onChange={(e: any) => setManuscriptText(e.target.value)}
+            onChange={(e: any) => {
+              setManuscriptText(e.target.value);
+              setRichBlocks(undefined);
+            }}
             placeholder="Pegá aquí tu manuscrito completo (hasta libros o tesis largas sin recortar texto)..."
           />
 

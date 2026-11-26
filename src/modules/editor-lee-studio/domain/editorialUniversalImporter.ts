@@ -91,8 +91,10 @@ async function runVisionOcrOnImage(
     temperature: 0.1,
   });
 
-  const heading = res.data?.detectedHeading?.trim();
-  const body = (res.data?.extractedText || '').trim();
+  const heading =
+    typeof res.data?.detectedHeading === 'string' ? res.data.detectedHeading.trim() : '';
+  const body =
+    typeof res.data?.extractedText === 'string' ? res.data.extractedText.trim() : '';
   if (!body) return heading ? `# ${heading}` : '';
   return heading && !body.startsWith(heading) ? `# ${heading}\n\n${body}` : body;
 }
@@ -316,18 +318,10 @@ export async function structureManuscriptInChunks(params: {
 }): Promise<StructureResult> {
   const { fullText, richBlocks, presetId, onProgress, onPartialSections, signal } = params;
 
-  // Vía determinística Zero-Loss cuando el Word trae bloques OOXML reales con encabezados, tablas, gráficos o cajas
+  // Vía determinística Zero-Loss cuando el Word trae encabezados de estructura OOXML reales (Heading 1/2)
   if (
     richBlocks &&
-    richBlocks.some(
-      (b) =>
-        b.kind === 'heading' ||
-        b.kind === 'table' ||
-        b.kind === 'image' ||
-        b.kind === 'callout' ||
-        b.kind === 'poem' ||
-        b.kind === 'figure_placeholder',
-    )
+    richBlocks.some((b) => b.kind === 'heading' && typeof b.text === 'string' && b.text.trim().length > 0)
   ) {
     const richSections = buildSectionsFromDocxRichBlocks(richBlocks);
     if (richSections.length > 0) {
@@ -356,6 +350,7 @@ export async function structureManuscriptInChunks(params: {
   let sectionsAcc: EditorialSection[] = [];
   let detectedMetadata: StructureResult['metadata'] | undefined;
   let fallbackCount = 0;
+  let aiQuotaExhausted = false;
 
   for (let idx = 0; idx < chunks.length; idx++) {
     if (signal?.aborted) break;
@@ -373,6 +368,16 @@ export async function structureManuscriptInChunks(params: {
           : `Detectando capítulos y secciones (parte ${idx + 1} de ${chunks.length})...`,
     });
 
+    if (aiQuotaExhausted) {
+      fallbackCount++;
+      sectionsAcc = mergeEditorialChunkedSections(
+        sectionsAcc,
+        heuristicSplitManuscript(chunks[idx]),
+      );
+      onPartialSections?.(sectionsAcc, detectedMetadata);
+      continue;
+    }
+
     try {
       const res = await executeAiTask<{
         sections: StructuredChunkSectionInput[];
@@ -386,7 +391,7 @@ export async function structureManuscriptInChunks(params: {
           totalChunks: chunks.length,
           previousSectionTitle,
         },
-        maxTokens: 4000,
+        maxTokens: 8192,
         temperature: 0.15,
       });
 
@@ -397,7 +402,7 @@ export async function structureManuscriptInChunks(params: {
       const incomingSections = Array.isArray(res.data?.sections) ? res.data.sections : [];
       const inputChars = countNonWhitespaceChars(chunks[idx]);
       const outputChars = countSectionRecordsChars(incomingSections);
-      const retainedEnough = incomingSections.length > 0 && outputChars >= inputChars * 0.98;
+      const retainedEnough = incomingSections.length > 0 && outputChars >= inputChars * 0.90;
 
       if (retainedEnough) {
         sectionsAcc = mergeEditorialChunkedSections(sectionsAcc, incomingSections);
@@ -408,7 +413,11 @@ export async function structureManuscriptInChunks(params: {
           heuristicSplitManuscript(chunks[idx]),
         );
       }
-    } catch {
+    } catch (err: any) {
+      const msg = String(err?.message || '');
+      if (/429|cuota|límite diario|rate.?limit/i.test(msg)) {
+        aiQuotaExhausted = true;
+      }
       fallbackCount++;
       sectionsAcc = mergeEditorialChunkedSections(
         sectionsAcc,

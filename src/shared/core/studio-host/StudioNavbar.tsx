@@ -359,19 +359,10 @@ export function StudioNavbar({
           })}
         </div>
 
-        {/* ZONA 4: Ver hoja (solo móvil con panel abierto) + Archivo 📁💾 + Cuenta & Tema 👤 */}
+        {/* ZONA 4: Archivo 📁💾 + Cuenta & Tema 👤 (el cierre de paneles vive en StudioDock) */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          {isPanelOpen && typeof onCloseMobilePanel === 'function' && (
-            <button
-              type="button"
-              onClick={onCloseMobilePanel}
-              title="Ver vista previa del documento"
-              aria-label="Ver vista previa"
-              className="md:hidden flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[11px] font-black transition active:scale-95 cursor-pointer shrink-0"
-            >
-              <DomSectionIcon iconId={UI_ICON_IDS.preview} className="w-3.5 h-3.5 shrink-0" />
-              <span>Ver</span>
-            </button>
+          {false && isPanelOpen && typeof onCloseMobilePanel === 'function' && (
+            <button type="button" onClick={onCloseMobilePanel} className="hidden" />
           )}
 
           {/* MENÚ DE ARCHIVO Y EXPORTACIÓN */}
@@ -387,10 +378,12 @@ export function StudioNavbar({
               aria-label="Archivo y exportación"
             >
               <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)] shrink-0" />
-              <DomSectionIcon
-                iconId={UI_ICON_IDS.guardar}
-                className="w-4 h-4 text-[var(--color-accent-purple-bright)] shrink-0"
-              />
+              <span className="hidden sm:inline-flex shrink-0">
+                <DomSectionIcon
+                  iconId={UI_ICON_IDS.guardar}
+                  className="w-4 h-4 text-[var(--color-accent-purple-bright)] shrink-0"
+                />
+              </span>
               {backupHealth && (
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${

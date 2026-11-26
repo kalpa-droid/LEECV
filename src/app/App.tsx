@@ -206,7 +206,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Editor...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">Cargando Editor…</div>}>
       <CvWorkspaceContent
         currentRoute={currentRoute} cvData={cvData} setCvData={setCvData}
         globalUiTheme={globalUiTheme} cycleUITheme={cycleUITheme}
@@ -261,7 +261,7 @@ export default function App() {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (currentRoute === '/') {
-      document.title = 'LEECV — Creador de Currículum Vitae listo para imprimir';
+      document.title = 'LEECV — CV, Tesis, Libros, FacturLee y Agendas en tu navegador';
       return;
     }
     if (isKnownAppRoute(currentRoute) && !currentRoute.startsWith('/blog') && !currentRoute.startsWith('/cv/')) {
@@ -280,18 +280,18 @@ export default function App() {
     <ConfirmProvider>
       <CVProvider>
         {currentRoute.startsWith('/blog') ? (
-          <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">Cargando Blog…</div>}>
             <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={navigateTo} />
           </Suspense>
         ) : currentRoute === '/' ? (
-          <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">Cargando LEECV…</div>}>
             <LandingPage onNavigate={navigateTo} onOpenLogin={() => setIsLandingLoginOpen(true)} />
             {isLandingLoginOpen && (
               <LoginModal isOpen={isLandingLoginOpen} onClose={() => setIsLandingLoginOpen(false)} onSuccess={() => { setIsLandingLoginOpen(false); navigateTo('/crear-cv'); }} />
             )}
           </Suspense>
         ) : currentRoute.startsWith('/cv/') ? (
-          <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando página de rol...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">Cargando página de rol…</div>}>
             <JobRoleLandingPage />
           </Suspense>
         ) : (

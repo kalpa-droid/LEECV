@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 10,
-  patch: 0,
-  label: 'V3.10.0',
-  lastUpdated: '2026-11-24',
+  patch: 1,
+  label: 'V3.10.1',
+  lastUpdated: '2026-11-26',
   lastAgent: '@antigravity',
-  stage: 'feat(platform): V3.10.0 — Suite de 5 apps con Carta y Tarjeta gratis en CV, blindaje IA Pro/Fast, billetera de créditos con Pases Permanentes y 30 días, guardado local+Drive sin miedos, sala de equipo EditorLee y panel Admin automatizado con Telegram.',
+  stage: 'fix(platform): V3.10.1 — Arranque limpio sin salto de página en index.html/prerender, blindaje anti-pantalla blanca en análisis IA de EditorLee y VectorDocViewer virtualizado, y barra superior móvil sin botón Ver redundante ni numeración en FacturLee.',
 } as const;

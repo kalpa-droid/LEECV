@@ -58,12 +58,28 @@ export async function apiFetch<T = any>(
     const response = await fetch(endpoint, config);
     let data: any = null;
 
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    const contentType = response.headers.get('content-type') || '';
+    const isJsonContent = contentType.includes('application/json');
+    if (isJsonContent) {
       data = await response.json();
     } else {
       const text = await response.text();
-      data = text ? { message: text } : null;
+      const looksLikeHtml = /^\s*<(?:!doctype|html)\b/i.test(text || '');
+      if (response.ok && looksLikeHtml && endpoint.startsWith('/api/')) {
+        return {
+          ok: false,
+          status: 502,
+          data: null,
+          error: 'El servicio no respondió en formato JSON válido. Intentá de nuevo en unos segundos.',
+        };
+      }
+      data = text
+        ? {
+            message: looksLikeHtml
+              ? `Error temporal del servidor (${response.status}). Intentá de nuevo en unos segundos.`
+              : text,
+          }
+        : null;
     }
 
     if (!response.ok) {

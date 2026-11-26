@@ -95,7 +95,7 @@ export function resolveCanonicalEditorialKey(section: Partial<EditorialSection>)
   const directKey = typeof section.sectionKey === 'string' && section.sectionKey ? section.sectionKey : '';
   if (directKey) {
     if (PRELIM_KEYS.has(directKey)) return { sectionKey: directKey, category: section.category || 'preliminares' };
-    if (directKey === 'anexo' || directKey in CIERRE_SHORT_BADGE) {
+    if (directKey === 'anexo' || Object.prototype.hasOwnProperty.call(CIERRE_SHORT_BADGE, directKey)) {
       return { sectionKey: directKey, category: section.category || 'cierre' };
     }
     return { sectionKey: directKey, category: section.category || 'cuerpo' };
@@ -106,7 +106,7 @@ export function resolveCanonicalEditorialKey(section: Partial<EditorialSection>)
   if (idMatch && idMatch[1]) {
     const key = idMatch[1];
     if (PRELIM_KEYS.has(key)) return { sectionKey: key, category: section.category || 'preliminares' };
-    if (key === 'anexo' || key in CIERRE_SHORT_BADGE) {
+    if (key === 'anexo' || Object.prototype.hasOwnProperty.call(CIERRE_SHORT_BADGE, key)) {
       return { sectionKey: key, category: section.category || 'cierre' };
     }
     return { sectionKey: key, category: section.category || 'cuerpo' };
@@ -184,7 +184,7 @@ export function resolveSectionBadgeLabel(
     return { badgeLabel: letter, sectionKey, category };
   }
 
-  if (sectionKey in CIERRE_SHORT_BADGE) {
+  if (Object.prototype.hasOwnProperty.call(CIERRE_SHORT_BADGE, sectionKey)) {
     return { badgeLabel: CIERRE_SHORT_BADGE[sectionKey], sectionKey, category };
   }
 

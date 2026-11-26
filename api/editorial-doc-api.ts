@@ -177,7 +177,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
   if (!rateLimitOk) return;
 
-  const action = (req.query.action as string) || req.body?.action;
+  const rawAction = req.query?.action ?? req.body?.action;
+  const action = typeof rawAction === 'string' ? rawAction.trim() : '';
+  if (!action) {
+    return errorResponse(res, 400, 'Falta parámetro action.');
+  }
 
   if (action === 'parse-docx' || action === 'parse-document') {
     try {
@@ -261,9 +265,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           for (const rec of section.records) {
             const content = rec.content || '';
             if (rec.type === 'table' && ((rec.tableHeaders?.length || 0) > 0 || (rec.tableRows?.length || 0) > 0)) {
+              const safeHeaders = Array.isArray(rec.tableHeaders)
+                ? rec.tableHeaders.map((h: unknown) => String(h ?? ''))
+                : [];
+              const safeRows = Array.isArray(rec.tableRows)
+                ? rec.tableRows
+                    .filter((r: unknown): r is unknown[] => Array.isArray(r))
+                    .map((r) => r.map((c) => String(c ?? '')))
+                : [];
               const allRows: string[][] = [
-                ...(Array.isArray(rec.tableHeaders) && rec.tableHeaders.length > 0 ? [rec.tableHeaders] : []),
-                ...(Array.isArray(rec.tableRows) ? rec.tableRows : []),
+                ...(safeHeaders.length > 0 ? [safeHeaders] : []),
+                ...safeRows,
               ];
               if (allRows.length > 0) {
                 docChildren.push(

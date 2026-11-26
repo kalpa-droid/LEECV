@@ -93,7 +93,7 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
         cvData={cvData}
         setCvData={setCvData}
         fieldName="hardSkills"
-        emptyItem="Nueva Habilidad Técnica"
+        emptyItem={{ name: '', level: '' }}
         itemTitlePrefix="Habilidad"
         getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Habilidad #${idx + 1}`)}
         renderItem={(item: any, idx: number) => {
@@ -109,7 +109,8 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
                     const val = e.target.value;
                     setCvData((prev: any) => {
                       const current = [...(Array.isArray(prev.hardSkills) ? prev.hardSkills : [])];
-                      current[idx] = { ...current[idx], name: val, level };
+                      const prevObj = typeof current[idx] === 'object' && current[idx] !== null ? current[idx] : {};
+                      current[idx] = { ...prevObj, name: val, level };
                       return { ...prev, hardSkills: current };
                     });
                   }}
@@ -126,7 +127,8 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
                     const val = e.target.value;
                     setCvData((prev: any) => {
                       const current = [...(Array.isArray(prev.hardSkills) ? prev.hardSkills : [])];
-                      current[idx] = { ...current[idx], name, level: val };
+                      const prevObj = typeof current[idx] === 'object' && current[idx] !== null ? current[idx] : {};
+                      current[idx] = { ...prevObj, name, level: val };
                       return { ...prev, hardSkills: current };
                     });
                   }}

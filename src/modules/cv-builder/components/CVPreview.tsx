@@ -83,7 +83,15 @@ export default function CVPreview({
   const sections = useMemo(() => cvDataToContentSections(debouncedCvData), [debouncedCvData]);
 
   useEffect(() => {
-    buildCardDataFromCV(debouncedCvData).then(setCardData);
+    let active = true;
+    buildCardDataFromCV(debouncedCvData)
+      .then((built) => {
+        if (active) setCardData(built);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, [debouncedCvData]);
 
   const dynamicThemeStyle = useMemo(() => ({
@@ -106,7 +114,7 @@ export default function CVPreview({
         />
       );
     }
-    if (activePreset.pageCategory === 'tarjeta') {
+    if (activePreset.pageCategory === 'tarjeta' && cardData) {
       return <CardSheetDocument card={cardData} preset={activePreset} />;
     }
     if (activePreset.pageCategory === 'carta') {

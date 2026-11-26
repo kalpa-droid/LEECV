@@ -53,7 +53,8 @@ export function ClassifyItemModal({
       return;
     }
 
-    const { type, extractedFields } = result;
+    const type = result.type;
+    const extractedFields = result.extractedFields || {};
 
     setCvData((prev: any) => {
       // Map AI types to our CVData arrays
@@ -176,10 +177,10 @@ export function ClassifyItemModal({
                   <CheckCircle2 className="w-4 h-4" /> Detectado como: <span className="uppercase">{result.type}</span>
                 </p>
                 <div className="text-xs text-[var(--ui-text-secondary)] space-y-1 bg-[var(--ui-bg-card)] p-3 rounded border border-[var(--ui-border)]">
-                  {result.extractedFields.title && <p><strong>Título:</strong> {result.extractedFields.title}</p>}
-                  {result.extractedFields.subtitle && <p><strong>Subtítulo/Institución:</strong> {result.extractedFields.subtitle}</p>}
-                  {result.extractedFields.dateRange && <p><strong>Fechas:</strong> {result.extractedFields.dateRange}</p>}
-                  {result.extractedFields.description && <p><strong>Descripción:</strong> {result.extractedFields.description}</p>}
+                  {result.extractedFields?.title && <p><strong>Título:</strong> {String(result.extractedFields.title)}</p>}
+                  {result.extractedFields?.subtitle && <p><strong>Subtítulo/Institución:</strong> {String(result.extractedFields.subtitle)}</p>}
+                  {result.extractedFields?.dateRange && <p><strong>Fechas:</strong> {String(result.extractedFields.dateRange)}</p>}
+                  {result.extractedFields?.description && <p><strong>Descripción:</strong> {String(result.extractedFields.description)}</p>}
                 </div>
               </div>
             )}

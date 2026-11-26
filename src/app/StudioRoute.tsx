@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { getActiveTabId, OpenTab } from '../shared/core/documents/tabStore';
+import { ErrorBoundary } from '../shared/core/ui/ErrorBoundary';
 import type { DocumentTypeId } from '../types/document';
 import type { AppRuntimeEntry } from './appRegistry';
 
@@ -61,7 +62,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
 
   if (entry.autoCreateBlankTabOnRouteEnter && !activeTab) {
     return (
-      <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">
+      <div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">
         {entry.loadingLabel}
       </div>
     );
@@ -72,42 +73,44 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
 
   return (
     <>
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">
-            {entry.loadingLabel}
-          </div>
-        }
-      >
-        <StudioComponent
-          currentUiTheme={globalUiTheme}
-          onBackToHome={onBackToHome}
-          documentTabs={tabs}
-          activeTabId={activeTabId}
-          onSelectTab={(id) => onSelectTab(id, entry.id)}
-          onCloseTab={(id) => {
-            const tab = tabs.find((t) => t.id === id || t.cvId === id);
-            onCloseTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
-          }}
-          onNavigateToDocument={onNavigateToDocument}
-          onTabsChanged={onTabsChanged}
-          onNewDocument={onNewDocument}
-          onNewCV={() => onNewDocument('cv')}
-          onNewCard={() => onNewDocument('business_card')}
-          onNewBook={() => onNewDocument('book')}
-          onNewCoverLetter={() => onNewDocument('cover_letter')}
-          onNewPlanner={() => onNewDocument('planner')}
-          onNewInvoice={() => onNewDocument('invoice')}
-          onNewEditorial={() => onNewDocument('editorial')}
-          cycleUITheme={cycleUITheme}
-          onOpenSavedCVsModal={onOpenSavedCVsModal}
-          onOpenSaveAsModal={onOpenSaveAsModal}
-          onOpenJsonDownloadModal={onOpenJsonDownloadModal}
-          onOpenCreditsModal={onOpenCreditsModal}
-          onOpenShareAppModal={onOpenShareAppModal}
-          onOpenPrivacy={onOpenPrivacy}
-        />
-      </Suspense>
+      <ErrorBoundary resetKey={`${entry.id}_${activeTabId}`}>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] text-sm font-semibold">
+              {entry.loadingLabel}
+            </div>
+          }
+        >
+          <StudioComponent
+            currentUiTheme={globalUiTheme}
+            onBackToHome={onBackToHome}
+            documentTabs={tabs}
+            activeTabId={activeTabId}
+            onSelectTab={(id) => onSelectTab(id, entry.id)}
+            onCloseTab={(id) => {
+              const tab = tabs.find((t) => t.id === id || t.cvId === id);
+              onCloseTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+            }}
+            onNavigateToDocument={onNavigateToDocument}
+            onTabsChanged={onTabsChanged}
+            onNewDocument={onNewDocument}
+            onNewCV={() => onNewDocument('cv')}
+            onNewCard={() => onNewDocument('business_card')}
+            onNewBook={() => onNewDocument('book')}
+            onNewCoverLetter={() => onNewDocument('cover_letter')}
+            onNewPlanner={() => onNewDocument('planner')}
+            onNewInvoice={() => onNewDocument('invoice')}
+            onNewEditorial={() => onNewDocument('editorial')}
+            cycleUITheme={cycleUITheme}
+            onOpenSavedCVsModal={onOpenSavedCVsModal}
+            onOpenSaveAsModal={onOpenSaveAsModal}
+            onOpenJsonDownloadModal={onOpenJsonDownloadModal}
+            onOpenCreditsModal={onOpenCreditsModal}
+            onOpenShareAppModal={onOpenShareAppModal}
+            onOpenPrivacy={onOpenPrivacy}
+          />
+        </Suspense>
+      </ErrorBoundary>
       {modalsSlot}
     </>
   );

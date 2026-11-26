@@ -49,12 +49,12 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
-      <ErrorBoundary>
+      <ErrorBoundary resetKey={pathname}>
         <AuthProvider>
           <ToastProvider>
             <Suspense fallback={
-              <div className="min-h-screen bg-[var(--ui-preview-bg)] text-white flex items-center justify-center font-bold">
-                Cargando LEECV...
+              <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] flex items-center justify-center text-sm font-semibold">
+                Cargando LEECV…
               </div>
             }>
               <RootComponent />

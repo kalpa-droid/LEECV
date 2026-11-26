@@ -152,7 +152,11 @@ export function countNonWhitespaceChars(text: string): number {
 export function countSectionRecordsChars(sections: StructuredChunkSectionInput[]): number {
   let total = 0;
   for (const sec of sections) {
-    if (!sec || !Array.isArray(sec.records)) continue;
+    if (!sec) continue;
+    if (typeof sec.title === 'string') {
+      total += countNonWhitespaceChars(sec.title);
+    }
+    if (!Array.isArray(sec.records)) continue;
     for (const rec of sec.records) {
       const txt =
         (typeof rec?.content === 'string' && rec.content) ||
@@ -160,6 +164,9 @@ export function countSectionRecordsChars(sections: StructuredChunkSectionInput[]
         (typeof (rec as any)?.body === 'string' && (rec as any).body) ||
         '';
       total += countNonWhitespaceChars(txt);
+      if (typeof rec?.quoteAttribution === 'string') {
+        total += countNonWhitespaceChars(rec.quoteAttribution);
+      }
     }
   }
   return total;

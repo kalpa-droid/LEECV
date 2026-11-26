@@ -158,7 +158,16 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
     const docChanged = lastDocKeyRef.current !== docKey; // otro tamaño de hoja: zoom manual descartado
     lastDocKeyRef.current = docKey;
 
+    let wasHidden = container.clientWidth <= 0;
     const onResize = () => {
+      const isNowVisible = container.clientWidth > 0;
+      if (wasHidden && isNowVisible) {
+        wasHidden = false;
+        userZoomRef.current = 1;
+        fitWithRetry(true, true);
+        return;
+      }
+      wasHidden = !isNowVisible;
       const auto = Math.abs(userZoomRef.current - 1) < 0.005;
       fitWithRetry(false, auto);
     };
