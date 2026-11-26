@@ -1,3 +1,41 @@
+## [2026-11-26] - PR #172 (V3.11.0): EditorLee — Motor Editorial Integral: Doble Faz / Simple Faz, Capítulos en Hoja Aparte / Página Impar, Presets Informes/Proyectos y Exportación Word (.docx) con Márgenes Simétricos
+
+**Commit en `main`:** `cfcc533e8c85db88fd42379c65a283b78539e1d8`
+
+**Resumen:**
+- **Modelo Editorial, Paginación y Páginas Blancas de Cortesía (`editorialTypes.ts`, `editorialPaginationEngine.ts`)**:
+  - Incorporados modos de impresión `simplex` (simple faz) y `duplex` (doble faz), modos de inicio de capítulo (`continuous`, `next_page`, `odd_page`), y resolución en cascada (`resolveEffectiveEditorialPagination`, `resolveSectionEffectiveStartNewPage`).
+  - Motor puro `computePaginationWithCourtesyBlanks`: en simplex garantiza 0 hojas blancas residuales; en duplex inserta página blanca de cortesía limpia únicamente si una sección con `odd_page` caería en página par física.
+- **Nuevos Presets Canónicos para Informes y Proyectos (`editorialSectionCatalog.ts`, `editorialPresetCatalog.ts`, `capabilityRegistry.ts`, `editorialDockEngine.ts`)**:
+  - Creados presets de fábrica `informe-proyecto` y `proyecto-tecnico` con A4, margen de encuadernación interior de 30 mm, pie de página "Página X de Y" e inicio en hoja aparte por defecto.
+  - 8 nuevas secciones canónicas (`resumen_ejecutivo`, `introduccion`, `metodologia`, `resultados_discusion`, `cronograma`, `presupuesto_recursos`, `conclusiones`, `anexos_apendices`) con íconos dedicados sin colisiones.
+- **Motor PDF de 2 Pasadas con Márgenes Simétricos en Páginas Pares (`EditorialPdfDocument.tsx`, `editorialTwoPassRenderer.ts`)**:
+  - Integración de dimensiones físicas exactas vía `getPageSize(design.paperSize)`.
+  - Agrupación fluida contigua para secciones que no inician en hoja aparte (`continuous`), intercalado de páginas blancas de cortesía con numeración transparente, y traslación física de márgenes en páginas pares vía `pdf-lib` para encuadernación simétrica real.
+- **Exportación Word (.docx) Integral con Márgenes Simétricos (`editorialDocxExporter.ts`, `EditorLeeStudioContent.tsx`)**:
+  - Exportador OOXML nativo con carga dinámica de librerías (`docx` y `jszip`), inyección de `<w:mirrorMargins/>`, encabezados y pies diferenciados par/impar, numeración dinámica y saltos de página/sección respetando el flujo de impresión.
+- **UI de Controles Globales (Estándar Cero Ruido V3.2) (`StudioNavbar.tsx`, `EditorialPrintFlowModal.tsx`, `EditorialGlobalNormModal.tsx`, `editorialNormEngine.ts`)**:
+  - Tres píldoras globales en la barra superior (`Formato`, `Impresión`, `Normas`), modal dedicado `EditorialPrintFlowModal` para elegir Simple Faz / Doble Faz y salto de capítulos sin cálculos manuales, y selectores en los paneles de sección.
+- **Verificación:** Suite `tests/editorial/v3110EditorialPaginationAndDocx.test.ts` (5/5), `npm run check-all` en 0 errores en local, GitHub Actions (`1m42s`) y Vercel Preview antes del merge.
+
+---
+
+## [2026-11-26] - PR #170 (V3.10.1): Arranque Limpio sin Flash en leecv.app, Blindaje contra Pantalla Blanca en IA y Optimización de Barra Superior Móvil
+
+**Commit en `main`:** `f5a22f4ce1372a64fe5b0abecf5b912978bffb60`
+
+**Resumen:**
+- **Eliminación del Flash en Carga y Prerenderizado (`index.html`, `scripts/prerender.mjs`, `App.tsx`, `AtsAuditHeroWidget.tsx`)**:
+  - Corrección del markup estático prerenderizado para reflejar la identidad visual exacta de LEECV, eliminando el parpadeo de estilos durante la hidratación de React y unificando el widget de auditoría ATS.
+- **Blindaje contra Pantalla Blanca en Importación y Análisis IA (`imageCompressor.ts`, `localAssetStore.ts`, `VectorDocViewer.tsx`)**:
+  - Corrección de desbordamiento de memoria y cuotas de almacenamiento en activos locales, reemplazo de colores hex sueltos por RGB para cumplimiento de tokens de diseño, y manejo robusto de excepciones en el visor de documentos vectoriales para evitar caídas catastróficas de la aplicación.
+- **Optimización de Barra Superior Móvil (Estándar Cero Ruido V3.2) (`StudioNavbar.tsx`, `FacturadorStudioContent.tsx`)**:
+  - Removido el botón redundante "Ver" en la barra superior en dispositivos móviles cuando los paneles están desplegados (manteniendo únicamente el botón de colapso de paneles).
+  - Removida la exhibición del número largo de factura en la píldora superior de FacturLee para priorizar espacio para píldoras globales.
+- **Verificación:** Suite `tests/v3101BootStabilityAndMobileTopbar.test.ts` (3/3), `npm run check-all` en 0 errores en local, GitHub Actions y Vercel Preview antes del merge.
+
+---
+
 ## [2026-11-25] - PR #168 (V3.10.0): Monetización Modular sin Suscripción Forzosa, Blindaje IA Pro/Ágil, Respaldo Google Drive, Sala de Equipo EditorLee y Admin con Telegram
 
 **Commit en `main`:** `13e0d741245f53e077a68c565a368932b8cd41d1`
