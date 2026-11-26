@@ -38,10 +38,14 @@ export const geminiProvider: AiProviderDefinition = {
         ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
       };
 
-      // thinkingConfig solo en modelos 3.8 (no lite ni 2.5-pro con thinkingLevel)
+      // thinkingConfig: LOW en 3.8 y presupuesto acotado en 2.5-pro para no truncar salidas JSON largas
       if (currentModel.includes('3.8')) {
         generationConfig.thinkingConfig = {
           thinkingLevel: 'LOW'
+        };
+      } else if (currentModel.includes('2.5-pro')) {
+        generationConfig.thinkingConfig = {
+          thinkingBudget: 1024
         };
       }
 

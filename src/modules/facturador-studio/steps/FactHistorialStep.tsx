@@ -32,11 +32,11 @@ export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({
   onOpenHistorical,
 }) => {
   const [query, setQuery] = useState('');
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
 
   const comprobantes = useMemo(
     () =>
-      [...vault.comprobantes]
+      [...(Array.isArray(vault?.comprobantes) ? vault.comprobantes : [])]
         .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''))
         .filter((comp) =>
           matchesSearchQuery(
@@ -45,7 +45,7 @@ export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({
               comp.numero,
               comp.cliente?.nombre,
               comp.cliente?.cuit,
-              ...comp.items.map((it) => `${it.nombre || ''} ${it.descripcion}`),
+              ...(Array.isArray(comp.items) ? comp.items.map((it) => `${it.nombre || ''} ${it.descripcion || ''}`) : []),
             ],
             query,
             3,

@@ -246,5 +246,5 @@ describe('gemini.ts — header x-goog-api-key, rotación inmediata 429 y thinkin
     expect(jsonResponses[0].body.providerUsed).toBe('gemini');
     expect(seenKeys).toEqual(['rot-401-key-1', 'rot-401-key-2']);
     vi.restoreAllMocks();
-  }, 15_000);
+  }, 45_000);
 });

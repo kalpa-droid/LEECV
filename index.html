@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#FFFFFF" />
 
-    <!-- Polyfill de compatibilidad temprana para interceptores de extensiones de navegador -->
+    <!-- Polyfill de compatibilidad temprana + tema inicial sin parpadeo -->
     <script>
       (function() {
         try {
@@ -23,6 +23,25 @@
               enumerable: true
             });
           }
+        } catch (e) {}
+        try {
+          var t = localStorage.getItem('leecv_ui_theme_global') || localStorage.getItem('cv_ui_theme_preference') || 'day';
+          var map = {
+            day: ['#F1F5F9', '#0F172A', '#FFFFFF', 'default'],
+            default: ['#F1F5F9', '#0F172A', '#FFFFFF', 'default'],
+            night: ['#111827', '#F8FAFC', '#111827', 'dark'],
+            dark: ['#111827', '#F8FAFC', '#111827', 'dark'],
+            teal_ocean: ['#0C2135', '#E8F4F8', '#0C2135', 'teal_ocean'],
+            ink: ['#26262E', '#F0F0F4', '#26262E', 'ink']
+          };
+          var cfg = map[t] || map.day;
+          var root = document.documentElement;
+          root.setAttribute('data-ui-theme', cfg[3]);
+          root.style.setProperty('--ui-bg-panel', cfg[0]);
+          root.style.setProperty('--ui-text-primary', cfg[1]);
+          root.style.backgroundColor = cfg[0];
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', cfg[2]);
         } catch (e) {}
       })();
     </script>
@@ -116,8 +135,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
   </head>
-  <body>
-    <div id="root">
+  <body style="margin:0;background-color:var(--ui-bg-panel,#F1F5F9);color:var(--ui-text-primary,#0F172A);">
+    <div id="root"></div>
+    <noscript>
       <main style="max-width:960px;margin:0 auto;padding:32px 20px;font-family:Inter,system-ui,sans-serif;color:#0f172a;line-height:1.5;">
         <p style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6d28d9;margin:0 0 8px;">LEECV · 5 herramientas gratuitas al editar</p>
         <h1 style="font-size:32px;font-weight:900;margin:0 0 12px;">Creá tu CV, tesis, libros, agendas o presupuestos en minutos</h1>
@@ -130,7 +150,7 @@
           <a href="/crear-agenda" style="padding:10px 16px;border-radius:10px;background:#f1f5f9;color:#0f172a;font-weight:700;text-decoration:none;">Agendas y Planificadores Anuales</a>
         </nav>
       </main>
-    </div>
+    </noscript>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>

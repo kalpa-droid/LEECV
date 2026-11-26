@@ -114,7 +114,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   
   const { consumeCreditIfNeeded } = useExportEntitlement('planner');
 
-  const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
+  const plannerId = useMemo(
+    () => resolveDocumentIdWithHandoff(activeTabId, 'planner'),
+    [activeTabId],
+  );
 
   // Cargar el borrador guardado (IndexedDB/Supabase, vía loadDocumentById) si existe.
   // Sin esto, useDraftAutosave escribe pero nadie lee de vuelta: cerrar y reabrir
@@ -124,7 +127,13 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     loadPlannerById(plannerId).then((saved) => {
       if (cancelled || !saved) return;
       const { id: _id, doc_type_id: _dt, updated_at: _u, isProvisional: _ip, ...restored } = saved;
-      setData((prev) => ({ ...prev, ...restored }));
+      setData((prev) => ({
+        ...prev,
+        ...restored,
+        theme: restored.theme && typeof restored.theme === 'object' ? { ...prev.theme, ...restored.theme } : prev.theme,
+        modules: restored.modules && typeof restored.modules === 'object' ? { ...prev.modules, ...restored.modules } : prev.modules,
+        monthOverrides: restored.monthOverrides && typeof restored.monthOverrides === 'object' ? restored.monthOverrides : prev.monthOverrides,
+      }));
       if (saved.selectedPresetId) setSelectedPresetId(saved.selectedPresetId);
     }).catch(() => {
       // Sin borrador guardado todavía (agenda nueva) — se sigue con el estado en blanco.

@@ -206,6 +206,14 @@ function sanitizeRecord(raw: unknown, sectionId: string, index: number): Record<
   const sanitizedCalloutItems = Array.isArray(raw.calloutItems)
     ? raw.calloutItems.filter((item: unknown): item is string => typeof item === 'string')
     : undefined;
+  const sanitizedTableHeaders = Array.isArray(raw.tableHeaders)
+    ? raw.tableHeaders.map((h: unknown) => (h === null || h === undefined ? '' : String(h)))
+    : undefined;
+  const sanitizedTableRows = Array.isArray(raw.tableRows)
+    ? raw.tableRows
+        .filter((row: unknown): row is unknown[] => Array.isArray(row))
+        .map((row) => row.map((cell) => (cell === null || cell === undefined ? '' : String(cell))))
+    : undefined;
 
   return {
     ...raw,
@@ -214,6 +222,8 @@ function sanitizeRecord(raw: unknown, sectionId: string, index: number): Record<
     content: typeof raw.content === 'string' ? raw.content : '',
     ...(typeof raw.calloutTitle === 'string' ? { calloutTitle: raw.calloutTitle } : {}),
     ...(sanitizedCalloutItems ? { calloutItems: sanitizedCalloutItems } : {}),
+    ...(sanitizedTableHeaders ? { tableHeaders: sanitizedTableHeaders } : {}),
+    ...(sanitizedTableRows ? { tableRows: sanitizedTableRows } : {}),
     ...(sanitizedFootnotes ? { footnotes: sanitizedFootnotes } : {}),
     ...(typeof raw.preserveLineBreaks === 'boolean' ? { preserveLineBreaks: raw.preserveLineBreaks } : {}),
     ...(typeof raw.keepTogether === 'boolean' ? { keepTogether: raw.keepTogether } : {}),

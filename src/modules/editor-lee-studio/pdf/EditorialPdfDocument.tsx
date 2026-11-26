@@ -566,7 +566,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               }}
             >
               <View style={{ width: imgWidthPt }}>
-                {record.imagePath ? (
+                {record.imagePath && !record.imagePath.startsWith('asset://') ? (
                   <Image style={{ width: '100%', objectFit: 'contain' }} src={record.imagePath} />
                 ) : null}
                 {record.imageCaption ? (
@@ -790,7 +790,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
         case 'image':
           elements.push(
             <View key={key} wrap={false} style={{ alignItems: 'center', marginVertical: 10 }}>
-              {record.imagePath ? (
+              {record.imagePath && !record.imagePath.startsWith('asset://') ? (
                 <Image
                   style={{ maxWidth: Math.min(380, colUsableWidthPt), maxHeight: 260, objectFit: 'contain' }}
                   src={record.imagePath}

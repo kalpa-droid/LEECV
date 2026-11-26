@@ -159,8 +159,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const systemPrompt = taskDef.buildSystemPrompt(cvContext, payload, formatContext);
-  const userPrompt = taskDef.buildUserPrompt(payload);
+  const safePayload = payload && typeof payload === 'object' ? payload : {};
+  let systemPrompt = '';
+  let userPrompt = '';
+  try {
+    systemPrompt = taskDef.buildSystemPrompt(cvContext, safePayload, formatContext);
+    userPrompt = taskDef.buildUserPrompt(safePayload);
+  } catch (promptErr: any) {
+    return errorResponse(res, 400, promptErr?.message || 'Datos insuficientes para construir la consulta de IA.');
+  }
 
   const validImages = Array.isArray(payload?.images)
     ? payload.images

@@ -591,7 +591,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
               {
                 id: 'fact_emisor_pill',
                 shortLabel: empresa.razonSocial?.trim() || 'Tu negocio',
-                mobileLabel: empresa.razonSocial?.trim() ? empresa.razonSocial.trim().slice(0, 12) : 'Negocio',
+                mobileLabel: empresa.razonSocial?.trim() ? empresa.razonSocial.trim().slice(0, 9) : 'Negocio',
                 tooltip: 'Configurar datos de tu negocio, CUIT y logo',
                 icon: <Store className="w-3.5 h-3.5 shrink-0" />,
                 onClick: () => setIsEmisorModalOpen(true),
@@ -599,7 +599,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
               {
                 id: 'fact_cliente_pill',
                 shortLabel: draft.cliente?.nombre?.trim() || 'Consumidor Final',
-                mobileLabel: draft.cliente?.nombre?.trim() ? draft.cliente.nombre.trim().slice(0, 12) : 'Cliente',
+                mobileLabel: draft.cliente?.nombre?.trim() ? draft.cliente.nombre.trim().slice(0, 9) : 'Cliente',
                 tooltip: 'Elegir cliente guardado o crear uno nuevo para este comprobante',
                 icon: <UserRound className="w-3.5 h-3.5 shrink-0" />,
                 onClick: () => setIsClientModalOpen(true),
@@ -615,9 +615,19 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
                         ? 'Remito'
                         : draft.tipo === 'recibo'
                           ? 'Recibo'
+                          : 'Factura'
+                } ${draft.letra}`,
+                mobileLabel: `${
+                  draft.tipo === 'presupuesto'
+                    ? 'Presup.'
+                    : draft.tipo === 'nota_credito'
+                      ? 'NC'
+                      : draft.tipo === 'remito'
+                        ? 'Remito'
+                        : draft.tipo === 'recibo'
+                          ? 'Recibo'
                           : 'Fact.'
-                } ${draft.letra} · ${formatPointOfSale(draft.puntoVenta)}-${formatCompNro(draft.numero)}`,
-                mobileLabel: `${draft.letra} · #${Number.parseInt(draft.numero || '1', 10) || 1}`,
+                } ${draft.letra}`,
                 tooltip: 'Cambiar tipo de comprobante, letra (A/B/C/X/R) o numeración',
                 icon: <Hash className="w-3.5 h-3.5 shrink-0" />,
                 hasOverrides: isManuallyOverridden(draft, 'voucherType') || isManuallyOverridden(draft, 'numero'),
@@ -628,6 +638,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
               {
                 id: 'fact_new_action',
                 label: 'Nuevo',
+                mobileLabel: 'Nuevo',
                 tooltip: 'Iniciar un comprobante nuevo limpio',
                 tone: 'neutral',
                 icon: <FilePlus2 className="w-3.5 h-3.5 shrink-0" />,
@@ -636,6 +647,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
               {
                 id: 'fact_save_action',
                 label: draft.readonlyHistorical ? 'Reimprimir' : 'Guardar',
+                mobileLabel: draft.readonlyHistorical ? 'PDF' : 'Guardar',
                 tooltip: draft.readonlyHistorical ? 'Descargar PDF del comprobante emitido' : 'Guardar comprobante actual en el historial',
                 tone: 'success',
                 icon: <Save className="w-3.5 h-3.5 shrink-0" />,

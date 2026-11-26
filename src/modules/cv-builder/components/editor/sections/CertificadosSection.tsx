@@ -201,22 +201,22 @@ export const CertificadosSection = ({ cvData, setCvData, registeredItems }: any)
           {/* 4. List of Attached Certificates */}
           <div className="pt-3 border-t-2 border-[var(--color-neutral-border)] space-y-3">
             <span className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase tracking-wider">
-              ANEXADOS: ({cvData.certificatesScanned.length})
+              ANEXADOS: ({Array.isArray(cvData?.certificatesScanned) ? cvData.certificatesScanned.length : 0})
             </span>
 
-            {cvData.certificatesScanned.length === 0 ? (
-              <p className={`text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}] bg-[var(--ui-bg-card)]`}>
+            {!Array.isArray(cvData?.certificatesScanned) || cvData.certificatesScanned.length === 0 ? (
+              <p className="text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-[12px] bg-[var(--ui-bg-card)]">
                 No hay certificados anexados aún.
               </p>
             ) : (
               <div className="space-y-2">
                 {cvData.certificatesScanned.map((cert: any) => (
-                  <div key={cert.id} className={`flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
+                  <div key={cert.id} className={`flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-[12px] border-2 border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
                     <img 
                       src={cert.dataUrl || cert.imageUrl} 
                       alt={cert.title} 
                       style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                      className={`w-12 h-14 object-cover rounded-[${radius.control}] border border-[var(--color-neutral-border)] flex-shrink-0`} 
+                      className="w-12 h-14 object-cover rounded-[10px] border border-[var(--color-neutral-border)] flex-shrink-0" 
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-[var(--color-neutral-text-primary)] truncate">{cert.title}</p>
@@ -228,12 +228,12 @@ export const CertificadosSection = ({ cvData, setCvData, registeredItems }: any)
                       onClick={() => {
                         setCvData((prev: any) => ({
                           ...prev,
-                          certificatesScanned: prev.certificatesScanned.map((c: any) => 
+                          certificatesScanned: (Array.isArray(prev?.certificatesScanned) ? prev.certificatesScanned : []).map((c: any) => 
                             c.id === cert.id ? { ...c, rotation: ((c.rotation || 0) + 90) % 360 } : c
                           )
                         }));
                       }}
-                      className={`flex items-center gap-1 px-2 py-1.5 rounded-[${radius.control}] bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition`}
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-[10px] bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition"
                       title="Girar imagen 90°"
                     >
                       <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />

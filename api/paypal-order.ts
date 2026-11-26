@@ -94,31 +94,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     if (!rateOk) return;
 
-    const { orderId } = req.body || {};
-    if (!orderId) return errorResponse(res, 400, 'Falta orderId');
+    const rawOrderId = req.body?.orderId;
+    const orderId = typeof rawOrderId === 'string' ? rawOrderId.trim() : '';
+    if (!orderId || !/^[A-Z0-9_-]{6,64}$/i.test(orderId)) {
+      return errorResponse(res, 400, 'Falta orderId válido');
+    }
 
     const env = (process.env.PAYPAL_ENV || 'live').toLowerCase();
     const baseUrl = env === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
     const auth64 = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
 
-    const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
-      method: 'POST',
-      headers: { Authorization: `Basic ${auth64}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'grant_type=client_credentials',
-    });
+    let tokenData: any;
+    let captureRes: Response;
+    let captureData: any;
+    try {
+      const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: { Authorization: `Basic ${auth64}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'grant_type=client_credentials',
+      });
 
-    if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      return errorResponse(res, 500, `Error de autenticación con PayPal: ${errText}`);
+      if (!tokenRes.ok) {
+        return errorResponse(res, 502, 'Error de autenticación con PayPal');
+      }
+
+      tokenData = await tokenRes.json();
+
+      captureRes = await fetch(`${baseUrl}/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tokenData.access_token}`, 'Content-Type': 'application/json' },
+      });
+      captureData = await captureRes.json().catch(() => ({}));
+    } catch (err: any) {
+      return errorResponse(res, 502, err?.message || 'Error de red al capturar orden de PayPal');
     }
-
-    const tokenData: any = await tokenRes.json();
-
-    const captureRes = await fetch(`${baseUrl}/v2/checkout/orders/${orderId}/capture`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${tokenData.access_token}`, 'Content-Type': 'application/json' },
-    });
-    const captureData: any = await captureRes.json();
 
     if (!captureRes.ok) {
       // Captura repetida (doble clic / refresh del retorno): no es un error de

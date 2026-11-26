@@ -687,9 +687,16 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
         if (mediaFile) {
           const b64 = await mediaFile.async('base64');
           const mime = guessMimeFromPath(targetPath);
+          let dataUrl = `data:${mime};base64,${b64}`;
+          if (mime === 'image/webp' || mime === 'image/gif') {
+            try {
+              const { ensurePdfCompatibleImageDataUrl } = await import('../../../shared/core/utils/imageCompressor');
+              dataUrl = await ensurePdfCompatibleImageDataUrl(dataUrl);
+            } catch {}
+          }
           blocks.push({
             kind: 'image',
-            imageDataUrl: `data:${mime};base64,${b64}`,
+            imageDataUrl: dataUrl,
             imageCaption: '',
           });
           stats.images++;
@@ -860,13 +867,16 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
       }
 
       const structured = parseCalloutParagraphsToStructured(boxParts);
+      const itemsList = Array.isArray(structured.calloutItems) ? structured.calloutItems : [];
+      const totalBoxChars =
+        structured.text.length + itemsList.reduce((acc, it) => acc + it.length, 0);
       blocks.push({
         kind: 'callout',
         calloutTitle: structured.calloutTitle,
         calloutItems: structured.calloutItems,
         calloutVariant: structured.calloutVariant,
         text: structured.text,
-        keepTogether: structured.text.length < 700,
+        keepTogether: totalBoxChars < 450 && itemsList.length <= 5,
       });
       markdownLines.push(boxParts.join('\n'));
       stats.callouts++;
@@ -952,13 +962,16 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
           // Tabla de 1 sola columna (ej. Resguardo ético Ley 26.061 o CAJA didáctica en recuadro)
           const cellParagraphs = matrix.flat().filter(Boolean);
           const structured = parseCalloutParagraphsToStructured(cellParagraphs);
+          const itemsList = Array.isArray(structured.calloutItems) ? structured.calloutItems : [];
+          const totalBoxChars =
+            structured.text.length + itemsList.reduce((acc, it) => acc + it.length, 0);
           blocks.push({
             kind: 'callout',
             calloutTitle: structured.calloutTitle,
             calloutItems: structured.calloutItems,
             calloutVariant: structured.calloutVariant,
             text: structured.text,
-            keepTogether: structured.text.length < 750,
+            keepTogether: totalBoxChars < 450 && itemsList.length <= 5,
           });
           markdownLines.push(cellParagraphs.join('\n'));
           stats.callouts++;

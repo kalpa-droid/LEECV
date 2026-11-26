@@ -229,22 +229,30 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     setFocusedAnchorId(activeStepTab);
   }, [activeStepTab]);
 
-  // Precarga de fuentes TTF Unicode locales (Tinos / Arimo) sin afectar el bundle inicial
+  // Precarga de fuentes TTF Unicode locales (Tinos / Arimo) solo cuando cambia la familia o el preset
   const [fontsReadyTick, setFontsReadyTick] = useState<number>(0);
   const activeFontFamily =
     debouncedDraft?.design?.typography?.fontFamily || DEFAULT_EDITORIAL_PRESET.typography.fontFamily;
+  const lastLoadedFontKeyRef = useRef<string>('');
   useEffect(() => {
+    const fontKey = `${activeFontFamily}::${preset}`;
+    if (lastLoadedFontKeyRef.current === fontKey) return;
     let active = true;
     void import('./pdf/editorialTwoPassRenderer')
-      .then(({ ensureEditorialFontsReady }) => ensureEditorialFontsReady(debouncedDraft, preset))
+      .then(({ ensureEditorialFontsReady }) =>
+        ensureEditorialFontsReady({ design: { typography: { fontFamily: activeFontFamily }, presetId: preset } }, preset),
+      )
       .then(() => {
-        if (active) setFontsReadyTick((n) => n + 1);
+        if (active) {
+          lastLoadedFontKeyRef.current = fontKey;
+          setFontsReadyTick((n) => n + 1);
+        }
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, [activeFontFamily, preset, debouncedDraft]);
+  }, [activeFontFamily, preset]);
 
   // Índice exacto en dos pasadas sobre la vista previa real de pdfjs-dist
   const [resolvedTocState, setResolvedTocState] = useState<{
@@ -781,6 +789,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               {
                 id: 'editorial_preset',
                 shortLabel: pillLabels.presetShort,
+                mobileLabel: pillLabels.presetShort,
                 tooltip: pillLabels.presetTooltip,
                 ariaLabel: `Tipo de obra: ${pillLabels.presetShort}`,
                 iconId: PRODUCT_ICON_IDS.editor,
@@ -789,6 +798,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               {
                 id: 'editorial_norm',
                 shortLabel: pillLabels.normShort,
+                mobileLabel: pillLabels.normShort,
                 tooltip: pillLabels.normTooltip,
                 ariaLabel: `Norma visual: ${pillLabels.normShort}`,
                 iconId: UI_ICON_IDS.editorialNorm,
@@ -798,6 +808,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               {
                 id: 'editorial_bibliography',
                 shortLabel: pillLabels.bibShort,
+                mobileLabel: pillLabels.bibShort.replace(/^Citas:\s*/i, ''),
                 tooltip: pillLabels.bibTooltip,
                 ariaLabel: `Estilo de citas: ${pillLabels.bibShort}`,
                 iconId: UI_ICON_IDS.editorialCitations,
@@ -812,6 +823,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               {
                 id: 'editorial_team_room',
                 label: activeTeamRoom ? 'Equipo en Vivo' : 'Equipo (10)',
+                mobileLabel: activeTeamRoom ? 'En Vivo' : 'Equipo',
                 tooltip: 'Sala de Equipo en vivo hasta 10 personas en EditorLee',
                 icon: <Users className="w-3.5 h-3.5 shrink-0" />,
                 tone: activeTeamRoom ? 'success' : 'secondary',
@@ -836,6 +848,12 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           />
         }
         panelSlot={
+          <ErrorBoundary
+            compact
+            resetKey={`${editorialId}_${activeStepTab}`}
+            title="Inconveniente en este panel"
+            subtitle="Ocurrió un problema temporal al mostrar esta sección. Tus capítulos y textos están resguardados."
+          >
           <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
             {activeTeamRoom && (
               <div
@@ -999,6 +1017,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               </button>
             </div>
           </div>
+          </ErrorBoundary>
         }
         mainSlot={
           <div className="w-full flex flex-col items-start justify-start print-wrapper relative touch-pan-x touch-pan-y">

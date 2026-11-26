@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { isTextLayerCoherent } from '../../../shared/core/cv-import/textCoherenceHeuristic';
-import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 
 export default function AtsAuditHeroWidget() {
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'done'>('idle');
@@ -13,14 +12,16 @@ export default function AtsAuditHeroWidget() {
     setStatus('analyzing');
     setFindings([]);
 
+    let pdfDoc: any = null;
     try {
+      const { ensurePdfjsWorkerConfigured } = await import('../../../shared/core/pdf-engine/pdfjsWorkerSetup');
       const pdfjsLib = ensurePdfjsWorkerConfigured();
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+      pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
 
       let rawText = '';
-      for (let i = 1; i <= Math.min(pdf.numPages, 2); i++) {
-        const page = await pdf.getPage(i);
+      for (let i = 1; i <= Math.min(pdfDoc.numPages, 2); i++) {
+        const page = await pdfDoc.getPage(i);
         const content = await page.getTextContent();
         rawText += content.items.map((item: any) => item.str).join(' ') + ' ';
       }
@@ -51,6 +52,10 @@ export default function AtsAuditHeroWidget() {
       setScore(0);
       setFindings(['No se pudo leer la capa de texto del archivo.']);
       setStatus('done');
+    } finally {
+      try {
+        await pdfDoc?.destroy?.();
+      } catch {}
     }
   }, []);
 
@@ -87,7 +92,7 @@ export default function AtsAuditHeroWidget() {
       {status === 'done' && (
         <div className="mt-4">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-full h-4 bg-[var(--ui-bg-base)] rounded-full overflow-hidden">
+            <div className="w-full h-4 bg-[var(--ui-bg-panel)] rounded-full overflow-hidden">
               <div className="h-full bg-[var(--color-accent-base)] transition-all" style={{ width: `${score}%` }} />
             </div>
             <span className="text-sm font-bold text-[var(--ui-text-primary)] min-w-[3ch]">{score}</span>

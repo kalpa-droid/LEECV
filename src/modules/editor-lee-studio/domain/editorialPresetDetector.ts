@@ -257,15 +257,23 @@ export async function detectEditorialPresetForText(params: {
           return null;
         }
         const presetMeta = getEditorialPreset(d.recommendedPresetId);
+        const safeDetectedLabel =
+          typeof d.detectedLabel === 'string' && d.detectedLabel.trim()
+            ? d.detectedLabel.trim()
+            : presetMeta?.shortLabel || 'Obra detectada';
+        const safeReason =
+          typeof d.reason === 'string' && d.reason.trim()
+            ? d.reason.trim()
+            : heuristic.reason;
         return {
           currentPresetId,
           recommendedPresetId: d.recommendedPresetId,
-          recommendedPresetLabel: presetMeta?.label || d.detectedLabel || d.recommendedPresetId,
+          recommendedPresetLabel: presetMeta?.label || safeDetectedLabel || d.recommendedPresetId,
           recommendedStructuralNormId: d.recommendedStructuralNormId || presetMeta?.structuralNormId || 'libre',
           recommendedBibliographyStyle: d.recommendedBibliographyStyle || presetMeta?.bibliographyStyle || 'tradicional',
           confidence: d.confidence,
-          detectedLabel: d.detectedLabel || presetMeta?.shortLabel || 'Obra detectada',
-          reason: d.reason || heuristic.reason,
+          detectedLabel: safeDetectedLabel,
+          reason: safeReason,
           source: 'ai',
         };
       }

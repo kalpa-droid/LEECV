@@ -285,10 +285,12 @@ export const EditorialCalloutBlock: React.FC<{
   const theme = getCalloutTheme(record.calloutVariant);
   const bodySize = Math.max(9.5, baseFontSize - 0.5);
   const items = Array.isArray(record.calloutItems) ? record.calloutItems.filter(Boolean) : [];
+  const totalCalloutChars =
+    (record.content?.length || 0) + items.reduce((acc, it) => acc + String(it || '').length, 0);
+  const fitsSinglePageSafely = totalCalloutChars <= 480 && items.length <= 5;
   const shouldKeepTogether =
-    record.keepTogether !== undefined
-      ? record.keepTogether
-      : (record.content?.length || 0) < 700 && items.length <= 6;
+    fitsSinglePageSafely &&
+    (record.keepTogether !== undefined ? record.keepTogether : true);
 
   return (
     <View
@@ -393,8 +395,14 @@ export const EditorialTableBlock: React.FC<{
   sectionColumns = 1,
   accentColor = '#1E293B',
 }) => {
-  const rawHeaders = Array.isArray(record.tableHeaders) ? record.tableHeaders : [];
-  const rawRows = Array.isArray(record.tableRows) ? record.tableRows : [];
+  const rawHeaders = Array.isArray(record.tableHeaders)
+    ? record.tableHeaders.map((h) => String(h ?? ''))
+    : [];
+  const rawRows = Array.isArray(record.tableRows)
+    ? record.tableRows
+        .filter((r) => Array.isArray(r))
+        .map((r) => r.map((c) => String(c ?? '')))
+    : [];
   const hasExplicitHeader = record.tableHasHeaderRow !== false;
 
   const normalizedRows = hasExplicitHeader
@@ -407,7 +415,22 @@ export const EditorialTableBlock: React.FC<{
     ? rawHeaders
     : rawHeaders.map((_, idx) => `Columna ${idx + 1}`);
 
-  if (headerLabels.length === 0 && normalizedRows.length === 0) return null;
+  if (headerLabels.length === 0 && normalizedRows.length === 0) {
+    if (record.content && record.content.trim()) {
+      return (
+        <View style={{ marginVertical: 6 }}>
+          <EditorialRichText
+            text={record.content}
+            fontStyles={fontStyles}
+            isUnicodeFont={isUnicodeFont}
+            preserveLineBreaks={true}
+            style={{ fontSize: baseFontSize, lineHeight: 1.4, color: '#1E293B' }}
+          />
+        </View>
+      );
+    }
+    return null;
+  }
 
   const autoLayout = computeOptimalTableLayout(headerLabels, normalizedRows, {
     sectionColumns,
@@ -490,10 +513,12 @@ export const EditorialTableBlock: React.FC<{
           </View>
         ) : null}
 
-        {normalizedRows.map((row, ri) => (
+        {normalizedRows.map((row, ri) => {
+          const maxCellLen = row.reduce((m, c) => Math.max(m, String(c ?? '').length), 0);
+          return (
           <View
             key={`tr-${ri}`}
-            wrap={false}
+            wrap={maxCellLen <= 260 ? false : undefined}
             style={{
               flexDirection: 'row',
               backgroundColor: ri % 2 === 1 ? '#F8FAFC' : '#FFFFFF',
@@ -529,7 +554,8 @@ export const EditorialTableBlock: React.FC<{
               );
             })}
           </View>
-        ))}
+          );
+        })}
       </View>
     </View>
   );
@@ -729,6 +755,9 @@ export const EditorialFootnoteListBlock: React.FC<{
 
 export const EditorialBlockPrimitives: React.FC = () => (
   <View style={{ padding: 12 }}>
-    <PdfImage style={{ width: 1, height: 1 }} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" />
+    <PdfImage
+      style={{ width: 1, height: 1 }}
+      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    />
   </View>
 );

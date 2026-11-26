@@ -189,16 +189,42 @@ export async function externalizeInlineAssets<T>(docId: string, value: T): Promi
   return value;
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof FileReader === 'undefined') {
+      resolve('');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(blob);
+  });
+}
+
 /**
  * Rehidrata referencias `asset://<hash>` almacenadas en `LocalAssetStore` (con fallback a claves legadas).
+ * Convierte además cualquier `image/webp` o `image/gif` heredada a PNG compatible con `@react-pdf/renderer`,
+ * y limpia referencias `asset://` huérfanas para que nunca lleguen rotas a `<Image src=...>`.
  */
 export async function hydrateInlineAssets<T>(value: T): Promise<T> {
-  if (typeof value === 'string' && value.startsWith('asset://')) {
-    const loaded = await localAssetStore.getAsset(value as LocalAssetUri);
-    if (loaded && typeof loaded.data === 'string') {
-      return loaded.data as unknown as T;
+  if (typeof value === 'string') {
+    let resolvedStr: string = value;
+    if (value.startsWith('asset://')) {
+      const loaded = await localAssetStore.getAsset(value as LocalAssetUri);
+      if (loaded && typeof loaded.data === 'string') {
+        resolvedStr = loaded.data;
+      } else if (loaded && typeof Blob !== 'undefined' && loaded.data instanceof Blob) {
+        resolvedStr = await blobToDataUrl(loaded.data);
+      } else {
+        return value;
+      }
     }
-    return value;
+    if (/^data:image\/(?:webp|gif|bmp)\b/i.test(resolvedStr) && typeof document !== 'undefined') {
+      const { ensurePdfCompatibleImageDataUrl } = await import('../utils/imageCompressor');
+      resolvedStr = await ensurePdfCompatibleImageDataUrl(resolvedStr);
+    }
+    return resolvedStr as unknown as T;
   }
 
   if (Array.isArray(value)) {

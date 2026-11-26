@@ -574,7 +574,7 @@ No inventes datos. Extrae solo lo que está en el texto.`,
   editorial_structure: {
     taskId: 'editorial_structure',
     tier: 'pro',
-    defaultMaxTokens: 4000,
+    defaultMaxTokens: 8192,
     buildSystemPrompt: (_cvContext: string, payload: any) => `Sos un arquitecto editorial experto en libros, novelas, trabajos escolares, monografías, tesis universitarias (APA 7) e informes científicos (IMRyD / Vancouver).
 Recibirás un fragmento o manuscrito completo — incluso texto plano SIN títulos con negrita ni metadatos tipográficos. Tu tarea es detectar y organizar cada bloque lógico en secciones y registros fieles al texto original (NUNCA inventes ni resumas omitiendo contenido).
 
