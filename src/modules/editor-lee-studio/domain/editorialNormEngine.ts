@@ -32,6 +32,7 @@ import {
   DEFAULT_EDITORIAL_PRESET,
   getEditorialPreset,
 } from './editorialPresetCatalog';
+import { resolveEffectiveEditorialPagination } from './editorialPaginationEngine';
 import type {
   EditorialBibliographyStyle,
   EditorialPresetId,
@@ -336,10 +337,17 @@ export function applyEditorialGlobalConfig<T extends Record<string, any>>(
   const syncedSections = syncSectionsBibliographyOrder(baseSections, bibStyle);
 
   const currentCover = draft?.cover || {};
+  const currentDesign = draft?.design || {};
+  const manualOverrides = cascadedFlat.manualOverrides || {};
+  const resolvedPrintSides =
+    manualOverrides.printSides && (currentDesign.printSides === 'simplex' || currentDesign.printSides === 'duplex')
+      ? currentDesign.printSides
+      : preset.printSides;
+
   return {
     ...draft,
     design: {
-      ...(draft?.design || {}),
+      ...currentDesign,
       presetId: preset.id,
       pageSizeId: cascadedFlat.pageSizeId,
       marginTop: cascadedFlat.marginTop,
@@ -350,9 +358,33 @@ export function applyEditorialGlobalConfig<T extends Record<string, any>>(
       structuralNormId,
       normId: legacyNormId,
       bibliographyStyle: bibStyle,
+      printSides: resolvedPrintSides,
+      headersEvenOdd: resolvedPrintSides === 'duplex',
+      chapterBreakMode:
+        manualOverrides.chapterBreakMode && currentDesign.chapterBreakMode
+          ? currentDesign.chapterBreakMode
+          : preset.chapterBreakMode,
+      headerMode:
+        manualOverrides.headerMode && currentDesign.headerMode
+          ? currentDesign.headerMode
+          : preset.headerMode,
+      footerMode:
+        manualOverrides.footerMode && currentDesign.footerMode
+          ? currentDesign.footerMode
+          : preset.footerMode,
+      suppressHeaderOnChapterStart:
+        manualOverrides.suppressHeaderOnChapterStart &&
+        typeof currentDesign.suppressHeaderOnChapterStart === 'boolean'
+          ? currentDesign.suppressHeaderOnChapterStart
+          : preset.suppressHeaderOnChapterStart,
+      preliminaryRomanNumerals:
+        manualOverrides.preliminaryRomanNumerals &&
+        typeof currentDesign.preliminaryRomanNumerals === 'boolean'
+          ? currentDesign.preliminaryRomanNumerals
+          : preset.preliminaryRomanNumerals,
       firstLineIndent: cascadedFlat.firstLineIndent,
       bibliographyHangingIndent: bibStyle !== 'tradicional',
-      manualOverrides: cascadedFlat.manualOverrides,
+      manualOverrides,
       typography: {
         fontFamily: cascadedFlat.fontFamily,
         fontSize: cascadedFlat.fontSize,
@@ -426,7 +458,9 @@ export function formatEditorialPillLabel(draft: any): {
 } {
   const preset = getEditorialPreset(draft?.design?.presetId || '') || DEFAULT_EDITORIAL_PRESET;
   const structuralNorm = resolveStructuralNormFromDraft(draft);
-  const bibStyle = normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId);
+  const bibStyle = normalizeBibliographyStyle(
+    draft?.design?.bibliographyStyle || draft?.design?.normId || preset.bibliographyStyle,
+  );
   const bibShortMap: Record<CanonicalCitationStyle, string> = {
     apa7: 'APA 7',
     vancouver: 'Vancouver',
@@ -461,13 +495,21 @@ export interface EditorialThreePillLabels {
   normTooltip: string;
   bibShort: string;
   bibTooltip: string;
+  printFlowShort: string;
+  printFlowMobile: string;
+  printFlowTooltip: string;
+  normsUnifiedShort: string;
+  normsUnifiedMobile: string;
+  normsUnifiedTooltip: string;
 }
 
 export function formatEditorialGlobalPills(draft: any): EditorialThreePillLabels {
   const preset = getEditorialPreset(draft?.design?.presetId || '') || DEFAULT_EDITORIAL_PRESET;
   const structuralNorm = resolveStructuralNormFromDraft(draft);
   const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNorm];
-  const bibStyle = normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId);
+  const bibStyle = normalizeBibliographyStyle(
+    draft?.design?.bibliographyStyle || draft?.design?.normId || preset.bibliographyStyle,
+  );
   const bibGuide = BIBLIOGRAPHY_NORM_GUIDES[bibStyle];
   const bibShortMap: Record<CanonicalCitationStyle, string> = {
     apa7: 'APA 7',
@@ -479,7 +521,40 @@ export function formatEditorialGlobalPills(draft: any): EditorialThreePillLabels
     tradicional: 'Libre',
   };
 
+  const pagination = resolveEffectiveEditorialPagination(draft);
+  const sidesShort = pagination.printSides === 'duplex' ? '2 caras' : '1 cara';
+  const breakShort =
+    pagination.effectiveChapterBreakMode === 'odd_page'
+      ? 'Cap. impar'
+      : pagination.effectiveChapterBreakMode === 'next_page'
+        ? 'Hoja aparte'
+        : 'Seguido';
+  const printFlowShort = `${sidesShort} · ${breakShort}`;
+  const printFlowMobile =
+    pagination.printSides === 'duplex'
+      ? pagination.effectiveChapterBreakMode === 'odd_page'
+        ? '2 caras · Impar'
+        : '2 caras'
+      : pagination.effectiveChapterBreakMode === 'continuous'
+        ? '1 cara · Seg.'
+        : '1 cara';
+  const printFlowTooltip =
+    pagination.printSides === 'duplex'
+      ? `Impresión doble faz (2 caras) con inicio de capítulos: ${breakShort}. Tocá para cambiar impresión o saltos.`
+      : `Impresión simple faz (1 cara) con inicio de capítulos: ${breakShort}. Tocá para cambiar impresión o saltos.`;
+
   const bibShort = bibShortMap[bibStyle] || 'APA 7';
+  let normsUnifiedShort = normSpec.shortLabel;
+  let normsUnifiedMobile = structuralNorm === 'libre' ? 'Obra' : normSpec.shortLabel;
+
+  if (structuralNorm === 'libre') {
+    normsUnifiedShort = bibStyle === 'tradicional' ? 'Formato obra' : `Obra · ${bibShort}`;
+    normsUnifiedMobile = bibStyle === 'tradicional' ? 'Obra' : bibShort;
+  } else if (bibShort.toLowerCase() !== normSpec.shortLabel.toLowerCase()) {
+    normsUnifiedShort = `${normSpec.shortLabel} · ${bibShort}`;
+    normsUnifiedMobile = bibShort;
+  }
+
   return {
     presetShort: preset.shortLabel,
     presetTooltip: `Tipo de obra: ${preset.label}. Tocá para cambiar la plantilla base.`,
@@ -487,6 +562,12 @@ export function formatEditorialGlobalPills(draft: any): EditorialThreePillLabels
     normTooltip: `Norma visual de página: ${normSpec.label}. Tocá para ajustar márgenes e interlineado globales.`,
     bibShort: `Citas: ${bibShort}`,
     bibTooltip: `Estilo bibliográfico: ${bibGuide.label}. Tocá para cambiar el formato de citas.`,
+    printFlowShort,
+    printFlowMobile,
+    printFlowTooltip,
+    normsUnifiedShort,
+    normsUnifiedMobile,
+    normsUnifiedTooltip: `Estructura: ${normSpec.label} | Citas: ${bibGuide.label}. Tocá para configurar norma visual y bibliografía.`,
   };
 }
 

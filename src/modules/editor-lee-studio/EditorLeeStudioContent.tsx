@@ -18,12 +18,18 @@ import {
   applyEditorialGlobalConfig,
   formatEditorialGlobalPills,
 } from './domain/editorialNormEngine';
-import { countManualOverrides } from '../../shared/core/presets/configCascadeEngine';
+import {
+  areCourtesyMapsEqual,
+  computePaginationWithCourtesyBlanks,
+  resolveEffectiveEditorialPagination,
+} from './domain/editorialPaginationEngine';
+import { countManualOverrides, markManualOverride } from '../../shared/core/presets/configCascadeEngine';
 import { PRODUCT_ICON_IDS, UI_ICON_IDS } from '../../shared/core/ui/iconCatalog';
 import {
   EditorialGlobalAxis,
   EditorialGlobalNormModal,
 } from './ui/EditorialGlobalNormModal';
+import { EditorialPrintFlowModal } from './ui/EditorialPrintFlowModal';
 import { EDITORIAL_PRESETS } from './pdf/editorialPresets';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
@@ -46,7 +52,6 @@ import { EDITORIAL_STEP_SEQUENCE } from './domain/editorialStepSequence';
 import { resolveSectionBadgeLabel } from './domain/editorialDockEngine';
 import {
   areTocMapsEqual,
-  buildResolvedTocPageLabels,
   extractTocAnchorMapFromPageTexts,
 } from './domain/editorialTocResolver';
 import {
@@ -125,6 +130,13 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
       structuralNormId: DEFAULT_EDITORIAL_PRESET.structuralNormId,
       normId: DEFAULT_EDITORIAL_PRESET.normId,
       bibliographyStyle: DEFAULT_EDITORIAL_PRESET.bibliographyStyle,
+      printSides: DEFAULT_EDITORIAL_PRESET.printSides,
+      chapterBreakMode: DEFAULT_EDITORIAL_PRESET.chapterBreakMode,
+      headerMode: DEFAULT_EDITORIAL_PRESET.headerMode,
+      footerMode: DEFAULT_EDITORIAL_PRESET.footerMode,
+      suppressHeaderOnChapterStart: DEFAULT_EDITORIAL_PRESET.suppressHeaderOnChapterStart,
+      preliminaryRomanNumerals: DEFAULT_EDITORIAL_PRESET.preliminaryRomanNumerals,
+      headersEvenOdd: DEFAULT_EDITORIAL_PRESET.printSides === 'duplex',
       firstLineIndent: DEFAULT_EDITORIAL_PRESET.firstLineIndent,
       bibliographyHangingIndent: DEFAULT_EDITORIAL_PRESET.bibliographyHangingIndent,
       manualOverrides: {},
@@ -192,6 +204,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [preflightReport, setPreflightReport] = useState<EditorialPreflightReport | null>(null);
   const [isPreflightOpen, setIsPreflightOpen] = useState<boolean>(false);
   const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
+  const [isPrintFlowModalOpen, setIsPrintFlowModalOpen] = useState<boolean>(false);
+  const pendingExportFormatRef = useRef<'pdf' | 'docx'>('pdf');
 
   const { showSuccess, showError, showInfo } = useToast();
   const { user } = useAuth();
@@ -254,11 +268,12 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     };
   }, [activeFontFamily, preset]);
 
-  // Índice exacto en dos pasadas sobre la vista previa real de pdfjs-dist
+  // Índice exacto y hojas blancas de cortesía en dos pasadas sobre la vista previa real de pdfjs-dist
   const [resolvedTocState, setResolvedTocState] = useState<{
     displayMap: Record<string, string>;
     bodyStartPage: number;
-  }>({ displayMap: {}, bodyStartPage: 1 });
+    courtesyBlankBeforeMap: Record<string, boolean>;
+  }>({ displayMap: {}, bodyStartPage: 1, courtesyBlankBeforeMap: {} });
   const resolvedTocStateRef = useRef(resolvedTocState);
   resolvedTocStateRef.current = resolvedTocState;
   const tocPassCountRef = useRef<number>(0);
@@ -273,18 +288,28 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       if (Object.keys(rawMap).length === 0) return;
 
       const sections = Array.isArray(debouncedDraft?.sections) ? debouncedDraft.sections : [];
-      const usePrelimRoman = debouncedDraft?.design?.preliminaryRomanNumerals !== false;
-      const next = buildResolvedTocPageLabels(sections, rawMap, usePrelimRoman);
-
+      const pagination = resolveEffectiveEditorialPagination(debouncedDraft);
       const prev = resolvedTocStateRef.current;
-      if (areTocMapsEqual(prev.displayMap, next.map) && prev.bodyStartPage === next.bodyStartPage) {
+      const next = computePaginationWithCourtesyBlanks(
+        sections,
+        rawMap,
+        prev.courtesyBlankBeforeMap,
+        pagination,
+      );
+
+      if (
+        areTocMapsEqual(prev.displayMap, next.displayPageMap) &&
+        prev.bodyStartPage === next.bodyStartPage &&
+        areCourtesyMapsEqual(prev.courtesyBlankBeforeMap, next.courtesyBlankBeforeMap)
+      ) {
         return;
       }
-      if (tocPassCountRef.current >= 2) return;
+      if (tocPassCountRef.current >= 3) return;
       tocPassCountRef.current += 1;
       setResolvedTocState({
-        displayMap: next.map,
+        displayMap: next.displayPageMap,
         bodyStartPage: next.bodyStartPage,
+        courtesyBlankBeforeMap: next.courtesyBlankBeforeMap,
       });
     },
     [debouncedDraft],
@@ -531,6 +556,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const handleExportPDF = useCallback(
     async (options?: { skipPreflight?: boolean } | unknown) => {
       if (!draft) return;
+      pendingExportFormatRef.current = 'pdf';
       const skipPreflight = Boolean(
         options &&
           typeof options === 'object' &&
@@ -569,6 +595,53 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       setIsExporting(false);
     },
     [draft, preset, consumeCreditIfNeeded, showSuccess, showError],
+  );
+
+  const handleExportDocx = useCallback(
+    async (options?: { skipPreflight?: boolean } | unknown) => {
+      if (!draft) return;
+      pendingExportFormatRef.current = 'docx';
+      const skipPreflight = Boolean(
+        options &&
+          typeof options === 'object' &&
+          'skipPreflight' in options &&
+          (options as { skipPreflight?: boolean }).skipPreflight === true,
+      );
+
+      if (!skipPreflight) {
+        const report = runEditorialPreflight(draft);
+        if (!report.ok) {
+          setPreflightReport(report);
+          setIsPreflightOpen(true);
+          return;
+        }
+      }
+
+      const allowed = await consumeCreditIfNeeded('editorial');
+      if (!allowed) {
+        setIsCheckoutOpen(true);
+        return;
+      }
+
+      setIsExporting(true);
+      await withErrorHandling(
+        async () => {
+          const { exportEditorialToDocx } = await import('./domain/editorialDocxExporter');
+          const fileName = await exportEditorialToDocx(draft, {
+            resolvedTocMap: resolvedTocStateRef.current.displayMap,
+            courtesyBlankBeforeMap: resolvedTocStateRef.current.courtesyBlankBeforeMap,
+          });
+          showSuccess(`Documento Word guardado (${fileName}).`);
+        },
+        {
+          context: 'Exportación Word EditorLee',
+          errorMessage: 'No pudimos generar el archivo Word (.docx).',
+          notify: (msg) => showError(msg),
+        },
+      );
+      setIsExporting(false);
+    },
+    [draft, consumeCreditIfNeeded, showSuccess, showError],
   );
 
   const handleGoToPreflightIssue = useCallback(
@@ -746,6 +819,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         interactiveAnchors={true}
         resolvedTocMap={resolvedTocState.displayMap}
         bodyStartPage={resolvedTocState.bodyStartPage}
+        courtesyBlankBeforeMap={resolvedTocState.courtesyBlankBeforeMap}
         emitTocAnchors={true}
       />
     ),
@@ -796,23 +870,23 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 onClick: () => setGlobalModalAxis('preset'),
               },
               {
-                id: 'editorial_norm',
-                shortLabel: pillLabels.normShort,
-                mobileLabel: pillLabels.normShort,
-                tooltip: pillLabels.normTooltip,
-                ariaLabel: `Norma visual: ${pillLabels.normShort}`,
-                iconId: UI_ICON_IDS.editorialNorm,
-                hasOverrides: designOverrideCount > 0,
-                onClick: () => setGlobalModalAxis('structural_norm'),
+                id: 'editorial_print_flow',
+                shortLabel: pillLabels.printFlowShort,
+                mobileLabel: pillLabels.printFlowMobile,
+                tooltip: pillLabels.printFlowTooltip,
+                ariaLabel: `Impresión y saltos: ${pillLabels.printFlowShort}`,
+                iconId: UI_ICON_IDS.disenoHoja,
+                onClick: () => setIsPrintFlowModalOpen(true),
               },
               {
-                id: 'editorial_bibliography',
-                shortLabel: pillLabels.bibShort,
-                mobileLabel: pillLabels.bibShort.replace(/^Citas:\s*/i, ''),
-                tooltip: pillLabels.bibTooltip,
-                ariaLabel: `Estilo de citas: ${pillLabels.bibShort}`,
-                iconId: UI_ICON_IDS.editorialCitations,
-                onClick: () => setGlobalModalAxis('bibliography'),
+                id: 'editorial_norms',
+                shortLabel: pillLabels.normsUnifiedShort,
+                mobileLabel: pillLabels.normsUnifiedMobile,
+                tooltip: pillLabels.normsUnifiedTooltip,
+                ariaLabel: `Norma y citas: ${pillLabels.normsUnifiedShort}`,
+                iconId: UI_ICON_IDS.editorialNorm,
+                hasOverrides: designOverrideCount > 0,
+                onClick: () => setGlobalModalAxis('norms'),
               },
             ]}
             zoomLevel={viewport.zoomLevel}
@@ -956,7 +1030,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 draft={draft}
                 updateDraft={updateDraft}
                 setActiveStepTab={setActiveStepTab}
-                onOpenGlobalNormModal={() => setGlobalModalAxis('structural_norm')}
+                onOpenGlobalNormModal={() => setGlobalModalAxis('norms')}
+                onOpenPrintFlowModal={() => setIsPrintFlowModalOpen(true)}
               />
             )}
             {activeStepTab === 'editorial_toc' && (
@@ -964,6 +1039,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 draft={draft}
                 updateDraft={updateDraft}
                 setActiveStepTab={setActiveStepTab}
+                resolvedTocMap={resolvedTocState.displayMap}
               />
             )}
             {activeStepTab === 'editorial_metadata' && (
@@ -1001,20 +1077,30 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               />
             )}
 
-            <div className="flex items-center justify-between gap-2 pt-3 border-t border-[var(--ui-border)]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[var(--ui-border)]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
                 {activeDynamicSection
                   ? `Sección ${activeDynamicSection.badgeLabel}`
                   : `Paso ${activeStepMeta?.stepNumber || 1} de ${EDITORIAL_STEP_SEQUENCE.length}`}
               </span>
-              <button
-                type="button"
-                onClick={handleExportPDF}
-                className="px-3.5 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
-                style={{ borderRadius: radius.control }}
-              >
-                Exportar PDF
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleExportDocx()}
+                  className="px-3 py-2 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
+                  style={{ borderRadius: radius.control }}
+                >
+                  Word (.docx)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportPDF}
+                  className="px-3.5 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
+                  style={{ borderRadius: radius.control }}
+                >
+                  Exportar PDF
+                </button>
+              </div>
             </div>
           </div>
           </ErrorBoundary>
@@ -1077,7 +1163,11 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         docType="editorial"
         onConfirm={() => {
           setIsCheckoutOpen(false);
-          void handleExportPDF({ skipPreflight: true });
+          if (pendingExportFormatRef.current === 'docx') {
+            void handleExportDocx({ skipPreflight: true });
+          } else {
+            void handleExportPDF({ skipPreflight: true });
+          }
         }}
       />
       <EditorialPreflightModal
@@ -1088,7 +1178,11 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         onAutoCleanPunctuation={handleAutoCleanFromPreflight}
         onExportAnyway={() => {
           setIsPreflightOpen(false);
-          void handleExportPDF({ skipPreflight: true });
+          if (pendingExportFormatRef.current === 'docx') {
+            void handleExportDocx({ skipPreflight: true });
+          } else {
+            void handleExportPDF({ skipPreflight: true });
+          }
         }}
       />
       <EditorialGlobalNormModal
@@ -1099,6 +1193,37 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         onApplyGlobalConfig={(params) => {
           updateDraft((prev) => applyEditorialGlobalConfig(prev, params));
           showSuccess('Configuración global aplicada.');
+        }}
+      />
+      <EditorialPrintFlowModal
+        isOpen={isPrintFlowModalOpen}
+        onClose={() => setIsPrintFlowModalOpen(false)}
+        draft={draft}
+        onApplyPrintFlow={({ printSides, chapterBreakMode, breakOnH2 }) => {
+          updateDraft((prev) => {
+            let nextDesign = {
+              ...(prev?.design || {}),
+              printSides,
+              headersEvenOdd: printSides === 'duplex',
+              chapterBreakMode,
+              breakOnH2,
+              ...(printSides === 'duplex' &&
+              (!prev?.design?.headerMode || prev.design.headerMode === 'auto')
+                ? { headerMode: 'mirror_book_chapter' }
+                : {}),
+            };
+            nextDesign = markManualOverride(nextDesign, 'printSides');
+            nextDesign = markManualOverride(nextDesign, 'chapterBreakMode');
+            return {
+              ...prev,
+              design: nextDesign,
+            };
+          });
+          showSuccess(
+            printSides === 'duplex'
+              ? 'Modo doble faz (2 caras) aplicado; recalculando índice.'
+              : 'Modo simple faz (1 cara) aplicado sin páginas en blanco.',
+          );
         }}
       />
       <EditorialTeamModal

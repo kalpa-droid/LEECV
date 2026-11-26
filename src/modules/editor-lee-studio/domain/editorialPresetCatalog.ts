@@ -19,6 +19,10 @@ import {
   EditorialStructuralNormId,
   EditorialBibliographyStyle,
   EditorialSection,
+  EditorialPrintSides,
+  EditorialChapterBreakMode,
+  EditorialHeaderMode,
+  EditorialFooterMode,
 } from './editorialTypes';
 import {
   findEditorialSectionDefinition,
@@ -87,6 +91,20 @@ export interface EditorialPreset {
   };
   firstLineIndent: boolean;
   bibliographyHangingIndent: boolean;
+  /** Modalidad de impresión predeterminada ('simplex' 1 cara vs 'duplex' 2 caras). */
+  printSides: EditorialPrintSides;
+  /** Inicio de cada capítulo/sección ('odd_page' solo efectivo en duplex, 'next_page', 'continuous'). */
+  chapterBreakMode: EditorialChapterBreakMode;
+  /** Modo de encabezado superior por defecto. */
+  headerMode: EditorialHeaderMode;
+  /** Modo de pie de página por defecto. */
+  footerMode: EditorialFooterMode;
+  /** Ocultar encabezado en la página donde inicia cada capítulo/apartado. */
+  suppressHeaderOnChapterStart: boolean;
+  /** Numeración romana en minúsculas (i, ii...) para preliminares. */
+  preliminaryRomanNumerals: boolean;
+  /** Salto automático opcional en subtítulos H2. */
+  breakOnH2?: boolean;
   dockButtons: EditorialPresetDockButtons;
   defaultSections: string[];      // ids de secciones iniciales (del catálogo)
   typography: {
@@ -116,6 +134,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 20, bottom: 20, left: 18, right: 16, gutter: 22 },
     firstLineIndent: true,
     bibliographyHangingIndent: false,
+    printSides: 'duplex',
+    chapterBreakMode: 'odd_page',
+    headerMode: 'mirror_book_chapter',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: true,
     dockButtons: {
       cover: true,
       toc: true,
@@ -145,6 +169,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 20, bottom: 22, left: 18, right: 16, gutter: 22 },
     firstLineIndent: true,
     bibliographyHangingIndent: false,
+    printSides: 'duplex',
+    chapterBreakMode: 'odd_page',
+    headerMode: 'mirror_book_chapter',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: true,
     dockButtons: {
       cover: true,
       toc: true,
@@ -174,6 +204,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: true,
     bibliographyHangingIndent: true,
+    printSides: 'duplex',
+    chapterBreakMode: 'odd_page',
+    headerMode: 'mirror_book_chapter',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: true,
     dockButtons: {
       cover: true,
       toc: true,
@@ -205,6 +241,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: true,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'none',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: false,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -244,6 +286,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: true,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'none',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: false,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -273,6 +321,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: false,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'continuous',
+    headerMode: 'book_title',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -300,7 +354,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     shortLabel: 'Informe',
     audienceTag: 'Ejecutivo',
     label: 'Informe Ejecutivo / Institucional',
-    description: 'Informe profesional con resumen ejecutivo, hallazgos, tablas, conclusiones y anexos.',
+    description: 'Informe listo para entregar (simple faz, margen de carpeta 30 mm, pie Página X de Y y cada sección en hoja nueva).',
     pageSize: 'a4',
     coverMode: 'ejecutiva',
     coverStyleId: 'bold-impact',
@@ -308,9 +362,15 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
-    margins: { top: 20, bottom: 20, left: 22, right: 20, gutter: 20 },
+    margins: { top: 25, bottom: 25, left: 30, right: 20, gutter: 30 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'book_title',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -320,7 +380,15 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
       addSection: true,
       bibliography: false,
     },
-    defaultSections: ['resumen', 'introduccion', 'desarrollo', 'conclusiones', 'anexo'],
+    defaultSections: [
+      'resumen_ejecutivo',
+      'objetivos_alcance',
+      'diagnostico',
+      'resultados',
+      'conclusiones',
+      'recomendaciones',
+      'anexo',
+    ],
     typography: { fontFamily: 'Helvetica', fontSize: 11, lineHeight: 1.45 },
   },
 
@@ -342,6 +410,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 22 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'duplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'mirror_book_chapter',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -371,6 +445,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 18, bottom: 18, left: 20, right: 18, gutter: 20 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'simplex',
+    chapterBreakMode: 'continuous',
+    headerMode: 'book_title',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -400,6 +480,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 16, bottom: 18, left: 16, right: 16, gutter: 18 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'duplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'mirror_book_chapter',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -418,7 +504,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     shortLabel: 'Proyecto',
     audienceTag: 'Ingeniería / Gestión',
     label: 'Proyecto Técnico',
-    description: 'Propuesta con alcance, cronograma tabular, presupuesto, riesgos y anexos técnicos.',
+    description: 'Propuesta integral con objetivos, solución técnica, cronograma, presupuesto, riesgos y anexos.',
     pageSize: 'a4',
     coverMode: 'ejecutiva',
     coverStyleId: 'modern-corporate',
@@ -426,9 +512,15 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'ieee',
-    margins: { top: 20, bottom: 20, left: 22, right: 20, gutter: 22 },
+    margins: { top: 25, bottom: 25, left: 30, right: 20, gutter: 30 },
     firstLineIndent: false,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'book_title',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -438,7 +530,15 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
       addSection: true,
       bibliography: true,
     },
-    defaultSections: ['resumen', 'introduccion', 'metodologia', 'desarrollo', 'conclusiones', 'anexo'],
+    defaultSections: [
+      'resumen_ejecutivo',
+      'objetivos_alcance',
+      'propuesta_tecnica',
+      'cronograma',
+      'presupuesto',
+      'riesgos',
+      'anexo',
+    ],
     typography: { fontFamily: 'Helvetica', fontSize: 11, lineHeight: 1.45 },
   },
   {
@@ -458,6 +558,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 20 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'simplex',
+    chapterBreakMode: 'continuous',
+    headerMode: 'none',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: false,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: false,
       toc: false,
@@ -490,6 +596,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 20, bottom: 20, left: 22, right: 20, gutter: 22 },
     firstLineIndent: false,
     bibliographyHangingIndent: false,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'book_title',
+    footerMode: 'page_x_of_y',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -520,6 +632,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: false,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'book_title',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: true,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -559,6 +677,12 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     margins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4, gutter: 25.4 },
     firstLineIndent: false,
     bibliographyHangingIndent: true,
+    printSides: 'simplex',
+    chapterBreakMode: 'next_page',
+    headerMode: 'none',
+    footerMode: 'folio_only',
+    suppressHeaderOnChapterStart: false,
+    preliminaryRomanNumerals: false,
     dockButtons: {
       cover: true,
       toc: true,
@@ -609,6 +733,7 @@ export function buildInitialSectionsForPreset(presetId: EditorialPresetId): Edit
     result.push({
       ...created,
       id: `ed_${def.id}_${result.length}_${Math.random().toString(36).slice(2, 6)}`,
+      startNewPage: preset.chapterBreakMode !== 'continuous',
       records: [
         {
           id: `rec_seed_${result.length}`,
@@ -631,7 +756,7 @@ export function buildInitialSectionsForPreset(presetId: EditorialPresetId): Edit
 
 /**
  * Aplica un preset sobre un borrador editorial existente:
- * - `'apply-design'`: actualiza tipografía, hoja, márgenes, norma de citas y tapa SIN borrar tus textos actuales.
+ * - `'apply-design'`: actualiza tipografía, hoja, márgenes, citas, impresión y tapa SIN borrar tus textos actuales.
  * - `'replace-structure'`: además reemplaza la lista de secciones por la estructura base del preset.
  */
 export function applyEditorialPresetToDraft<T extends Record<string, any>>(
@@ -668,6 +793,34 @@ export function applyEditorialPresetToDraft<T extends Record<string, any>>(
       structuralNormId: preset.structuralNormId,
       normId: preset.normId,
       bibliographyStyle: preset.bibliographyStyle,
+      printSides:
+        manualOverrides.printSides && (currentDesign.printSides === 'simplex' || currentDesign.printSides === 'duplex')
+          ? currentDesign.printSides
+          : preset.printSides,
+      chapterBreakMode:
+        manualOverrides.chapterBreakMode && currentDesign.chapterBreakMode
+          ? currentDesign.chapterBreakMode
+          : preset.chapterBreakMode,
+      headerMode:
+        manualOverrides.headerMode && currentDesign.headerMode
+          ? currentDesign.headerMode
+          : preset.headerMode,
+      footerMode:
+        manualOverrides.footerMode && currentDesign.footerMode
+          ? currentDesign.footerMode
+          : preset.footerMode,
+      suppressHeaderOnChapterStart:
+        manualOverrides.suppressHeaderOnChapterStart && typeof currentDesign.suppressHeaderOnChapterStart === 'boolean'
+          ? currentDesign.suppressHeaderOnChapterStart
+          : preset.suppressHeaderOnChapterStart,
+      preliminaryRomanNumerals:
+        manualOverrides.preliminaryRomanNumerals && typeof currentDesign.preliminaryRomanNumerals === 'boolean'
+          ? currentDesign.preliminaryRomanNumerals
+          : preset.preliminaryRomanNumerals,
+      headersEvenOdd:
+        (manualOverrides.printSides && currentDesign.printSides
+          ? currentDesign.printSides
+          : preset.printSides) === 'duplex',
       firstLineIndent:
         manualOverrides.firstLineIndent && typeof currentDesign.firstLineIndent === 'boolean'
           ? currentDesign.firstLineIndent

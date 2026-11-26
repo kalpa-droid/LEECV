@@ -24,6 +24,7 @@ const PRELIMINARY_SECTION_KEYS = new Set<string>([
   'prefacio',
   'indice',
   'resumen',
+  'resumen_ejecutivo',
   'abstract',
   'derechos',
   'nota_autor',
