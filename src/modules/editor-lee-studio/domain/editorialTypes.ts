@@ -133,6 +133,33 @@ export interface EditorialLegalFields {
   [key: string]: string;            // Campos clave-valor libres
 }
 
+/** Modalidad de impresión física del documento editorial. */
+export type EditorialPrintSides = 'simplex' | 'duplex';
+
+/** Cómo comienza cada capítulo o sección principal del manuscrito. */
+export type EditorialChapterBreakMode = 'odd_page' | 'next_page' | 'continuous';
+
+/** Modo del encabezado superior de página. */
+export type EditorialHeaderMode =
+  | 'auto'
+  | 'none'
+  | 'book_title'
+  | 'chapter_title'
+  | 'mirror_book_chapter'
+  | 'custom';
+
+/** Modo del pie de página / folio. */
+export type EditorialFooterMode =
+  | 'auto'
+  | 'none'
+  | 'folio_only'
+  | 'page_x_of_y'
+  | 'book_and_folio'
+  | 'custom_and_folio';
+
+/** Alineación del pie de página. */
+export type EditorialFooterAlignment = 'auto' | 'center' | 'outside' | 'right';
+
 /** Configuración de diseño. */
 export interface EditorialDesignConfig {
   pageSize: string;                  // A4, A5, Carta, etc. (PAGE_SIZES[id]) // plain-language:allow — tamaño de hoja y formatos de impresión
@@ -164,10 +191,24 @@ export interface EditorialDesignConfig {
   coverPaletteKey?: string;
   /** Configuración global de carátulas separadoras por capítulo/sección (desactivadas por defecto). */
   sectionDividers?: EditorialSectionDividerConfig;
-  /** Modo de encabezado corriente en cuerpo del libro ('none' | 'book_title' | 'chapter_title'). */
-  headerMode?: 'none' | 'book_title' | 'chapter_title';
-  /** Modo de pie/folio ('folio_only' | 'book_and_folio'). */
-  footerMode?: 'folio_only' | 'book_and_folio';
+  /** Modalidad de impresión: 'simplex' (1 cara) o 'duplex' (2 caras / libro). */
+  printSides?: EditorialPrintSides;
+  /** Inicio de cada capítulo/sección: 'odd_page' (solo efectivo en duplex), 'next_page' o 'continuous'. */
+  chapterBreakMode?: EditorialChapterBreakMode;
+  /** Salto automático de hoja antes de cada subtítulo principal (H2). */
+  breakOnH2?: boolean;
+  /** Oculta el encabezado corriente en la primera página donde abre un capítulo/sección. */
+  suppressHeaderOnChapterStart?: boolean;
+  /** Modo de encabezado corriente en cuerpo del libro/informe. */
+  headerMode?: EditorialHeaderMode;
+  /** Texto personalizado para encabezado cuando `headerMode === 'custom'`. */
+  headerCustomText?: string;
+  /** Modo de pie de página / folio. */
+  footerMode?: EditorialFooterMode;
+  /** Texto personalizado para pie de página cuando `footerMode === 'custom_and_folio'`. */
+  footerCustomText?: string;
+  /** Alineación del pie de página. */
+  footerAlignment?: EditorialFooterAlignment;
   /** Numeración romana en minúsculas (i, ii, iii...) para páginas preliminares. */
   preliminaryRomanNumerals?: boolean;
   /** Evita líneas sueltas de una sola palabra al cierre de párrafo mediante espacio duro (\u00A0). */

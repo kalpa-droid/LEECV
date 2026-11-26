@@ -23,7 +23,7 @@ import {
 } from '../domain/editorialNormEngine';
 import type { EditorialPresetId, EditorialStructuralNormId } from '../domain/editorialTypes';
 
-export type EditorialGlobalAxis = 'preset' | 'structural_norm' | 'bibliography';
+export type EditorialGlobalAxis = 'preset' | 'norms' | 'structural_norm' | 'bibliography';
 
 export interface EditorialGlobalNormModalProps {
   isOpen: boolean;
@@ -131,23 +131,31 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
           icon: <DomSectionIcon iconId={PRODUCT_ICON_IDS.editor} size={18} />,
           helpTitle: 'Plantilla base de obra',
           helpText:
-            'Cada plantilla arma las partes recomendadas (escolar, terciario, tesis APA 7, científico Vancouver, libro o manual), carátula y hoja inicial.',
+            'Cada plantilla arma las partes recomendadas (escolar, terciario, tesis APA 7, científico Vancouver, libro, informe, proyecto o manual), carátula, impresión simple o doble faz y hoja inicial.',
         }
-      : axis === 'structural_norm'
+      : axis === 'norms'
         ? {
-            title: 'Norma visual de página',
+            title: 'Norma visual y estilo de citas',
             icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialNorm} size={18} />,
-            helpTitle: 'Estructura de página',
+            helpTitle: 'Estructura y referencias en un solo lugar',
             helpText:
-              'Define márgenes, interlineado y espacio inicial de párrafo para toda la obra sin alterar tus textos ni tu estilo de citas.',
+              'Definí márgenes e interlineado globales de la obra junto al estilo de citas y bibliografía (APA 7, IEEE, Vancouver, Chicago o MLA) sin perder tus textos.',
           }
-        : {
-            title: 'Estilo de citas y bibliografía',
-            icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialCitations} size={18} />,
-            helpTitle: 'Citas independientes',
-            helpText:
-              'Podés usar estructura de página APA 7 junto con citas Vancouver, IEEE o Harvard sin cambiar tus textos.',
-          };
+        : axis === 'structural_norm'
+          ? {
+              title: 'Norma visual de página',
+              icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialNorm} size={18} />,
+              helpTitle: 'Estructura de página',
+              helpText:
+                'Define márgenes, interlineado y espacio inicial de párrafo para toda la obra sin alterar tus textos ni tu estilo de citas.',
+            }
+          : {
+              title: 'Estilo de citas y bibliografía',
+              icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialCitations} size={18} />,
+              helpTitle: 'Citas independientes',
+              helpText:
+                'Podés usar estructura de página APA 7 junto con citas Vancouver, IEEE o Harvard sin cambiar tus textos.',
+            };
 
   return (
     <Modal
@@ -253,34 +261,46 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
           </div>
         )}
 
-        {axis === 'structural_norm' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {(['libre', 'apa7', 'chicago', 'mla'] as EditorialStructuralNormId[]).map((normId) => {
-              const norm = EDITORIAL_STRUCTURAL_NORMS[normId];
-              const selected = selectedNorm === normId;
-              return (
-                <button
-                  key={normId}
-                  type="button"
-                  onClick={() => setSelectedNorm(normId)}
-                  aria-pressed={selected}
-                  className={`${selectableCard.base} ${
-                    selected ? selectableCard.selected : selectableCard.unselected
-                  } p-3 text-left cursor-pointer space-y-1`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-[var(--ui-text-primary)]">{norm.shortLabel}</span>
-                    {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
-                  </div>
-                  <p className="text-[11px] text-[var(--ui-text-secondary)] leading-snug">{norm.summary}</p>
-                </button>
-              );
-            })}
+        {(axis === 'structural_norm' || axis === 'norms') && (
+          <div className="space-y-2">
+            {axis === 'norms' && (
+              <span className="text-xs font-extrabold text-[var(--ui-text-primary)] block">
+                1. Estructura visual y márgenes
+              </span>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(['libre', 'apa7', 'chicago', 'mla'] as EditorialStructuralNormId[]).map((normId) => {
+                const norm = EDITORIAL_STRUCTURAL_NORMS[normId];
+                const selected = selectedNorm === normId;
+                return (
+                  <button
+                    key={normId}
+                    type="button"
+                    onClick={() => setSelectedNorm(normId)}
+                    aria-pressed={selected}
+                    className={`${selectableCard.base} ${
+                      selected ? selectableCard.selected : selectableCard.unselected
+                    } p-3 text-left cursor-pointer space-y-1`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-[var(--ui-text-primary)]">{norm.shortLabel}</span>
+                      {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
+                    </div>
+                    <p className="text-[11px] text-[var(--ui-text-secondary)] leading-snug">{norm.summary}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {axis === 'bibliography' && (
+        {(axis === 'bibliography' || axis === 'norms') && (
           <div className="space-y-3">
+            {axis === 'norms' && (
+              <span className="text-xs font-extrabold text-[var(--ui-text-primary)] block">
+                2. Estilo de citas y bibliografía
+              </span>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {CITATION_OPTIONS.map((opt) => {
                 const selected = selectedBib === opt.id;
@@ -293,7 +313,7 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
                     className={`px-3 py-1.5 rounded-full border text-xs font-bold cursor-pointer transition-colors ${
                       selected
                         ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                        : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)]'
+                        : 'bg-[var(--ui-bg-card)] border-[var(--ui-border)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)]'
                     }`}
                   >
                     {opt.label}{' '}
@@ -304,13 +324,14 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
             </div>
 
             <div
-              className={`p-3 rounded-[${radius.control}] border text-xs space-y-1 ${
+              className={`p-3 border text-xs space-y-1 ${
                 compatibility.level === 'advisory'
                   ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
                   : compatibility.level === 'optimal'
                     ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
-                    : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)]'
+                    : 'bg-[var(--ui-bg-card)] border-[var(--ui-border)] text-[var(--ui-text-primary)]'
               }`}
+              style={{ borderRadius: radius.control }}
             >
               <div className="flex items-center gap-1.5 font-bold">
                 {compatibility.level === 'advisory' ? (
@@ -330,7 +351,8 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
 
         {conflicts.length > 0 && (
           <div
-            className={`p-3 rounded-[${radius.control}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 space-y-1.5`}
+            className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 space-y-1.5"
+            style={{ borderRadius: radius.control }}
           >
             <div className="flex items-start gap-2 text-xs font-bold text-[var(--color-status-warning-text)]">
               <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />

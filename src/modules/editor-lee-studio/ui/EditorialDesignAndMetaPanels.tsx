@@ -18,6 +18,7 @@ import {
   markEditorialFieldManual,
   resolveStructuralNormFromDraft,
 } from '../domain/editorialNormEngine';
+import { resolveEffectiveEditorialPagination } from '../domain/editorialPaginationEngine';
 import { getSavedEditorialsList } from '../../../shared/core/storage/documentStorageService';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { ACADEMIC_FONT_CATALOG } from '../../../shared/core/pdf-engine/layers/typography/academicFontCatalog';
@@ -32,6 +33,8 @@ interface BasePanelProps {
   updateDraft: (updater: (prev: any) => any) => void;
   setActiveStepTab: (tab: string) => void;
   onOpenGlobalNormModal?: () => void;
+  onOpenPrintFlowModal?: () => void;
+  resolvedTocMap?: Record<string, string>;
 }
 
 export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
@@ -39,11 +42,13 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
   updateDraft,
   setActiveStepTab,
   onOpenGlobalNormModal,
+  onOpenPrintFlowModal,
 }) => {
   const { showInfo, showSuccess } = useToast() as any;
   const design = draft?.design || {};
   const structuralNorm = resolveStructuralNormFromDraft(draft);
   const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNorm];
+  const pagination = resolveEffectiveEditorialPagination(draft);
   const documentPageSizes = Object.values(PAGE_SIZES).filter((p) => p.category === 'documento');
 
   const updateDesignField = (field: keyof EditorialDesignDefaultsFlat, val: any) => {
@@ -413,36 +418,113 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <div>
-              <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
-                Encabezado superior de página
-              </label>
-              <select
-                value={design.headerMode || 'book_title'}
-                onChange={(e) => updateDesignOption('headerMode', e.target.value)}
-                className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+          <div className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
+            {onOpenPrintFlowModal && (
+              <div
+                className="p-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
                 style={{ borderRadius: radius.control }}
               >
-                <option value="book_title">Título de la obra</option>
-                <option value="chapter_title">Título del capítulo actual</option>
-                <option value="none">Sin encabezado superior</option>
-              </select>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+                    {pagination.printSides === 'duplex' ? 'De ambos lados (doble faz)' : 'De un solo lado (simple faz)'}
+                  </p>
+                  <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">
+                    Capítulos:{' '}
+                    {pagination.effectiveChapterBreakMode === 'odd_page'
+                      ? 'siempre en página impar'
+                      : pagination.effectiveChapterBreakMode === 'next_page'
+                        ? 'en hoja aparte'
+                        : 'seguido sin saltar de hoja'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onOpenPrintFlowModal}
+                  className="px-2.5 py-1 rounded-full border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer shrink-0"
+                >
+                  Configurar
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                  Encabezado superior de página
+                </label>
+                <select
+                  value={design.headerMode || 'auto'}
+                  onChange={(e) => updateDesignOption('headerMode', e.target.value)}
+                  className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                  style={{ borderRadius: radius.control }}
+                >
+                  <option value="auto">Automático según obra</option>
+                  <option value="book_title">Título de la obra</option>
+                  <option value="chapter_title">Título del capítulo actual</option>
+                  <option value="mirror_book_chapter">Alternar obra (par) y capítulo (impar)</option>
+                  <option value="custom">Texto propio</option>
+                  <option value="none">Sin encabezado superior</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                  Pie de página (folio)
+                </label>
+                <select
+                  value={design.footerMode || 'auto'}
+                  onChange={(e) => updateDesignOption('footerMode', e.target.value)}
+                  className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                  style={{ borderRadius: radius.control }}
+                >
+                  <option value="auto">Automático según obra</option>
+                  <option value="folio_only">Solo número de página</option>
+                  <option value="page_x_of_y">Página X de Y (ideal informes)</option>
+                  <option value="book_and_folio">Título de la obra y número</option>
+                  <option value="custom_and_folio">Texto propio y número</option>
+                  <option value="none">Sin pie de página</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
-                Pie de página (folio)
-              </label>
-              <select
-                value={design.footerMode || 'folio_only'}
-                onChange={(e) => updateDesignOption('footerMode', e.target.value)}
-                className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+
+            {pagination.headerMode === 'custom' && (
+              <Field
+                label="Texto del encabezado superior"
+                value={design.headerCustomText || ''}
+                onChange={(e: any) => updateDesignOption('headerCustomText', e.target.value)}
+                placeholder="Ej: Área de Ingeniería · Confidencial"
+              />
+            )}
+
+            {pagination.footerMode === 'custom_and_folio' && (
+              <Field
+                label="Texto previo al número de página en el pie"
+                value={design.footerCustomText || ''}
+                onChange={(e: any) => updateDesignOption('footerCustomText', e.target.value)}
+                placeholder="Ej: Proyecto 2026"
+              />
+            )}
+
+            {pagination.headerMode !== 'none' && (
+              <div
+                className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
                 style={{ borderRadius: radius.control }}
               >
-                <option value="folio_only">Solo número de página</option>
-                <option value="book_and_folio">Título de la obra y número</option>
-              </select>
-            </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-semibold">Ocultar encabezado al iniciar cada capítulo</span>
+                  <LidioHelpTrigger
+                    size="xs"
+                    title="Primera hoja de capítulo limpia"
+                    text="En libros e informes, la primera hoja donde aparece el título del capítulo no lleva texto repetido arriba."
+                  />
+                </div>
+                <SectionSwitch
+                  size="sm"
+                  checked={pagination.suppressHeaderOnChapterStart}
+                  onChange={(next) => updateDesignOption('suppressHeaderOnChapterStart', next)}
+                  label="Ocultar encabezado en apertura de capítulo"
+                />
+              </div>
+            )}
           </div>
         </div>
       </PanelSection>
@@ -463,6 +545,7 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
   draft,
   updateDraft,
   setActiveStepTab,
+  resolvedTocMap,
 }) => {
   const tocConfig = draft?.tocConfig || {
     enabled: true,
@@ -479,8 +562,8 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
   };
 
   const calculatedAnchors = useMemo(
-    () => generateSectionAnchors(draft?.sections || [], {}),
-    [draft?.sections],
+    () => generateSectionAnchors(draft?.sections || [], {}, draft?.design, draft?.cover),
+    [draft?.sections, draft?.design, draft?.cover],
   );
 
   return (
@@ -488,7 +571,7 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
       <PanelSection
         icon={<LayoutGrid className="w-4 h-4" />}
         title="Índice automático"
-        helpText="Calcula los números de página reales de tus capítulos y subtítulos al armar el PDF."
+        helpText="Recalcula los números de página reales de tus capítulos y subtítulos automáticamente según simple faz, doble faz o capítulos en página impar."
         headerRight={
           <SectionSwitch
             size="sm"
@@ -499,7 +582,7 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
         }
       >
         <ContextualGuideBox title="Cómo funciona">
-          Activá la perilla superior para incluir la tabla de contenidos al principio de tu trabajo o libro.
+          Al cambiar entre un solo lado, doble faz o inicio en página impar, los números de página del índice se actualizan solos.
         </ContextualGuideBox>
 
         {tocConfig.enabled !== false && (
@@ -509,6 +592,20 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
               value={tocConfig.title || 'Índice General'}
               onChange={(e: any) => updateToc('title', e.target.value)}
             />
+            <div>
+              <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                Ubicación del índice
+              </label>
+              <select
+                value={tocConfig.position || 'tras-caratula'}
+                onChange={(e) => updateToc('position', e.target.value)}
+                className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                style={{ borderRadius: radius.control }}
+              >
+                <option value="tras-caratula">Al inicio (justo después de la carátula)</option>
+                <option value="tras-preliminares">Después de prólogo / resumen preliminar</option>
+              </select>
+            </div>
             <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
               <span className="text-xs font-semibold">Mostrar subtítulos internos</span>
               <SectionSwitch
@@ -521,12 +618,17 @@ export const EditorialTocPanel: React.FC<BasePanelProps> = ({
 
             {calculatedAnchors.length > 0 && (
               <div className="divide-y divide-[var(--ui-border)] rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] px-3 text-xs">
-                {calculatedAnchors.map((item, i) => (
-                  <div key={item.anchorId || i} className="py-1.5 flex items-center justify-between">
-                    <span className="font-medium truncate">{item.label}</span>
-                    <span className="font-mono text-[var(--ui-text-secondary)]">pág. {item.pageNumber}</span>
-                  </div>
-                ))}
+                {calculatedAnchors.map((item, i) => {
+                  const realLabel = resolvedTocMap?.[item.anchorId];
+                  return (
+                    <div key={item.anchorId || i} className="py-1.5 flex items-center justify-between gap-2">
+                      <span className="font-medium truncate">{item.label}</span>
+                      <span className="font-mono text-[var(--ui-text-secondary)] shrink-0">
+                        pág. {realLabel ?? item.pageNumber}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

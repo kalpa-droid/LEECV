@@ -73,11 +73,13 @@ const PRELIM_KEYS = new Set([
   'dedicatoria',
   'agradecimientos',
   'resumen',
+  'resumen_ejecutivo',
   'introduccion',
 ]);
 
 const CIERRE_SHORT_BADGE: Record<string, string> = {
   conclusiones: 'Cl',
+  recomendaciones: 'Rc',
   epilogo: 'Ep',
   glosario: 'Gl',
   bibliografia: 'Bf',
@@ -126,12 +128,33 @@ export function resolveCanonicalEditorialKey(section: Partial<EditorialSection>)
   } else if (/^agradecimientos?\b/.test(norm)) {
     inferred = 'agradecimientos';
     cat = 'preliminares';
+  } else if (/^resumen\s+ejecutivo\b/.test(norm)) {
+    inferred = 'resumen_ejecutivo';
+    cat = 'preliminares';
   } else if (/^(resumen|abstract)\b/.test(norm)) {
     inferred = 'resumen';
     cat = 'preliminares';
   } else if (/^(introduccion|fundamentacion)\b/.test(norm)) {
     inferred = 'introduccion';
     cat = 'preliminares';
+  } else if (/^objetivos?\b/.test(norm)) {
+    inferred = 'objetivos_alcance';
+    cat = 'cuerpo';
+  } else if (/^(diagnostico|situacion actual)\b/.test(norm)) {
+    inferred = 'diagnostico';
+    cat = 'cuerpo';
+  } else if (/^(propuesta|solucion)\b/.test(norm)) {
+    inferred = 'propuesta_tecnica';
+    cat = 'cuerpo';
+  } else if (/^(cronograma|plan de trabajo)\b/.test(norm)) {
+    inferred = 'cronograma';
+    cat = 'cuerpo';
+  } else if (/^(presupuesto|recursos)\b/.test(norm)) {
+    inferred = 'presupuesto';
+    cat = 'cuerpo';
+  } else if (/^(riesgos|matriz de riesgos)\b/.test(norm)) {
+    inferred = 'riesgos';
+    cat = 'cuerpo';
   } else if (/^(metodologia|materiales y metodos|metodo)\b/.test(norm)) {
     inferred = 'metodologia';
     cat = 'cuerpo';
@@ -146,6 +169,9 @@ export function resolveCanonicalEditorialKey(section: Partial<EditorialSection>)
     cat = 'cuerpo';
   } else if (/^conclusiones?\b/.test(norm)) {
     inferred = 'conclusiones';
+    cat = 'cierre';
+  } else if (/^(recomendaciones|proximos pasos)\b/.test(norm)) {
+    inferred = 'recomendaciones';
     cat = 'cierre';
   } else if (/^epilogo\b/.test(norm)) {
     inferred = 'epilogo';

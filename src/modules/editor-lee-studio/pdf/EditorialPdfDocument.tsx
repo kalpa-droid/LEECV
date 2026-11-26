@@ -37,6 +37,10 @@ import {
 } from '../domain/editorialCitationFormatter';
 import { resolveEditorialNormMetrics } from '../domain/editorialNormEngine';
 import {
+  resolveEffectiveEditorialPagination,
+  resolveSectionEffectiveStartNewPage,
+} from '../domain/editorialPaginationEngine';
+import {
   sanitizeEditorialText,
   stripTrailingHeaderPunctuation,
 } from '../domain/editorialTypographyEngine';
@@ -114,12 +118,14 @@ export interface EditorialPdfDocumentProps {
   bodyStartPage?: number;
   /** Emite tokens `__TOC_ID:<id>__` invisibles para el escaneo con pdfjs-dist. */
   emitTocAnchors?: boolean;
+  /** Mapa `{ sectionId -> true }` de hojas blancas de cortesía previas (solo doble faz + impar). */
+  courtesyBlankBeforeMap?: Record<string, boolean>;
 }
 
 function toPdfPageSize(pageSizeId: string): 'A4' | 'A5' | 'LETTER' | [number, number] {
   if (pageSizeId === 'a4') return 'A4';
   if (pageSizeId === 'a5') return 'A5';
-  if (pageSizeId === 'carta' || pageSizeId === 'legal') return 'LETTER';
+  if (pageSizeId === 'carta') return 'LETTER';
   const def = getPageSize(pageSizeId);
   return [def.widthPt, def.heightPt];
 }
@@ -159,6 +165,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   resolvedTocMap,
   bodyStartPage = 1,
   emitTocAnchors = false,
+  courtesyBlankBeforeMap,
 }) => {
   const pdfPreset = getEditorialPreset(preset) || DEFAULT_EDITORIAL_PRESET;
   const rawDesign: EditorialDocumentDesign = (data?.design || {}) as EditorialDocumentDesign;
@@ -182,12 +189,19 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
     rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
   );
   const normMetrics = resolveEditorialNormMetrics({ ...data, design: rawDesign });
+  const pagination = resolveEffectiveEditorialPagination({ ...data, design: rawDesign });
   const effectiveStructuralNorm = normMetrics.structuralNormId;
 
-  const usePrelimRoman = rawDesign.preliminaryRomanNumerals !== false;
+  const usePrelimRoman = pagination.preliminaryRomanNumerals;
   const preventRunts = rawDesign.preventRunts !== false;
-  const headerMode = rawDesign.headerMode || 'book_title';
-  const footerMode = rawDesign.footerMode || 'folio_only';
+  const headerMode = pagination.headerMode;
+  const footerMode = pagination.footerMode;
+  const cleanCustomHeader = stripTrailingHeaderPunctuation(
+    sanitizeEditorialText(pagination.headerCustomText || '', { targetFontIsUnicode: isUnicodeFont }),
+  );
+  const cleanCustomFooter = sanitizeEditorialText(pagination.footerCustomText || '', {
+    targetFontIsUnicode: isUnicodeFont,
+  });
 
   const visibleSections = (data?.sections || []).filter((s) => s.visible !== false);
   const syncedVisibleSections = syncSectionsBibliographyOrder(visibleSections, activeBibStyle);
@@ -227,12 +241,29 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   };
 
   const MM_TO_PT = 2.83465;
-  const marginTopPt = Math.max(36, normMetrics.marginsMm.top * MM_TO_PT);
-  const marginBottomPt = Math.max(38, normMetrics.marginsMm.bottom * MM_TO_PT);
-  const marginLeftPt = Math.max(32, (rawDesign.gutter ?? normMetrics.marginsMm.gutter ?? normMetrics.marginsMm.left) * MM_TO_PT);
+  const rawOverrides = rawDesign.manualOverrides && typeof rawDesign.manualOverrides === 'object'
+    ? rawDesign.manualOverrides
+    : {};
+  const effectiveMarginTopMm =
+    !rawOverrides.marginTop && headerMode !== 'none'
+      ? Math.max(normMetrics.marginsMm.top, pagination.safeMarginTopMm)
+      : normMetrics.marginsMm.top;
+  const effectiveMarginBottomMm =
+    !rawOverrides.marginBottom && footerMode !== 'none' && pagination.pageNumbers
+      ? Math.max(normMetrics.marginsMm.bottom, pagination.safeMarginBottomMm)
+      : normMetrics.marginsMm.bottom;
+  const effectiveGutterMm =
+    !rawOverrides.gutter && pagination.printSides === 'duplex'
+      ? Math.max(normMetrics.marginsMm.gutter, pagination.safeGutterMm)
+      : rawDesign.gutter ?? normMetrics.marginsMm.gutter ?? normMetrics.marginsMm.left;
+
+  const marginTopPt = Math.max(36, effectiveMarginTopMm * MM_TO_PT);
+  const marginBottomPt = Math.max(38, effectiveMarginBottomMm * MM_TO_PT);
+  const marginLeftPt = Math.max(32, effectiveGutterMm * MM_TO_PT);
   const marginRightPt = Math.max(32, normMetrics.marginsMm.right * MM_TO_PT);
   const resolvedPageSize = toPdfPageSize(resolvedPageSizeId);
-  const pageWidthPt = resolvedPageSizeId === 'a5' ? 419.53 : resolvedPageSizeId === 'carta' ? 612 : 595.28;
+  const pageSizeDef = getPageSize(resolvedPageSizeId);
+  const pageWidthPt = pageSizeDef.widthPt;
   const usableWidthPt = Math.max(220, pageWidthPt - marginLeftPt - marginRightPt);
 
   const paragraphIndentPt = normMetrics.firstLineIndentPt;
@@ -311,13 +342,13 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       top: Math.max(14, marginTopPt - 22),
       left: marginLeftPt,
       right: marginRightPt,
-      borderBottomWidth: 0.4,
+      borderBottomWidth: pagination.suppressHeaderOnChapterStart ? 0 : 0.4,
       borderBottomColor: '#E2E8F0',
       paddingBottom: 3,
       fontSize: 8.5,
       ...fontStyles.italic,
       color: '#64748B',
-      textAlign: 'right',
+      textAlign: pagination.printSides === 'duplex' ? 'center' : 'right',
     },
     footerClean: {
       position: 'absolute',
@@ -327,7 +358,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       fontSize: 9,
       ...fontStyles.regular,
       color: '#64748B',
-      textAlign: 'center',
+      textAlign: pagination.footerAlignment === 'right' ? 'right' : 'center',
     },
     listItem: {
       marginBottom: 6,
@@ -508,13 +539,17 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
         );
       })}
 
-      {rawDesign.pageNumbers !== false && (
+      {pagination.pageNumbers && footerMode !== 'none' && (
         <Text
           fixed
           style={styles.footerClean}
-          render={({ pageNumber }) =>
-            usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber)
-          }
+          render={({ pageNumber, totalPages }) => {
+            const folio = usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber);
+            if (!usePrelimRoman && footerMode === 'page_x_of_y') {
+              return `Página ${folio} de ${Math.max(1, totalPages)}`;
+            }
+            return folio;
+          }}
         />
       )}
       <AnchorMarker id="ANCHOR_END:editorial_toc" active={interactiveAnchors} />
@@ -629,7 +664,11 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
 
         case 'subtitle':
           elements.push(
-            <View key={key} minPresenceAhead={52}>
+            <View
+              key={key}
+              break={Boolean(pagination.breakOnH2 && (record.subtitleLevel ?? 2) === 2 && idx > 0)}
+              minPresenceAhead={52}
+            >
               <TocMarker id={`${sectionId}-${record.id}`} emit={emitTocAnchors} />
               <Text
                 minPresenceAhead={48}
@@ -942,7 +981,24 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
     return elements;
   };
 
-  const sectionPages = model.sections.flatMap((section, secIndex) => {
+  interface PageGroup {
+    key: string;
+    masterMode: MasterPageMode;
+    isPreliminary: boolean;
+    primarySectionId: string;
+    primarySectionIndex: number;
+    primaryRawSec: EditorialSection;
+    primaryRunningTitle: string;
+    hasAnyBib: boolean;
+    hasFirstSection: boolean;
+    hasLastSection: boolean;
+    precedingPages: React.ReactElement[];
+    blocks: React.ReactElement[];
+  }
+
+  const pageGroups: PageGroup[] = [];
+
+  model.sections.forEach((section, secIndex) => {
     const rawSec = syncedVisibleSections[secIndex];
     const { badgeLabel } = resolveSectionBadgeLabel(rawSec || (section as any), badgeCounters);
     const secCoverState = resolveEditorialSectionCoverState(rawSec, rawDesign, model.cover);
@@ -950,8 +1006,24 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
     const isBibSection =
       rawSec?.sectionKey === 'bibliografia' ||
       section.records.some((r) => r.type === 'bibliography_item');
+    const effectiveStartNewPage = resolveSectionEffectiveStartNewPage(
+      rawSec || section.raw,
+      pagination.effectiveChapterBreakMode,
+    );
+    const needsCourtesyBlank = Boolean(courtesyBlankBeforeMap?.[section.id]);
 
-    const pagesForThisSection: React.ReactElement[] = [];
+    const precedingPages: React.ReactElement[] = [];
+    if (needsCourtesyBlank) {
+      precedingPages.push(
+        <Page
+          key={`${section.id}_courtesy_blank`}
+          size={resolvedPageSize}
+          style={styles.page}
+        >
+          <Text style={{ fontSize: 1, opacity: 0 }}> </Text>
+        </Page>,
+      );
+    }
 
     if (secCoverState.enabled) {
       const autoKicker =
@@ -965,7 +1037,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               ? `PRELIMINAR ${badgeLabel}`
               : `CAPÍTULO ${badgeLabel}`);
 
-      pagesForThisSection.push(
+      precedingPages.push(
         <EditorialSectionDividerPage
           key={`${section.id}_divider`}
           pageSize={resolvedPageSize}
@@ -992,9 +1064,9 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       );
 
       if (secCoverState.blankBackPage) {
-        pagesForThisSection.push(
+        precedingPages.push(
           <Page key={`${section.id}_divider_blank`} size={resolvedPageSize} style={styles.page}>
-            <Text style={{ opacity: 0 }}> </Text>
+            <Text style={{ fontSize: 1, opacity: 0 }}> </Text>
           </Page>,
         );
       }
@@ -1007,20 +1079,12 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       }),
     );
 
-    const runningHeaderLabel =
-      headerMode === 'none'
-        ? ''
-        : headerMode === 'chapter_title'
-          ? stripTrailingHeaderPunctuation(
-              sanitizeEditorialText(rawSec?.runningHeaderText || cleanSectionTitle, {
-                targetFontIsUnicode: isUnicodeFont,
-              }),
-            )
-          : stripTrailingHeaderPunctuation(
-              sanitizeEditorialText(rawSec?.runningHeaderText || cleanBookTitle, {
-                targetFontIsUnicode: isUnicodeFont,
-              }),
-            );
+    const runningTitleCandidate =
+      stripTrailingHeaderPunctuation(
+        sanitizeEditorialText(rawSec?.runningHeaderText || cleanSectionTitle, {
+          targetFontIsUnicode: isUnicodeFont,
+        }),
+      ) || cleanBookTitle;
 
     const colGapPt = (rawSec?.columnGapMm ?? 6) * MM_TO_PT;
     const twoColWidthPt = Math.max(120, (usableWidthPt - colGapPt) / 2);
@@ -1058,8 +1122,16 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           })
         : renderRecordsList(section.records, section.id, section.records, 1, usableWidthPt);
 
-    pagesForThisSection.push(
-      <Page key={section.id} size={resolvedPageSize} style={styles.page}>
+    const prevGroup = pageGroups[pageGroups.length - 1];
+    const canJoinPreviousPage =
+      Boolean(prevGroup) &&
+      !effectiveStartNewPage &&
+      !needsCourtesyBlank &&
+      !secCoverState.enabled &&
+      prevGroup.masterMode === masterMode;
+
+    const sectionBlock = (
+      <View key={`sec-blk-${section.id}`} style={canJoinPreviousPage ? { marginTop: 18 } : undefined}>
         <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
         {!secCoverState.enabled && <TocMarker id={section.id} emit={emitTocAnchors} />}
         {isBibSection && <AnchorMarker id="ANCHOR_START:editorial_bibliografia" active={interactiveAnchors} />}
@@ -1070,28 +1142,6 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
             <AnchorMarker id="ANCHOR_START:editorial_metadata" active={interactiveAnchors} />
           </>
         )}
-
-        {masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && rawDesign.pageNumbers !== false ? (
-          <Text
-            fixed
-            style={[styles.runningHeader, { textAlign: 'right', borderBottomWidth: 0 }]}
-            render={({ pageNumber }) => {
-              const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
-              const authorSurname = coverAuthorText
-                ? coverAuthorText.includes(',')
-                  ? coverAuthorText.split(',')[0].trim()
-                  : coverAuthorText.trim().split(/\s+/).slice(-1)[0]
-                : '';
-              return normMetrics.mlaAuthorSurnameHeader && authorSurname
-                ? `${authorSurname} ${folio}`
-                : folio;
-            }}
-          />
-        ) : masterMode === 'body' && runningHeaderLabel ? (
-          <Text fixed style={styles.runningHeader}>
-            {runningHeaderLabel}
-          </Text>
-        ) : null}
 
         {normMetrics.structuralNormId === 'mla' && !showCover && secIndex === 0 && (coverAuthorText || data?.legalFields?.docente || data?.legalFields?.catedra) ? (
           <View style={{ marginBottom: 14 }}>
@@ -1150,33 +1200,132 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
 
         {sectionContentNodes}
 
-        {rawDesign.pageNumbers !== false &&
-          masterMode !== 'clean' &&
-          !(masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && footerMode === 'folio_only') && (
-          <Text
-            fixed
-            style={styles.footerClean}
-            render={({ pageNumber }) => {
-              if (masterMode === 'preliminary') {
-                return usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber);
-              }
-              const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
-              return footerMode === 'book_and_folio' ? `${cleanBookTitle} · ${folio}` : folio;
-            }}
-          />
-        )}
-
         <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
         {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}
         {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
+      </View>
+    );
+
+    if (canJoinPreviousPage) {
+      prevGroup.blocks.push(sectionBlock);
+      prevGroup.hasAnyBib = prevGroup.hasAnyBib || isBibSection;
+      prevGroup.hasLastSection = prevGroup.hasLastSection || secIndex === model.sections.length - 1;
+    } else {
+      pageGroups.push({
+        key: section.id,
+        masterMode,
+        isPreliminary: masterMode !== 'body',
+        primarySectionId: section.id,
+        primarySectionIndex: secIndex,
+        primaryRawSec: rawSec,
+        primaryRunningTitle: runningTitleCandidate,
+        hasAnyBib: isBibSection,
+        hasFirstSection: secIndex === 0,
+        hasLastSection: secIndex === model.sections.length - 1,
+        precedingPages,
+        blocks: [sectionBlock],
+      });
+    }
+  });
+
+  const renderGroupPages = (group: PageGroup): React.ReactElement[] => {
+    const out: React.ReactElement[] = [...group.precedingPages];
+    const masterMode = group.masterMode;
+
+    out.push(
+      <Page key={group.key} size={resolvedPageSize} style={styles.page}>
+        {masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && pagination.pageNumbers ? (
+          <Text
+            fixed
+            style={[styles.runningHeader, { textAlign: 'right', borderBottomWidth: 0 }]}
+            render={({ pageNumber }) => {
+              const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
+              const authorSurname = coverAuthorText
+                ? coverAuthorText.includes(',')
+                  ? coverAuthorText.split(',')[0].trim()
+                  : coverAuthorText.trim().split(/\s+/).slice(-1)[0]
+                : '';
+              return normMetrics.mlaAuthorSurnameHeader && authorSurname
+                ? `${authorSurname} ${folio}`
+                : folio;
+            }}
+          />
+        ) : masterMode === 'body' && headerMode !== 'none' ? (
+          <Text
+            fixed
+            style={styles.runningHeader}
+            render={({ pageNumber, subPageNumber }) => {
+              if (pagination.suppressHeaderOnChapterStart && subPageNumber === 1) {
+                return '';
+              }
+              if (headerMode === 'custom') {
+                return cleanCustomHeader || cleanBookTitle;
+              }
+              if (headerMode === 'chapter_title') {
+                return group.primaryRunningTitle;
+              }
+              if (headerMode === 'mirror_book_chapter') {
+                return pagination.printSides === 'duplex' && pageNumber % 2 === 0
+                  ? cleanBookTitle
+                  : group.primaryRunningTitle;
+              }
+              return cleanBookTitle;
+            }}
+          />
+        ) : null}
+
+        {group.blocks}
+
+        {pagination.pageNumbers &&
+          masterMode !== 'clean' &&
+          footerMode !== 'none' &&
+          !(masterMode === 'body' && normMetrics.pageNumberPlacement === 'top-right' && footerMode === 'folio_only') && (
+            <Text
+              fixed
+              style={styles.footerClean}
+              render={({ pageNumber, totalPages }) => {
+                if (masterMode === 'preliminary') {
+                  const prelimFolio = usePrelimRoman ? toLowerRoman(pageNumber) : String(pageNumber);
+                  if (footerMode === 'book_and_folio') {
+                    return `${cleanBookTitle} · ${prelimFolio}`;
+                  }
+                  if (footerMode === 'custom_and_folio' && cleanCustomFooter) {
+                    return `${cleanCustomFooter} · ${prelimFolio}`;
+                  }
+                  return prelimFolio;
+                }
+                const folio = formatEditorialDisplayPageNumber(pageNumber, bodyStartPage, usePrelimRoman);
+                const bodyTotal = Math.max(
+                  1,
+                  totalPages - (usePrelimRoman && bodyStartPage > 1 ? bodyStartPage - 1 : 0),
+                );
+                if (footerMode === 'page_x_of_y') {
+                  return `Página ${folio} de ${bodyTotal}`;
+                }
+                if (footerMode === 'book_and_folio') {
+                  return `${cleanBookTitle} · ${folio}`;
+                }
+                if (footerMode === 'custom_and_folio') {
+                  return cleanCustomFooter ? `${cleanCustomFooter} · ${folio}` : folio;
+                }
+                return folio;
+              }}
+            />
+          )}
       </Page>,
     );
 
-    return pagesForThisSection;
-  });
+    return out;
+  };
+
+  const firstBodyGroupIdx = pageGroups.findIndex((g) => !g.isPreliminary);
+  const splitIdx = firstBodyGroupIdx === -1 ? pageGroups.length : firstBodyGroupIdx;
+  const prelimSectionPages = pageGroups.slice(0, splitIdx).flatMap(renderGroupPages);
+  const bodySectionPages = pageGroups.slice(splitIdx).flatMap(renderGroupPages);
+  const allSectionPagesCount = prelimSectionPages.length + bodySectionPages.length;
 
   const fallbackEmptyPage =
-    !coverPage && !tocPage && sectionPages.length === 0 ? (
+    !coverPage && !tocPage && allSectionPagesCount === 0 ? (
       <Page size={resolvedPageSize} style={styles.page}>
         <Text style={styles.sectionTitle}>{cleanBookTitle}</Text>
         <Text style={styles.bodyText}>
@@ -1185,11 +1334,14 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       </Page>
     ) : null;
 
+  const placeTocAfterPrelims = model.tocConfig?.position === 'tras-preliminares';
+
   return (
     <Document title={cleanBookTitle} author={coverAuthorText || 'EditorLee'} creator="LEECV" producer="LEECV">
       {coverPage}
-      {tocPage}
-      {sectionPages}
+      {placeTocAfterPrelims ? prelimSectionPages : tocPage}
+      {placeTocAfterPrelims ? tocPage : prelimSectionPages}
+      {bodySectionPages}
       {fallbackEmptyPage}
     </Document>
   );

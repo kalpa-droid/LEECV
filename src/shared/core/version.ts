@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 10,
-  patch: 1,
-  label: 'V3.10.1',
+  minor: 11,
+  patch: 0,
+  label: 'V3.11.0',
   lastUpdated: '2026-11-26',
   lastAgent: '@antigravity',
-  stage: 'fix(platform): V3.10.1 — Arranque limpio sin salto de página en index.html/prerender, blindaje anti-pantalla blanca en análisis IA de EditorLee y VectorDocViewer virtualizado, y barra superior móvil sin botón Ver redundante ni numeración en FacturLee.',
+  stage: 'feat(editor-lee): V3.11.0 — Motor integral simple/doble faz con inicio de capítulos en página impar e índice sincronizado, presets completos de Informe y Proyecto, encabezados/pies configurables con márgenes automáticos, 3 píldoras globales y exportación Word (.docx).',
 } as const;
