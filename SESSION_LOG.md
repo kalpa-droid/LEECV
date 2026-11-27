@@ -1,3 +1,20 @@
+## [2026-11-27] - PR #178 (V3.14.0): EditorLee — Grafo Vivo de Referencias Cruzadas (Tabla N, Figura N, Anexo A), Auto-Vinculación Bibliográfica e Interiores Diferenciados por Plantilla
+
+**Commit en `main`:** `ed867e1470fc22f75a352842e8d00e5ebe6c7e2a`
+
+**Resumen:**
+- **Grafo Vivo de Referencias Cruzadas (`editorialCrossRefEngine.ts`, `CleanBlockCanvas.tsx`, `EditorialSectionFocusPanel.tsx`)**:
+  - Numeración dinámica de `Tabla N`, `Figura N` y `Anexo A..Z` en orden de lectura sobre las secciones visibles, renumerando automáticamente tokens `[[ref:<targetId>]]` al reordenar capítulos o agregar bloques.
+  - Resolutor unificado `resolveAllEditorialInlineTokens` en vista previa de capítulos, PDF y Word, y selector unificado **`Citar / Ref.`** en capítulos para insertar fuentes o tablas/figuras/anexos en un clic.
+- **Auto-Parseo Bibliográfico, Rótulos Normativos y Preflight (`editorialCrossRefEngine.ts`, `editorialUniversalImporter.ts`, `editorialCitationFormatter.ts`, `EditorialBibliographyPanel.tsx`, `editorialPreflightEngine.ts`)**:
+  - Conversión automática de bibliografías importadas en texto plano/listas hacia `bibliography_item` estructurados y enlace inequívoco de citas `(Autor, Año)`, `[N]` y menciones a `Tabla N`, `Figura N` y `Anexo A` (disponible también bajo demanda con **`Vincular en capítulos`**).
+  - Formateo normativo `formatNormativeElementCaption` (APA 7 en dos líneas arriba de tablas y figuras; Vancouver/IEEE con Figura debajo; literario limpio) sin duplicar prefijos, más alertas `broken_cross_reference` y `uncited_bibliography_item` en Preflight.
+- **Diferenciación Visual Real de Interiores (`editorialInteriorTheme.ts`, `EditorialPdfDocument.tsx`, `EditorialBlockPrimitives.tsx`, `editorialDocxExporter.ts`)**:
+  - 5 arquetipos interiores (`literario`, `academico_formal`, `cientifico_imryd`, `ejecutivo_proyecto`, `didactico_guia`) acoplados a `coverPaletteKey` con contraste WCAG 2.1 AA verificado (`>= 4.5:1`), diferenciando encabezados, subtítulos, citas en bloque, recuadros de resumen y estilos de tabla tanto en PDF como en Word.
+- **Verificación:** `tests/v3140CrossRefsAndPresetInteriors.test.ts` (5/5), `npm run check-all` en 0 errores en local y GitHub Actions (`check-all` + Vercel Preview) en verde antes del merge.
+
+---
+
 ## [2026-11-27] - PR #177 (V3.13.0): EditorLee — Desarme Nativo sin Pérdidas (.docx/.odt/.pdf), Mapa Panorámico, Conciencia Global de IA, Vista Previa Blindada y Flujo de 7 Pasos
 
 **Commit en `main`:** `4910a9401e0137169b50b4c027f0a3f9b5059c09`
