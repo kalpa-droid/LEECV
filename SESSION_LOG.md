@@ -1,3 +1,19 @@
+## [2026-11-27] - PR #184 (V3.14.3): EditorLee — Auto-Aplicación Directa al Importar en Borrador Vacío, Revisión Persistente en Raíz y Coherencia Digital PDF con Rescate OCR
+
+**Commit en `main`:** `a87df68fffcd1de583a8c6b98a3b97bd27c9fef5`
+
+**Resumen:**
+- **Auto-aplicación directa y modal raíz persistente (`EditorLeeStudioContent.tsx`, `EditorialInicioArchivoPanel.tsx`, `StructuredImportReviewModal.tsx`)**:
+  - Elevación del callback `onImportReady` y los estados `pendingImportReview` / `postponedImportReview` a `EditorLeeStudioContent.tsx`: si el borrador actual está vacío (`!hasEditorialSubstantiveContent`), aplica automáticamente las secciones, metadatos y preset detectado (`applyEditorialImportPayload`), crea un punto de historial (`commitBoundary`), sincroniza `debouncedDraft`, guarda al instante en IndexedDB y enfoca el primer capítulo.
+  - Cuando la obra ya tiene contenido real, abre `<EditorialImportReviewModal>` desde el nivel raíz (inmune a cambios de pestaña durante la lectura), desactiva el cierre accidental por clic en el backdrop (`closeOnOverlayClick={false}`) y ofrece banner recuperable **`Revisar e importar`** si se pospone.
+- **Coherencia digital estricta y rescate OCR post-limpieza en PDF (`pdfEditorialExtractor.ts`)**:
+  - Endurecimiento de `hasUsableEditorialDigitalText()` para rechazar glifos PUA/CID rotos (`\uE000-\uF8FF`, `\uFFFD`, controles), palabras fusionadas sin espacios (`avgWordLen > 18`), sellos de escáner y folios de margen, y rescate OCR automático tras `stripRepeatedHeadersAndFooters()` si alguna página queda sin texto imprimible.
+- **Limpieza de rangos AST y respaldo no vacío (`documentAst.ts`, `editorialUniversalImporter.ts`, `version.ts`)**:
+  - Limpieza de `startBlockId`/`endBlockId`/`excludedBlockIds` al consolidar `blockIds` reparados en `sanitizeHallucinatedSections` y `repairProposalToLosslessBijection`, descarte de secciones vacías con respaldo `'Contenido principal'`/`'Contenido importado'` (`sectionHasImportableRecords`), suite `tests/v3143PdfImportVisibilityAndAutoApply.test.ts` (`4/4`) y bump PATCH a `V3.14.3`.
+- **Verificación:** `tests/v3143PdfImportVisibilityAndAutoApply.test.ts` (`4/4`), suite dirigida (`25/25`), `npm run check-all` en 0 errores en local y GitHub Actions (`check-all` + Vercel Preview) en verde antes del merge.
+
+---
+
 ## [2026-11-27] - PR #182 (V3.14.2): EditorLee — Cero Pérdida de Texto en AST, Extractores PDF/DOCX, Persistencia/Pestañas y Guardas Anti-Alucinación
 
 **Commit en `main`:** `935021dcde1b90a643d2f3df065670a362278949`
