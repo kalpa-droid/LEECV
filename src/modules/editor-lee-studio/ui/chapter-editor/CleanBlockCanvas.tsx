@@ -2,8 +2,11 @@ import React, { useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, BookmarkPlus, GripVertical, Plus, Scissors, Trash2 } from 'lucide-react';
 import { Field } from '../../../../shared/core/ui/Field';
 import { AIButton } from '../../../../shared/core/ui/AIButton';
-import { resolveInlineCitationsInText } from '../../domain/editorialCitationFormatter';
 import type { CanonicalCitationStyle } from '../../domain/editorialCitationFormatter';
+import {
+  resolveAllEditorialInlineTokens,
+  type EditorialCrossRefGraph,
+} from '../../domain/editorialCrossRefEngine';
 import type { EditorialRecord, EditorialRecordType } from '../../domain/editorialTypes';
 import { InsertBetweenDivider } from './InsertBetweenDivider';
 import { CleanBlockMediaEditor } from './CleanBlockMediaEditor';
@@ -17,6 +20,7 @@ export interface CleanBlockCanvasProps {
   bibMap: Map<string, EditorialRecord>;
   activeBibStyle: CanonicalCitationStyle;
   appearanceOrderMap: Map<string, number>;
+  crossRefGraph?: EditorialCrossRefGraph;
   pendingSuggestions: Record<string, string>;
   onFocusRecord: (id: string) => void;
   onUpdateRecord: (id: string, patch: Partial<EditorialRecord>) => void;
@@ -47,6 +51,7 @@ export const CleanBlockCanvas: React.FC<CleanBlockCanvasProps> = ({
   bibMap,
   activeBibStyle,
   appearanceOrderMap,
+  crossRefGraph,
   pendingSuggestions,
   onFocusRecord,
   onUpdateRecord,
@@ -85,9 +90,16 @@ export const CleanBlockCanvas: React.FC<CleanBlockCanvasProps> = ({
   };
 
   const renderInactivePreview = (rec: EditorialRecord) => {
+    const crossTarget = crossRefGraph?.byTargetId.get(rec.id);
+
     if (rec.type === 'image') {
       return (
         <div className="py-1 space-y-1">
+          {crossTarget && (
+            <span className="inline-block text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-accent-text)]">
+              {crossTarget.label}
+            </span>
+          )}
           {rec.imagePath ? (
             <img
               src={rec.imagePath}
@@ -111,6 +123,7 @@ export const CleanBlockCanvas: React.FC<CleanBlockCanvasProps> = ({
       return (
         <div className="py-1 text-xs text-[var(--ui-text-secondary)] space-y-1">
           <p className="font-bold text-[var(--ui-text-primary)]">
+            {crossTarget ? `${crossTarget.label} · ` : ''}
             {rec.tableCaption || 'Tabla'} ({rec.tableHeaders?.length || 0}×{rec.tableRows?.length || 0})
           </p>
           <p className="truncate opacity-80">{(rec.tableHeaders || []).join(' · ')}</p>
@@ -121,14 +134,19 @@ export const CleanBlockCanvas: React.FC<CleanBlockCanvasProps> = ({
     if (rec.type === 'figure_placeholder') {
       return (
         <p className="text-xs italic text-[var(--ui-text-secondary)] border border-dashed border-[var(--ui-border)] px-2.5 py-2">
-          [{rec.figureNumber || 'Figura'}: {rec.figureCaption || 'Espacio reservado — tocá para cargar imagen'}]
+          [{crossTarget?.label || rec.figureNumber || 'Figura'}: {rec.figureCaption || 'Espacio reservado — tocá para cargar imagen'}]
         </p>
       );
     }
 
     const rawText = String(rec.content || '').trim();
     const display = rawText
-      ? resolveInlineCitationsInText(rawText, bibMap, activeBibStyle, appearanceOrderMap)
+      ? resolveAllEditorialInlineTokens(rawText, {
+          bibMap,
+          bibStyle: activeBibStyle,
+          appearanceOrderMap,
+          crossRefGraph,
+        })
       : '';
 
     if (!display) {
@@ -331,11 +349,11 @@ export const CleanBlockCanvas: React.FC<CleanBlockCanvasProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenCitePicker(rec.id)}
-                            title="Insertar cita bibliográfica"
+                            title="Insertar cita bibliográfica o referencia a tabla, figura o anexo"
                             className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--color-accent-text)] cursor-pointer"
                             style={{ borderRadius: radius.control }}
                           >
-                            <BookmarkPlus className="w-3 h-3" /> Citar
+                            <BookmarkPlus className="w-3 h-3" /> Citar / Ref.
                           </button>
                         )}
 

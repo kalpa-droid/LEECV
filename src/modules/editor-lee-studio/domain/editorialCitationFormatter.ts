@@ -561,6 +561,8 @@ export function computeCitationAppearanceOrder(sections: EditorialSection[] = []
         rec.content,
         rec.quoteAttribution,
         rec.imageCaption,
+        rec.tableCaption,
+        rec.figureCaption,
         ...(Array.isArray(rec.tableRows) ? rec.tableRows.flat() : []),
       ];
       for (const rawField of fieldsToScan) {

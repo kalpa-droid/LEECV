@@ -10,6 +10,8 @@ import {
   sanitizeEditorialText,
 } from '../domain/editorialTypographyEngine';
 import { computeOptimalTableLayout } from '../domain/editorialLayoutEngines';
+import type { FormattedElementCaption } from '../domain/editorialCrossRefEngine';
+import type { EditorialTableVariant } from './editorialInteriorTheme';
 import { resolveDefaultUnicodeFontForPreset } from '../../../shared/core/pdf-engine/layers/typography/academicFontCatalog';
 import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 import { isDynamicFontRegistered } from '../../../shared/core/pdf-engine/layers/typography/fontSanitizer';
@@ -380,6 +382,62 @@ export const EditorialCalloutBlock: React.FC<{
   );
 };
 
+export const EditorialElementCaptionText: React.FC<{
+  caption: FormattedElementCaption;
+  fontStyles: EditorialFontStyleSet;
+  isUnicodeFont: boolean;
+  fontSize?: number;
+  align?: 'left' | 'center';
+  marginTop?: number;
+  marginBottom?: number;
+}> = ({
+  caption,
+  fontStyles,
+  isUnicodeFont,
+  fontSize = 9.5,
+  align = 'left',
+  marginTop = 0,
+  marginBottom = 4,
+}) => {
+  if (!caption.shouldRender) return null;
+
+  if (caption.layout === 'two-line-apa') {
+    return (
+      <View minPresenceAhead={42} style={{ marginTop, marginBottom, alignItems: align === 'center' ? 'center' : 'flex-start' }}>
+        <Text style={[fontStyles.bold, { fontSize, color: '#0F172A', textAlign: align, marginBottom: caption.titleText ? 2 : 0 }]}>
+          {sanitizeEditorialText(caption.boldPrefix, { targetFontIsUnicode: isUnicodeFont })}
+        </Text>
+        {caption.titleText ? (
+          <Text style={[fontStyles.italic, { fontSize, color: '#1E293B', textAlign: align, lineHeight: 1.35 }]}>
+            {sanitizeEditorialText(caption.titleText, { targetFontIsUnicode: isUnicodeFont })}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  return (
+    <Text
+      minPresenceAhead={40}
+      style={[
+        fontStyles.regular,
+        { fontSize, color: '#334155', textAlign: align, marginTop, marginBottom, lineHeight: 1.35 },
+      ]}
+    >
+      {caption.boldPrefix ? (
+        <Text style={[fontStyles.bold, { color: '#0F172A' }]}>
+          {sanitizeEditorialText(caption.boldPrefix, { targetFontIsUnicode: isUnicodeFont })}{' '}
+        </Text>
+      ) : null}
+      {caption.titleText ? (
+        <Text style={fontStyles.italic}>
+          {sanitizeEditorialText(caption.titleText, { targetFontIsUnicode: isUnicodeFont })}
+        </Text>
+      ) : null}
+    </Text>
+  );
+};
+
 export const EditorialTableBlock: React.FC<{
   record: EditorialRecord;
   fontStyles: EditorialFontStyleSet;
@@ -387,6 +445,11 @@ export const EditorialTableBlock: React.FC<{
   baseFontSize: number;
   sectionColumns?: 1 | 2;
   accentColor?: string;
+  headerBgColor?: string;
+  headerTextColor?: string;
+  tableVariant?: EditorialTableVariant;
+  formattedCaption?: FormattedElementCaption;
+  cellTextResolver?: (text: string) => string;
 }> = ({
   record,
   fontStyles,
@@ -394,14 +457,20 @@ export const EditorialTableBlock: React.FC<{
   baseFontSize,
   sectionColumns = 1,
   accentColor = '#1E293B',
+  headerBgColor,
+  headerTextColor,
+  tableVariant,
+  formattedCaption,
+  cellTextResolver,
 }) => {
+  const resolveCellText = cellTextResolver || ((t: string) => t);
   const rawHeaders = Array.isArray(record.tableHeaders)
-    ? record.tableHeaders.map((h) => String(h ?? ''))
+    ? record.tableHeaders.map((h) => resolveCellText(String(h ?? '')))
     : [];
   const rawRows = Array.isArray(record.tableRows)
     ? record.tableRows
         .filter((r) => Array.isArray(r))
-        .map((r) => r.map((c) => String(c ?? '')))
+        .map((r) => r.map((c) => resolveCellText(String(c ?? ''))))
     : [];
   const hasExplicitHeader = record.tableHasHeaderRow !== false;
 
@@ -420,7 +489,7 @@ export const EditorialTableBlock: React.FC<{
       return (
         <View style={{ marginVertical: 6 }}>
           <EditorialRichText
-            text={record.content}
+            text={resolveCellText(record.content)}
             fontStyles={fontStyles}
             isUnicodeFont={isUnicodeFont}
             preserveLineBreaks={true}
@@ -448,11 +517,30 @@ export const EditorialTableBlock: React.FC<{
     typeof record.tableFontSizePt === 'number' && record.tableFontSizePt > 0
       ? record.tableFontSizePt
       : Math.min(autoLayout.suggestedFontSizePt, Math.max(8, baseFontSize - 1));
-  const isApa = (record.tableStylePreset || 'apa') === 'apa';
+
+  const resolvedVariant: EditorialTableVariant =
+    tableVariant ||
+    (record.tableStylePreset === 'grid' || record.tableStylePreset === 'striped'
+      ? 'striped_guide'
+      : 'apa');
+  const isApaStrict = resolvedVariant === 'apa';
+  const isScientific = resolvedVariant === 'scientific_clean';
+  const isCleanThreeLine = isApaStrict || isScientific;
+  const resolvedHeaderBg = headerBgColor || (isCleanThreeLine ? '#FFFFFF' : accentColor);
+  const resolvedHeaderText =
+    headerTextColor || (isCleanThreeLine ? '#0F172A' : '#FFFFFF');
 
   return (
     <View style={{ marginVertical: 10 }}>
-      {record.tableCaption ? (
+      {formattedCaption ? (
+        <EditorialElementCaptionText
+          caption={formattedCaption}
+          fontStyles={fontStyles}
+          isUnicodeFont={isUnicodeFont}
+          fontSize={Math.max(8.5, tableFontSize)}
+          marginBottom={4}
+        />
+      ) : record.tableCaption ? (
         <Text
           minPresenceAhead={40}
           style={[
@@ -479,7 +567,7 @@ export const EditorialTableBlock: React.FC<{
             wrap={false}
             style={{
               flexDirection: 'row',
-              backgroundColor: isApa ? '#F1F5F9' : accentColor,
+              backgroundColor: resolvedHeaderBg,
               borderBottomWidth: 1,
               borderBottomColor: accentColor,
             }}
@@ -503,7 +591,7 @@ export const EditorialTableBlock: React.FC<{
                     {
                       fontSize: tableFontSize,
                       lineHeight: 1.3,
-                      color: isApa ? '#0F172A' : '#FFFFFF',
+                      color: resolvedHeaderText,
                       textAlign: colAlignments[ci] || 'left',
                     },
                   ]}
@@ -515,45 +603,47 @@ export const EditorialTableBlock: React.FC<{
 
         {normalizedRows.map((row, ri) => {
           const maxCellLen = row.reduce((m, c) => Math.max(m, String(c ?? '').length), 0);
+          const rowBg = isApaStrict ? '#FFFFFF' : ri % 2 === 1 ? '#F8FAFC' : '#FFFFFF';
           return (
-          <View
-            key={`tr-${ri}`}
-            wrap={maxCellLen <= 260 ? false : undefined}
-            style={{
-              flexDirection: 'row',
-              backgroundColor: ri % 2 === 1 ? '#F8FAFC' : '#FFFFFF',
-              borderTopWidth: ri > 0 || (hasExplicitHeader && rawHeaders.length > 0) ? 0.5 : 0,
-              borderTopColor: '#CBD5E1',
-            }}
-          >
-            {colWidths.map((pct, ci) => {
-              const cellText = String(row[ci] ?? '');
-              return (
-                <View
-                  key={`tc-${ri}-${ci}`}
-                  style={{
-                    width: `${pct}%`,
-                    paddingVertical: 4.5,
-                    paddingHorizontal: 6,
-                  }}
-                >
-                  <EditorialRichText
-                    text={cellText}
-                    fontStyles={fontStyles}
-                    isUnicodeFont={isUnicodeFont}
-                    preserveLineBreaks={true}
-                    accentColor={accentColor}
+            <View
+              key={`tr-${ri}`}
+              wrap={maxCellLen <= 260 ? false : undefined}
+              style={{
+                flexDirection: 'row',
+                backgroundColor: rowBg,
+                borderTopWidth:
+                  !isApaStrict && (ri > 0 || (hasExplicitHeader && rawHeaders.length > 0)) ? 0.5 : 0,
+                borderTopColor: '#CBD5E1',
+              }}
+            >
+              {colWidths.map((pct, ci) => {
+                const cellText = String(row[ci] ?? '');
+                return (
+                  <View
+                    key={`tc-${ri}-${ci}`}
                     style={{
-                      fontSize: tableFontSize,
-                      lineHeight: 1.32,
-                      color: '#1E293B',
-                      textAlign: colAlignments[ci] || 'left',
+                      width: `${pct}%`,
+                      paddingVertical: 4.5,
+                      paddingHorizontal: 6,
                     }}
-                  />
-                </View>
-              );
-            })}
-          </View>
+                  >
+                    <EditorialRichText
+                      text={cellText}
+                      fontStyles={fontStyles}
+                      isUnicodeFont={isUnicodeFont}
+                      preserveLineBreaks={true}
+                      accentColor={accentColor}
+                      style={{
+                        fontSize: tableFontSize,
+                        lineHeight: 1.32,
+                        color: '#1E293B',
+                        textAlign: colAlignments[ci] || 'left',
+                      }}
+                    />
+                  </View>
+                );
+              })}
+            </View>
           );
         })}
       </View>
@@ -618,55 +708,68 @@ export const EditorialFigurePlaceholderBlock: React.FC<{
   fontStyles: EditorialFontStyleSet;
   isUnicodeFont: boolean;
   accentColor?: string;
-}> = ({ record, fontStyles, isUnicodeFont, accentColor = '#475569' }) => (
-  <View
-    wrap={false}
-    style={{
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: '#94A3B8',
-      backgroundColor: '#F8FAFC',
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      marginVertical: 10,
-      alignItems: 'center',
-      borderRadius: 4,
-    }}
-  >
-    <Text
-      style={[
-        fontStyles.bold,
-        {
-          fontSize: 9,
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
-          color: accentColor,
-          marginBottom: 4,
-        },
-      ]}
+  formattedCaption?: FormattedElementCaption;
+}> = ({ record, fontStyles, isUnicodeFont, accentColor = '#475569', formattedCaption }) => (
+  <View style={{ marginVertical: 10 }}>
+    {formattedCaption && formattedCaption.placement === 'above' && formattedCaption.shouldRender ? (
+      <EditorialElementCaptionText
+        caption={formattedCaption}
+        fontStyles={fontStyles}
+        isUnicodeFont={isUnicodeFont}
+        align="center"
+        marginBottom={4}
+      />
+    ) : null}
+    <View
+      wrap={false}
+      style={{
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        borderColor: '#94A3B8',
+        backgroundColor: '#F8FAFC',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        borderRadius: 4,
+      }}
     >
-      {sanitizeEditorialText(record.figureNumber || 'Figura', { targetFontIsUnicode: isUnicodeFont })}
-    </Text>
-    <Text
-      style={[
-        fontStyles.italic,
-        { fontSize: 10, color: '#1E293B', textAlign: 'center', lineHeight: 1.35 },
-      ]}
-    >
-      {sanitizeEditorialText(record.figureCaption || record.content || 'Espacio reservado para figura', {
-        targetFontIsUnicode: isUnicodeFont,
-      })}
-    </Text>
-    {record.figureHint ? (
       <Text
         style={[
-          fontStyles.regular,
-          { fontSize: 8, color: '#64748B', textAlign: 'center', marginTop: 4 },
+          fontStyles.bold,
+          {
+            fontSize: 9,
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+            color: accentColor,
+            marginBottom: 4,
+          },
         ]}
       >
-        {sanitizeEditorialText(record.figureHint, { targetFontIsUnicode: isUnicodeFont })}
+        {sanitizeEditorialText(formattedCaption?.boldPrefix || record.figureNumber || 'Figura', {
+          targetFontIsUnicode: isUnicodeFont,
+        })}
       </Text>
-    ) : null}
+      <Text
+        style={[
+          fontStyles.italic,
+          { fontSize: 10, color: '#1E293B', textAlign: 'center', lineHeight: 1.35 },
+        ]}
+      >
+        {sanitizeEditorialText(record.figureCaption || record.content || 'Espacio reservado para figura', {
+          targetFontIsUnicode: isUnicodeFont,
+        })}
+      </Text>
+      {record.figureHint ? (
+        <Text
+          style={[
+            fontStyles.regular,
+            { fontSize: 8, color: '#64748B', textAlign: 'center', marginTop: 4 },
+          ]}
+        >
+          {sanitizeEditorialText(record.figureHint, { targetFontIsUnicode: isUnicodeFont })}
+        </Text>
+      ) : null}
+    </View>
   </View>
 );
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowDownAZ, BookOpenCheck, Library, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, BookOpenCheck, Link2, Plus, Trash2 } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { Field } from '../../../shared/core/ui/Field';
 import { AIButton } from '../../../shared/core/ui/AIButton';
@@ -11,11 +11,13 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
   CanonicalCitationStyle,
+  extractInlineCitationTokens,
   formatEditorialCitation,
   normalizeBibliographyStyle,
   sortBibliographyRecords,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import { enrichImportedSectionsWithReferences } from '../domain/editorialCrossRefEngine';
 import { resolveStructuralNormFromDraft } from '../domain/editorialNormEngine';
 import type {
   EditorialBibliographySourceType,
@@ -74,6 +76,21 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     () => (bibSection?.records || []).filter((r) => r.type === 'bibliography_item'),
     [bibSection],
   );
+  const citationCountByBibId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const sec of sections) {
+      if (!sec || sec.sectionKey === 'bibliografia') continue;
+      for (const rec of sec.records || []) {
+        if (!rec || rec.type === 'bibliography_item') continue;
+        const txt = String(rec.content || '');
+        if (!txt.includes('[[cite:')) continue;
+        for (const tok of extractInlineCitationTokens(txt)) {
+          counts.set(tok.bibId, (counts.get(tok.bibId) || 0) + 1);
+        }
+      }
+    }
+    return counts;
+  }, [sections]);
 
   const ensureAndMutateBibRecords = (
     mutator: (current: EditorialRecord[], currentSections: EditorialSection[]) => EditorialRecord[],
@@ -234,6 +251,23 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
         ? 'Referencias renumeradas [1..N] correctamente.'
         : 'Referencias ordenadas alfabéticamente.',
     );
+  };
+
+  const handleAutoLinkInChapters = () => {
+    let stats = { parsedBibCount: 0, linkedCitationsCount: 0, linkedCrossRefsCount: 0 };
+    updateDraft((prev) => {
+      const res = enrichImportedSectionsWithReferences(prev?.sections || [], activeStyle);
+      stats = res;
+      return { ...prev, sections: res.sections };
+    });
+    const total = stats.linkedCitationsCount + stats.linkedCrossRefsCount + stats.parsedBibCount;
+    if (total === 0) {
+      notify.success('No se encontraron menciones nuevas sin vincular en los capítulos.');
+    } else {
+      notify.success(
+        `Sincronización completa: ${stats.linkedCitationsCount} cita(s) y ${stats.linkedCrossRefsCount} referencia(s) cruzadas vinculadas.`,
+      );
+    }
   };
 
   const handleRemoveRecord = async (recId: string) => {
@@ -455,15 +489,30 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
         title={`Fuentes cargadas (${bibRecords.length})`}
         helpText="Acá ves cómo quedarán impresas tus referencias. Podés reordenarlas automáticamente cuando cambies de estilo."
         headerRight={
-          bibRecords.length > 1 && (
-            <button
-              type="button"
-              onClick={handleSortNow}
-              className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--color-accent-text)] cursor-pointer"
-            >
-              {activeStyle === 'vancouver' || activeStyle === 'ieee' ? 'Renumerar [1..N]' : 'Ordenar A–Z'}
-            </button>
-          )
+          <div className="flex flex-wrap items-center gap-1.5">
+            {sections.length > 0 && (
+              <button
+                type="button"
+                onClick={handleAutoLinkInChapters}
+                title="Detecta citas escritas como (Autor, Año) o [N] y menciones a Tabla/Figura/Anexo para vincularlas"
+                className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--color-accent-text)] cursor-pointer"
+                style={{ borderRadius: radius.control }}
+              >
+                <Link2 className="w-3 h-3" />
+                Vincular en capítulos
+              </button>
+            )}
+            {bibRecords.length > 1 && (
+              <button
+                type="button"
+                onClick={handleSortNow}
+                className="px-2 py-1 text-[11px] font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--color-accent-text)] cursor-pointer"
+                style={{ borderRadius: radius.control }}
+              >
+                {activeStyle === 'vancouver' || activeStyle === 'ieee' ? 'Renumerar [1..N]' : 'Ordenar A–Z'}
+              </button>
+            )}
+          </div>
         }
       >
         {bibRecords.length === 0 ? (
@@ -474,12 +523,14 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
           <div className="space-y-2">
             {bibRecords.map((rec, idx) => {
               const formatted = formatEditorialCitation(rec, activeStyle, idx);
+              const citeUses = citationCountByBibId.get(rec.id) || 0;
               return (
                 <div
                   key={rec.id}
-                  className="p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-start justify-between gap-2"
+                  className="p-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-start justify-between gap-2"
+                  style={{ borderRadius: radius.card }}
                 >
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 space-y-1">
                     <p className="text-xs leading-relaxed text-[var(--ui-text-primary)]">
                       {formatted.prefixText}
                       {formatted.italicSegment && <em>{formatted.italicSegment}</em>}
@@ -489,6 +540,18 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
                           : ` ${formatted.suffixText}`
                         : ''}
                     </p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`inline-block px-1.5 py-0.5 text-[10px] font-bold ${
+                          citeUses > 0
+                            ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]'
+                            : 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)]'
+                        }`}
+                        style={{ borderRadius: radius.control }}
+                      >
+                        {citeUses > 0 ? `Citada (${citeUses})` : 'Sin citar en capítulos'}
+                      </span>
+                    </div>
                     {rec.bibAnnotation && (
                       <p className="mt-1 pl-3 border-l-2 border-[var(--ui-border)] text-[11px] text-[var(--ui-text-secondary)] italic">
                         {rec.bibAnnotation}
