@@ -54,13 +54,34 @@ function normalizeMatchTitle(raw: string): string {
     .toLowerCase();
 }
 
+function recordHasRealContent(r: any): boolean {
+  if (!r || typeof r !== 'object') return false;
+  return (
+    String(r.content || '').trim().length > 0 ||
+    String(r.sourceTitle || r.calloutTitle || '').trim().length > 0 ||
+    Boolean(r.imagePath) ||
+    (Array.isArray(r.tableRows) && r.tableRows.length > 0) ||
+    (Array.isArray(r.calloutItems) && r.calloutItems.some((c: any) => String(c || '').trim().length > 0)) ||
+    String(r.footnoteText || '').trim().length > 0 ||
+    (Array.isArray(r.authors) && r.authors.length > 0)
+  );
+}
+
+function isEmptySeedOnlySection(sec: EditorialSection): boolean {
+  const recs = Array.isArray(sec?.records) ? sec.records : [];
+  if (recs.length === 0) return false;
+  return recs.every(
+    (r) => String(r?.id || '').startsWith('rec_seed_') && !recordHasRealContent(r),
+  );
+}
+
 export function buildDefaultMergeDecisions(
   incoming: EditorialSection[],
   existing: EditorialSection[],
 ): Record<string, SectionMergeDecision> {
   const out: Record<string, SectionMergeDecision> = {};
   const hasExistingContent = existing.some((s) =>
-    (s.records || []).some((r) => String(r.content || '').trim().length > 0 || r.imagePath || r.tableRows?.length),
+    (s.records || []).some((r) => recordHasRealContent(r)),
   );
   for (const sec of incoming) {
     if (!hasExistingContent) {
@@ -92,10 +113,14 @@ export function applyEditorialImportMergePlan(params: {
     return incomingSections.map((s, idx) => ({ ...s, position: idx }));
   }
 
-  const working: EditorialSection[] = existingSections.map((s) => ({
-    ...s,
-    records: [...(s.records || [])],
-  }));
+  const working: EditorialSection[] = existingSections
+    .filter((s) => !isEmptySeedOnlySection(s))
+    .map((s) => ({
+      ...s,
+      records: [...(s.records || [])].filter(
+        (r) => !(String(r?.id || '').startsWith('rec_seed_') && !recordHasRealContent(r)),
+      ),
+    }));
 
   for (const inc of incomingSections) {
     const decision = decisions[inc.id] || { action: 'new' };
@@ -151,9 +176,7 @@ export const EditorialImportReviewModal: React.FC<EditorialImportReviewModalProp
   const hasExistingContent = useMemo(
     () =>
       existingSections.some((s) =>
-        (s.records || []).some(
-          (r) => String(r.content || '').trim().length > 0 || Boolean(r.imagePath) || Boolean(r.tableRows?.length),
-        ),
+        (s.records || []).some((r) => recordHasRealContent(r)),
       ),
     [existingSections],
   );

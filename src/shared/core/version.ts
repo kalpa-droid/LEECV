@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 14,
-  patch: 1,
-  label: 'V3.14.1',
+  patch: 2,
+  label: 'V3.14.2',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'fix(pdf-engine): V3.14.1 — Blindaje de fuentes estándar PDF (Times-Roman/Helvetica) y validación profunda de subsetting SFNT sin Font.clear().',
+  stage: 'fix(editor-lee): V3.14.2 — Cero pérdida de texto en AST, extractores PDF/DOCX, persistencia/pestañas y guardas anti-alucinación.',
 } as const;
