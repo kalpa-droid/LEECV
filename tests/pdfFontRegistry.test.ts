@@ -1,7 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { sanitizeFontFamily } from '../src/shared/core/pdf-engine/layers/typography/pdfFontRegistry';
+import {
+  ensureAcademicOrCustomFontRegistered,
+  ensureStandardPdfFontsRegistered,
+  resetBrokenDynamicFonts,
+  resetFontSessionFlagsForTests,
+  sanitizeFontFamily,
+  verifySfntDataUrlSafe,
+} from '../src/shared/core/pdf-engine/layers/typography/pdfFontRegistry';
+import { isDynamicFontRegistered } from '../src/shared/core/pdf-engine/layers/typography/fontSanitizer';
 import { resolveUnifiedTextSpec } from '../src/shared/core/pdf-engine/layers/typography/unifiedTextHierarchyEngine';
 
 const PDF_ENGINE_DIR = join(__dirname, '../src/shared/core/pdf-engine');
@@ -94,5 +102,118 @@ describe('pdfFontRegistry — resolución de fuentes itálicas', () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  afterEach(() => {
+    resetFontSessionFlagsForTests();
+    ensureStandardPdfFontsRegistered();
+  });
+
+  it('4. REGRESIÓN — Font.clear() no deja la sesión sin Times-Roman ni Helvetica al pasar por resetBrokenDynamicFonts / sanitizeFontFamily', async () => {
+    const React = await import('react');
+    const { Font, pdf } = await import('@react-pdf/renderer');
+    const { EditorialPdfDocument } = await import('../src/modules/editor-lee-studio/pdf/EditorialPdfDocument');
+
+    // Simular un vaciado destructivo del registro interno de @react-pdf/font
+    (Font as any).clear();
+    expect(Object.keys((Font as any).getRegisteredFonts())).toHaveLength(0);
+
+    resetBrokenDynamicFonts();
+
+    const reg = (Font as any).getRegisteredFonts();
+    expect(Boolean(reg['Times-Roman'])).toBe(true);
+    expect(Boolean(reg['Times-Bold'])).toBe(true);
+    expect(Boolean(reg['Times-Italic'])).toBe(true);
+    expect(Boolean(reg['Times-BoldItalic'])).toBe(true);
+    expect(Boolean(reg['Helvetica'])).toBe(true);
+
+    const docEl = React.createElement(EditorialPdfDocument, {
+      data: {
+        metadata: { title: 'Recuperación Times-Roman', author: 'Kalpa' },
+        design: {
+          pageSize: 'a4',
+          margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 20 },
+          typography: { fontFamily: 'Times-Roman', fontSize: 11, lineHeight: 1.5 },
+          pageNumbers: true,
+          coverMode: 'libro',
+        },
+        sections: [
+          {
+            id: 'sec_rec',
+            title: 'Capítulo Recuperado',
+            visible: true,
+            includeInToc: true,
+            startNewPage: true,
+            position: 0,
+            records: [{ id: 'r1', type: 'paragraph', content: '**Negrita** y *cursiva* con áéíóúñ.' }],
+          },
+        ],
+        cover: { mode: 'libro', title: 'Recuperación Times-Roman' },
+        tocConfig: { enabled: false, title: 'Índice', showSubtitles: true, position: 'tras-caratula' },
+        manifestRules: {
+          preserveScenes: true,
+          preservePoems: true,
+          preserveCitations: true,
+          typographyCleanup: true,
+          qrQuietZone: 4,
+          qrMinSize: 20,
+        },
+      },
+      preset: 'libro-ensayo-novela',
+      interactiveAnchors: false,
+    });
+
+    const blob = await pdf(docEl as any).toBlob();
+    expect(blob.size).toBeGreaterThan(200);
+  });
+
+  it('5. resetBrokenDynamicFonts elimina familias dinámicas pero conserva las estándar y desactiva isDynamicFontRegistered', async () => {
+    resetFontSessionFlagsForTests();
+    const okTimes = await ensureAcademicOrCustomFontRegistered('Times New Roman');
+    expect(okTimes).toBe(true);
+    expect(isDynamicFontRegistered('Times New Roman')).toBe(true);
+
+    resetBrokenDynamicFonts();
+    expect(isDynamicFontRegistered('Times New Roman')).toBe(false);
+    expect(sanitizeFontFamily('Times New Roman', true, true)).toBe('Times-BoldItalic');
+
+    const { Font } = await import('@react-pdf/renderer');
+    const reg = (Font as any).getRegisteredFonts();
+    expect(Boolean(reg['Times-Roman'])).toBe(true);
+    expect(Boolean(reg['Helvetica'])).toBe(true);
+  });
+
+  it('6. ensureAcademicOrCustomFontRegistered registra Tinos/Arimo locales, deduplica llamadas concurrentes y renderiza español completo', async () => {
+    resetFontSessionFlagsForTests();
+    const [t1, t2, a1] = await Promise.all([
+      ensureAcademicOrCustomFontRegistered('Times New Roman'),
+      ensureAcademicOrCustomFontRegistered('Times New Roman'),
+      ensureAcademicOrCustomFontRegistered('Arial'),
+    ]);
+    expect(t1).toBe(true);
+    expect(t2).toBe(true);
+    expect(a1).toBe(true);
+
+    const React = await import('react');
+    const { pdf, Document, Page, Text } = await import('@react-pdf/renderer');
+    const sample = 'Barrio Limache – Salta Capital. ÁÉÍÓÚÑ áéíóúñ üÜ ¿¡ “Cita” — • § © ®';
+    const doc = React.createElement(
+      Document,
+      null,
+      React.createElement(
+        Page,
+        null,
+        React.createElement(Text, { style: { fontFamily: 'Times New Roman', fontWeight: 'bold', fontStyle: 'italic' } }, sample),
+        React.createElement(Text, { style: { fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'italic' } }, sample),
+      ),
+    );
+    const blob = await pdf(doc as any).toBlob();
+    expect(blob.size).toBeGreaterThan(500);
+  });
+
+  it('7. verifySfntDataUrlSafe rechaza buffers SFNT truncados, WOFF2 falsos o base64 inválido', async () => {
+    expect(await verifySfntDataUrlSafe('data:font/woff2;base64,d09GMgAAAA==')).toBe(false);
+    expect(await verifySfntDataUrlSafe('data:font/ttf;base64,AAEAAAABAAAAAAAAAAAAAAAA')).toBe(false);
+    expect(await verifySfntDataUrlSafe('not-a-data-url')).toBe(false);
   });
 });

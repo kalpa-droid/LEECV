@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 14,
-  patch: 0,
-  label: 'V3.14.0',
+  patch: 1,
+  label: 'V3.14.1',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'feat(editorial): V3.14.0 — Grafo vivo de referencias cruzadas (Tabla N, Figura N, Anexo A + auto-citas APA/Vancouver/IEEE) y diferenciación visual de interiores por plantilla y paleta.',
+  stage: 'fix(pdf-engine): V3.14.1 — Blindaje de fuentes estándar PDF (Times-Roman/Helvetica) y validación profunda de subsetting SFNT sin Font.clear().',
 } as const;
