@@ -1,3 +1,20 @@
+## [2026-11-27] - PR #180 (V3.14.1): Motor PDF — Blindaje de Fuentes Estándar (`Times-Roman` / `Helvetica`) y Validación SFNT Profunda sin `Font.clear()`
+
+**Commit en `main`:** `98f2c405baecdb76daaa08aecfd68931c8bde379`
+
+**Resumen:**
+- **Eliminación de `Font.clear()` y preservación de familias estándar (`pdfFontRegistry.ts`, `fontSanitizer.ts`)**:
+  - Detectado que `Font.clear()` en `@react-pdf/font` v4.0.10 vaciaba las 12 fuentes estándar Type1 (`Times-Roman`, `Helvetica`, `Courier` y variantes) durante los reintentos de `VectorDocViewer.tsx`, provocando `Font family not registered: Times-Roman`.
+  - Se reemplazó el limpiado destructivo en `resetBrokenDynamicFonts()` por limpieza selectiva de familias dinámicas, bypass de sesión para fuentes cacheadas, `Font.reset()` y auto-reparación O(1) vía `ensureStandardPdfFontsRegistered()` / `initPdfFonts()`, además de sincronizar `isDynamicFontRegistered()` con `setLiveFontRegistryProbe()` sin importar `@react-pdf/renderer` en el sanitizador puro.
+- **Validación SFNT profunda, deduplicación y recuperación de visor (`pdfFontRegistry.ts`, `VectorDocViewer.tsx`)**:
+  - Refuerzo de `isValidSfntFontBytes()` (tablas obligatorias `head`, `hhea`, `maxp`, `cmap`, `loca`/`glyf`), creación de `verifySfntDataUrlSafe()` con prueba real de `layout()` + `createSubset().encode()` sobre glifos compuestos latinos (sin romper si `fontkit` no es resoluble directamente) y deduplicación de promesas concurrentes en `ensureAcademicOrCustomFontRegistered()`.
+  - Invocación garantizada de `initPdfFonts()` en `VectorDocViewer.tsx` antes del renderizado y respaldo sin imágenes (`stripPdfImagesFromElement` / `sanitizeImageFieldsInData`) si el reintento vuelve a fallar por imágenes corruptas heredadas.
+- **Pruebas y versionado (`tests/pdfFontRegistry.test.ts`, `src/shared/core/version.ts`)**:
+  - 4 nuevos tests de regresión (recuperación completa tras `Font.clear()`, limpieza selectiva sin afectar fuentes estándar, registro concurrente de `Tinos`/`Arimo` con español completo y rechazo de SFNT truncado) y bump PATCH a `V3.14.1`.
+- **Verificación:** `tests/pdfFontRegistry.test.ts` (`8/8`), `npm run check-all` en 0 errores en local y GitHub Actions (`check-all` + Vercel Preview) en verde antes del merge.
+
+---
+
 ## [2026-11-27] - PR #178 (V3.14.0): EditorLee — Grafo Vivo de Referencias Cruzadas (Tabla N, Figura N, Anexo A), Auto-Vinculación Bibliográfica e Interiores Diferenciados por Plantilla
 
 **Commit en `main`:** `ed867e1470fc22f75a352842e8d00e5ebe6c7e2a`
