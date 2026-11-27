@@ -35,8 +35,6 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
 import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
-import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldBanner';
-import { getLastExternalBackupTimestamp } from '../../shared/core/storage/storageResilienceEngine';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
 import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
@@ -61,18 +59,14 @@ import {
   getBoundNativeFileName,
 } from '../../shared/core/storage/nativeFileDocumentService';
 import { unpackDocumentFromDisk } from '../../shared/core/storage/leecvPackageCodec';
-import { EditorialPresetInicioPanel } from './ui/EditorialPresetInicioPanel';
+import { EditorialInicioArchivoPanel } from './ui/EditorialInicioArchivoPanel';
 import { EditorialCoverPanel } from './ui/EditorialCoverPanel';
+import { EditorialStructurePanel } from './ui/EditorialStructurePanel';
+import { EditorialStylePanel } from './ui/EditorialStylePanel';
 import { EditorialSectionsOverviewPanel } from './ui/EditorialSectionsOverviewPanel';
 import { EditorialSectionFocusPanel } from './ui/EditorialSectionFocusPanel';
 import { EditorialBibliographyPanel } from './ui/EditorialBibliographyPanel';
-import {
-  EditorialDisenoPanel,
-  EditorialTocPanel,
-  EditorialMetadataPanel,
-  EditorialHistorialPanel,
-} from './ui/EditorialDesignAndMetaPanels';
-import { EditorialImportAiPanel } from './panels/EditorialImportAiPanel';
+import { EditorialTocPanel } from './ui/EditorialDesignAndMetaPanels';
 import {
   autoCleanEditorialPunctuation,
   EditorialPreflightIssue,
@@ -308,6 +302,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         rawMap,
         prev.courtesyBlankBeforeMap,
         pagination,
+        debouncedDraft?.design,
+        debouncedDraft?.cover,
       );
 
       if (
@@ -765,29 +761,53 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [editorialId, handleSaveToDisk, handleSaveDocument]);
 
+  const navigateStepTab = useCallback((nextTab: string) => {
+    if (nextTab === 'editorial_import_ai' || nextTab === 'editorial_historial') {
+      setActiveStepTab('editorial_inicio');
+      return;
+    }
+    if (nextTab === 'editorial_metadata') {
+      setActiveStepTab('editorial_portada');
+      return;
+    }
+    setActiveStepTab(nextTab);
+  }, []);
+
   const handleDuplicate = useCallback(
-    (saved: any) => {
-      if (!draft) return;
-      updateDraft((prev: any) => ({
-        ...prev,
-        sections: [
-          ...prev.sections,
-          {
-            id: `ed_seccion_${Date.now()}`,
-            title: saved?.title || 'Nueva sección',
-            visible: true,
-            includeInToc: true,
-            startNewPage: true,
-            position: prev.sections.length,
-            records: [],
-          },
-        ],
-      }));
-      setActiveStepTab('editorial_secciones');
-      setIsPanelOpen(true);
-      showInfo('Sección agregada al borrador.');
+    async (saved: any) => {
+      if (!saved?.id) return;
+      await withErrorHandling(
+        async () => {
+          const loaded = await loadDocumentById(saved.id, 'editorial');
+          const sanitized = sanitizeEditorialData(loaded);
+          if (!sanitized) throw new Error('documento_editorial_invalido');
+          const copyId = `ed_copy_${Date.now()}`;
+          const prevTitle = String(sanitized?.metadata?.title || saved?.title || 'Mi obra').trim();
+          const cloned = {
+            ...sanitized,
+            id: copyId,
+            updatedAt: Date.now(),
+            metadata: {
+              ...(sanitized.metadata || {}),
+              title: prevTitle.endsWith('(copia)') ? prevTitle : `${prevTitle} (copia)`,
+            },
+          };
+          await saveDocumentDraftLocal(cloned, 'editorial');
+          hasEditedRef.current = false;
+          history.resetSeed(cloned);
+          setDraft(cloned);
+          setActiveStepTab('editorial_inicio');
+          setIsPanelOpen(true);
+          showSuccess('Copia completa creada y abierta.');
+        },
+        {
+          context: 'Duplicar documento EditorLee',
+          errorMessage: 'No pudimos duplicar el documento guardado.',
+          notify: (msg) => showError(msg),
+        },
+      );
     },
-    [draft, updateDraft, showInfo],
+    [history, showSuccess, showError],
   );
 
   const handleOpenSaved = useCallback(
@@ -866,7 +886,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             currentCvData={draft}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={() => {
-              setActiveStepTab('editorial_historial');
+              setActiveStepTab('editorial_inicio');
               setIsPanelOpen(true);
             }}
             onSaveCVClick={handleSaveDocument}
@@ -936,7 +956,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             cvData={draft}
             activeTab={activeStepTab}
             setActiveTab={(tab) => {
-              setActiveStepTab(tab);
+              navigateStepTab(tab);
               setIsPanelOpen(true);
               focusSectionInPreview(tab);
             }}
@@ -1009,18 +1029,17 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 </div>
               </div>
             )}
-            <LocalBackupShieldBanner
-              visible={!getLastExternalBackupTimestamp() && Array.isArray(draft?.sections) && draft.sections.length >= 2}
-              title="Resguardá tu obra fuera del navegador"
-              description="Guardá una copia en tu dispositivo o en tu Google Drive personal desde Archivo → Abrir / Guardar."
-              onBackupNow={() => void handleSaveToDisk(true)}
-              dismissKey="leecv_editorial_shield_dismissed"
-            />
             {activeStepTab === 'editorial_inicio' && (
-              <EditorialPresetInicioPanel
+              <EditorialInicioArchivoPanel
+                docId={editorialId}
                 draft={draft}
-                onOpenGlobalPresetModal={() => setGlobalModalAxis('preset')}
-                onOpenImportAi={() => setActiveStepTab('editorial_import_ai')}
+                updateDraft={updateDraft}
+                notify={notify}
+                setActiveStepTab={navigateStepTab}
+                boundFileName={getBoundNativeFileName(editorialId)}
+                onNewDraft={handleNewDraft}
+                onOpenSaved={handleOpenSaved}
+                onDuplicateSaved={handleDuplicate}
                 onSaveToDisk={() => void handleSaveToDisk(true)}
                 onOpenDiskFile={handleOpenDiskFile}
               />
@@ -1029,14 +1048,36 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               <EditorialCoverPanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
+                setActiveStepTab={navigateStepTab}
+              />
+            )}
+            {activeStepTab === 'editorial_estructura' && (
+              <EditorialStructurePanel
+                draft={draft}
+                updateDraft={updateDraft}
+                setActiveStepTab={navigateStepTab}
+              />
+            )}
+            {activeStepTab === 'editorial_diseño' && (
+              <EditorialStylePanel
+                draft={draft}
+                updateDraft={updateDraft}
+                setActiveStepTab={navigateStepTab}
+              />
+            )}
+            {activeStepTab === 'editorial_toc' && (
+              <EditorialTocPanel
+                draft={draft}
+                updateDraft={updateDraft}
+                setActiveStepTab={navigateStepTab}
+                resolvedTocMap={resolvedTocState.displayMap}
               />
             )}
             {activeStepTab === 'editorial_secciones' && (
               <EditorialSectionsOverviewPanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
+                setActiveStepTab={navigateStepTab}
                 onFocusSection={focusSectionInPreview}
               />
             )}
@@ -1048,46 +1089,6 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 onOpenGlobalBibModal={() => setGlobalModalAxis('bibliography')}
               />
             )}
-            {activeStepTab === 'editorial_diseño' && (
-              <EditorialDisenoPanel
-                draft={draft}
-                updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
-                onOpenGlobalNormModal={() => setGlobalModalAxis('norms')}
-                onOpenPrintFlowModal={() => setIsPrintFlowModalOpen(true)}
-              />
-            )}
-            {activeStepTab === 'editorial_toc' && (
-              <EditorialTocPanel
-                draft={draft}
-                updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
-                resolvedTocMap={resolvedTocState.displayMap}
-              />
-            )}
-            {activeStepTab === 'editorial_metadata' && (
-              <EditorialMetadataPanel
-                draft={draft}
-                updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
-              />
-            )}
-            {activeStepTab === 'editorial_import_ai' && (
-              <EditorialImportAiPanel
-                draft={draft}
-                updateDraft={updateDraft}
-                notify={notify}
-                setActiveStepTab={setActiveStepTab}
-                onExportPDF={handleExportPDF}
-              />
-            )}
-            {activeStepTab === 'editorial_historial' && (
-              <EditorialHistorialPanel
-                setActiveStepTab={setActiveStepTab}
-                onOpenSaved={handleOpenSaved}
-                onDuplicate={handleDuplicate}
-              />
-            )}
             {activeDynamicSection && (
               <EditorialSectionFocusPanel
                 key={activeDynamicSection.section.id}
@@ -1095,8 +1096,9 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 draft={draft}
                 badgeLabel={activeDynamicSection.badgeLabel}
                 updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
+                setActiveStepTab={navigateStepTab}
                 notify={notify}
+                onCommitHistoryBoundary={history.commitBoundary}
               />
             )}
 

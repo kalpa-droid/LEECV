@@ -134,8 +134,9 @@ describe('Taxonomía de Botones y Cascada Anti-Pisado (V3.2.0)', () => {
     for (const tab of editorialTabs) {
       expect(VALID_DOCK_ROLES.has(tab.role!)).toBe(true);
     }
+    expect(editorialTabs.find((t) => t.id === 'editorial_inicio')?.role).toBe('catalog');
+    expect(editorialTabs.find((t) => t.id === 'editorial_estructura')?.role).toBe('preset');
     expect(editorialTabs.find((t) => t.id === 'editorial_diseño')?.role).toBe('preset');
-    expect(editorialTabs.find((t) => t.id === 'editorial_import_ai')?.role).toBe('ai_utility');
     expect(editorialTabs.find((t) => t.id === 'sec2')?.role).toBe('custom_record');
   });
 });

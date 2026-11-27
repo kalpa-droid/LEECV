@@ -17,6 +17,7 @@
 
 import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from './editorialPresetCatalog';
 import { buildResolvedTocPageLabels } from './editorialTocResolver';
+import { resolveEditorialSectionCoverState } from './sanitizeEditorialData';
 import type {
   EditorialChapterBreakMode,
   EditorialFooterAlignment,
@@ -170,16 +171,23 @@ export function resolveEffectiveEditorialPagination(draft: any): EffectiveEditor
 }
 
 /**
- * Determina si una sección individual comienza en página nueva respetando tanto el modo global
- * ('continuous' | 'next_page' | 'odd_page') como si la sección tiene carátula separadora.
+ * Determina si una sección individual comienza en página nueva respetando primero
+ * si tiene carátula separadora (global o puntual), luego cualquier excepción explícita
+ * (`startNewPageOverride`) y finalmente la regla global de impresión (`chapterBreakMode`).
  */
 export function resolveSectionEffectiveStartNewPage(
   section: Partial<EditorialSection>,
   effectiveChapterBreakMode: EditorialChapterBreakMode,
+  design?: Record<string, any> | null,
+  cover?: Record<string, any> | null,
 ): boolean {
-  if (section?.sectionCover?.enabled) return true;
-  if (effectiveChapterBreakMode === 'continuous') return false;
-  return section?.startNewPage !== false;
+  if (resolveEditorialSectionCoverState(section, design, cover).enabled) {
+    return true;
+  }
+  if (typeof section?.startNewPageOverride === 'boolean') {
+    return section.startNewPageOverride;
+  }
+  return effectiveChapterBreakMode !== 'continuous';
 }
 
 /**
@@ -194,6 +202,8 @@ export function computePaginationWithCourtesyBlanks(
   scannedRawAnchorMap: Record<string, number>,
   renderedCourtesyMap: Record<string, boolean>,
   pagination: EffectiveEditorialPagination,
+  design?: Record<string, any> | null,
+  cover?: Record<string, any> | null,
 ): CourtesyBlankComputationResult {
   const visibleSections = (sections || []).filter((s) => s && s.visible !== false);
 
@@ -254,6 +264,8 @@ export function computePaginationWithCourtesyBlanks(
     const startsNew = resolveSectionEffectiveStartNewPage(
       sec,
       pagination.effectiveChapterBreakMode,
+      design,
+      cover,
     );
     const intrinsicStart = intrinsicMap[sec.id];
 

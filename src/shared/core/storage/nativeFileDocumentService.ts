@@ -17,6 +17,7 @@ import {
   getWorkspaceFolderMeta,
   loadDirectoryHandle,
   loadDocumentFileHandle,
+  recordExternalBackupTimestamp,
   saveDirectoryHandle,
   saveDocumentFileHandle,
   saveWorkspaceFolderMeta,
@@ -398,6 +399,7 @@ export async function saveDocumentToDisk(
           lastSavedFileName: savedName,
           lastSavedAt: new Date().toISOString(),
         });
+        recordExternalBackupTimestamp();
         emitExplicitSaveNotice(savedName, meta?.folderName ? 'workspace-folder' : 'picked-file', meta?.folderName);
         return {
           status: 'saved',
@@ -435,6 +437,7 @@ export async function saveDocumentToDisk(
             lastSavedFileName: packed.suggestedFileName,
             lastSavedAt: new Date().toISOString(),
           });
+          recordExternalBackupTimestamp();
           emitExplicitSaveNotice(packed.suggestedFileName, 'workspace-folder', folderName);
           return {
             status: 'saved',
@@ -485,6 +488,7 @@ export async function saveDocumentToDisk(
           bindNativeFileHandle(docId, handle);
         }
         const savedName = handle.name || packed.suggestedFileName;
+        recordExternalBackupTimestamp();
         emitExplicitSaveNotice(savedName, 'picked-file');
         return {
           status: 'saved',
@@ -501,6 +505,7 @@ export async function saveDocumentToDisk(
   }
 
   downloadBlob(packed.blob, packed.suggestedFileName);
+  recordExternalBackupTimestamp();
   emitExplicitSaveNotice(packed.suggestedFileName, 'browser-downloads');
   return {
     status: 'saved',

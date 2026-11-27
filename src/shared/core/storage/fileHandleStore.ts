@@ -156,3 +156,29 @@ export function clearWorkspaceFolderMeta(): void {
     // noop
   }
 }
+
+const LAST_EXTERNAL_BACKUP_KEY = 'leecv_last_external_backup_at_v1';
+
+/**
+ * Registra la fecha/hora del último respaldo externo real (Carpeta Segura, .leecv, .zip, etc.).
+ */
+export function recordExternalBackupTimestamp(isoDate: string = new Date().toISOString()): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(LAST_EXTERNAL_BACKUP_KEY, isoDate);
+    }
+  } catch {
+    // Ignorar en entornos sin localStorage
+  }
+}
+
+export function getLastExternalBackupTimestamp(): string | null {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(LAST_EXTERNAL_BACKUP_KEY);
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}

@@ -35,8 +35,17 @@ describe('EditorLee V3.1 — Dock con distintivos numéricos/romanos y Chunker d
     });
 
     const byId = Object.fromEntries(tabs.map((t) => [t.id, t]));
-    expect(tabs[0]?.id).toBe('editorial_import_ai');
-    expect(tabs[1]?.id).toBe('editorial_inicio');
+    expect(tabs[0]?.id).toBe('editorial_inicio');
+    expect(tabs[1]?.id).toBe('editorial_portada');
+    expect(tabs.slice(0, 7).map((t) => t.id)).toEqual([
+      'editorial_inicio',
+      'editorial_portada',
+      'editorial_estructura',
+      'editorial_diseño',
+      'editorial_toc',
+      'editorial_secciones',
+      'editorial_bibliografia',
+    ]);
     expect(byId.editorial_inicio.isLarge).toBe(false);
     expect(byId.editorial_inicio.stepNumber).toBeUndefined();
     expect(byId.editorial_bibliografia.isLarge).toBe(false);

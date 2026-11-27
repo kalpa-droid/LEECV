@@ -150,7 +150,14 @@ export async function renderEditorialPdfWithExactToc(
   let currentBlob = await pdf(pass1Doc as any).toBlob();
   const pageTexts = await scanPdfPagesText(currentBlob);
   const rawMap = extractTocAnchorMapFromPageTexts(pageTexts);
-  const resolved = computePaginationWithCourtesyBlanks(sections, rawMap, {}, pagination);
+  const resolved = computePaginationWithCourtesyBlanks(
+    sections,
+    rawMap,
+    {},
+    pagination,
+    data?.design,
+    data?.cover,
+  );
 
   const tocEnabled = Boolean(data?.tocConfig?.enabled && sections.length > 0);
   const hasCourtesyBlanks = Object.keys(resolved.courtesyBlankBeforeMap).length > 0;
@@ -194,6 +201,8 @@ export async function renderEditorialPdfWithExactToc(
     pass2RawMap,
     resolved.courtesyBlankBeforeMap,
     pagination,
+    data?.design,
+    data?.cover,
   );
 
   const firstBodyKey = Object.keys(rawMap)[0];

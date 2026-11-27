@@ -215,6 +215,8 @@ export interface EditorialDesignConfig {
   preventRunts?: boolean;
   /** Bibliografía con resumen/comentario anotado debajo de cada referencia. */
   annotatedBibliography?: boolean;
+  /** Columnas globales para secciones del cuerpo (1 o 2). Cada capítulo puede definir excepción puntual. */
+  bodyColumns?: 1 | 2;
 }
 
 /** Configuración global de carátulas separadoras por capítulo o sección. */
@@ -232,6 +234,8 @@ export interface EditorialSectionDividerConfig {
 
 /** Configuración puntual de carátula separadora en una sección individual (Nivel 3). */
 export interface EditorialSectionCoverOverride {
+  /** 'inherit' sigue la regla global de Estructura y Hoja; 'on' / 'off' fuerza excepción puntual. */
+  mode?: 'inherit' | 'on' | 'off';
   enabled?: boolean;
   kicker?: string;
   subtitle?: string;
@@ -332,6 +336,10 @@ export interface EditorialSection {
   sectionCover?: EditorialSectionCoverOverride;
   /** Diseño de columnas específico de esta sección (1 o 2 columnas). */
   columns?: 1 | 2;
+  /** Sobreescritura puntual de salto de hoja para esta sección (undefined hereda Impresión global). */
+  startNewPageOverride?: boolean;
+  /** Sobreescritura puntual de columnas (undefined hereda design.bodyColumns global). */
+  columnsOverride?: 1 | 2;
   columnGapMm?: number;
   spanHeadingsFullWidth?: boolean;
 }

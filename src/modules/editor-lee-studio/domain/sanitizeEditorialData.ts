@@ -63,7 +63,11 @@ export function resolveEditorialSectionCoverState(
       (!section?.category && !section?.sectionKey));
 
   let enabled = false;
-  if (typeof override?.enabled === 'boolean') {
+  if (override?.mode === 'on') {
+    enabled = true;
+  } else if (override?.mode === 'off') {
+    enabled = false;
+  } else if (override?.mode !== 'inherit' && typeof override?.enabled === 'boolean') {
     enabled = override.enabled;
   } else if (globalCfg.enabled && !isBib) {
     enabled = globalCfg.scope === 'all-sections' ? true : isBody;
@@ -264,6 +268,8 @@ function sanitizeSection(raw: unknown, index: number): Record<string, any> | nul
     ...(typeof raw.epigraphText === 'string' ? { epigraphText: raw.epigraphText } : {}),
     ...(typeof raw.epigraphAuthor === 'string' ? { epigraphAuthor: raw.epigraphAuthor } : {}),
     ...(raw.columnCount === 1 || raw.columnCount === 2 ? { columnCount: raw.columnCount } : {}),
+    ...(typeof raw.startNewPageOverride === 'boolean' ? { startNewPageOverride: raw.startNewPageOverride } : {}),
+    ...(raw.columnsOverride === 1 || raw.columnsOverride === 2 ? { columnsOverride: raw.columnsOverride } : {}),
     records,
   };
 }
