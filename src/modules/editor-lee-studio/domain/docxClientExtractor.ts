@@ -546,6 +546,11 @@ function mergeConsecutiveVerseBlocks(
 }
 
 export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array): Promise<DocxClientExtractionResult> {
+  const {
+    detectSafeDocumentMime,
+    MAX_DOCX_UNCOMPRESSED_BYTES,
+    MAX_DOCX_EMBEDDED_IMAGES,
+  } = await import('../../../shared/core/document-ast/documentAst');
   const JSZip = (await import('jszip')).default;
   const bytes =
     input instanceof Uint8Array
@@ -554,10 +559,38 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
         ? new Uint8Array(input)
         : new Uint8Array(await input.arrayBuffer());
 
+  if (detectSafeDocumentMime(bytes) !== 'docx') {
+    throw new Error('El archivo no tiene firma binaria válida de documento Word (.docx).');
+  }
+
   const zip = await JSZip.loadAsync(bytes);
+
+  // Escudo Anti Zip-Bomb: verificar tamaño descomprimido acumulado declarado y real
+  let estimatedUncompressed = 0;
+  let declaredMediaCount = 0;
+  for (const [entryName, entry] of Object.entries(zip.files)) {
+    const rawSize = Number((entry as any)?._data?.uncompressedSize);
+    if (Number.isFinite(rawSize) && rawSize > 0) {
+      estimatedUncompressed += rawSize;
+      if (estimatedUncompressed > MAX_DOCX_UNCOMPRESSED_BYTES) {
+        throw new Error('El documento Word supera el límite seguro de tamaño interno (50 MB).');
+      }
+    }
+    if (!entry.dir && /^word\/media\//i.test(entryName)) {
+      declaredMediaCount++;
+    }
+  }
+  if (declaredMediaCount > MAX_DOCX_EMBEDDED_IMAGES * 2) {
+    throw new Error('El documento contiene demasiadas imágenes embebidas para procesarse en navegador.');
+  }
+
   const docXml = await zip.file('word/document.xml')?.async('string');
   if (!docXml) {
     throw new Error('El archivo .docx no contiene word/document.xml.');
+  }
+  let unpackedBytesAcc = docXml.length * 2;
+  if (unpackedBytesAcc > MAX_DOCX_UNCOMPRESSED_BYTES) {
+    throw new Error('El documento Word supera el límite seguro de tamaño interno (50 MB).');
   }
 
   const parser = new DOMParser();
@@ -674,16 +707,31 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
       const rId = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
       const targetPath = rId ? relsById.get(rId) : undefined;
       if (targetPath && /\.(png|jpe?g|webp|gif|bmp|tiff?|emf|wmf|svg|avif|heic)$/i.test(targetPath)) {
+        if (stats.images >= MAX_DOCX_EMBEDDED_IMAGES) {
+          warnings.push(
+            `Se alcanzó el límite máximo de ${MAX_DOCX_EMBEDDED_IMAGES} imágenes por documento; las restantes se marcaron como espacio de figura.`,
+          );
+          blocks.push({
+            kind: 'figure_placeholder',
+            figureCaption: `Figura adicional (${targetPath.split('/').pop() || 'límite por documento'})`,
+          });
+          stats.figurePlaceholders++;
+          continue;
+        }
         const mediaFile = zip.file(targetPath);
         if (mediaFile) {
-          const bytes = await mediaFile.async('uint8array');
+          const mediaBytes = await mediaFile.async('uint8array');
+          unpackedBytesAcc += mediaBytes.byteLength;
+          if (unpackedBytesAcc > MAX_DOCX_UNCOMPRESSED_BYTES) {
+            throw new Error('El documento Word supera el límite seguro de tamaño interno (50 MB).');
+          }
           const {
             detectImageMagicMime,
             encodeUint8ArrayToBase64,
             sanitizeImageDataUrlForPdf,
           } = await import('../../../shared/core/utils/imageCompressor');
 
-          const magic = detectImageMagicMime(bytes);
+          const magic = detectImageMagicMime(mediaBytes);
           if (magic === 'empty' || magic === 'unsupported') {
             blocks.push({
               kind: 'figure_placeholder',
@@ -697,7 +745,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
             continue;
           }
 
-          const rawDataUrl = `data:${magic};base64,${encodeUint8ArrayToBase64(bytes)}`;
+          const rawDataUrl = `data:${magic};base64,${encodeUint8ArrayToBase64(mediaBytes)}`;
           const sanitizedDataUrl = await sanitizeImageDataUrlForPdf(rawDataUrl);
           if (!sanitizedDataUrl) {
             blocks.push({

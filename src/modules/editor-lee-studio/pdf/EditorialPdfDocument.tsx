@@ -1031,6 +1031,8 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
     const effectiveStartNewPage = resolveSectionEffectiveStartNewPage(
       rawSec || section.raw,
       pagination.effectiveChapterBreakMode,
+      rawDesign,
+      model.cover,
     );
     const needsCourtesyBlank = Boolean(courtesyBlankBeforeMap?.[section.id]);
 
@@ -1094,7 +1096,17 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       }
     }
 
-    const sectionCols: 1 | 2 = rawSec?.columnCount === 2 || rawSec?.columns === 2 ? 2 : 1;
+    const isBodySectionColsEligible = !isBibSection && rawSec?.category !== 'preliminares';
+    const sectionCols: 1 | 2 =
+      rawSec?.columnsOverride === 1 || rawSec?.columnsOverride === 2
+        ? rawSec.columnsOverride
+        : rawSec?.columnCount === 2 || rawSec?.columns === 2
+          ? 2
+          : rawSec?.columnCount === 1 || rawSec?.columns === 1
+            ? 1
+            : isBodySectionColsEligible && rawDesign?.bodyColumns === 2
+              ? 2
+              : 1;
     const cleanSectionTitle = stripTrailingHeaderPunctuation(
       sanitizeEditorialText(section.title || `Sección ${secIndex + 1}`, {
         targetFontIsUnicode: isUnicodeFont,

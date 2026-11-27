@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowDownAZ, BookOpenCheck, Library, Plus, Trash2 } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
-import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
 import { AIButton } from '../../../shared/core/ui/AIButton';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { radius } from '../../../shared/core/uiDesignSystem';
@@ -43,8 +43,8 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   draft,
   updateDraft,
   notify,
-  onOpenGlobalBibModal,
-}) => {
+  onOpenGlobalBibModal: _onOpenGlobalBibModal,
+}: EditorialBibliographyPanelProps) => {
   const { confirm: confirmBib } = useConfirm();
   const sections: EditorialSection[] = useMemo(
     () => (Array.isArray(draft?.sections) ? draft.sections : []),
@@ -254,46 +254,40 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   return (
     <div className="space-y-5">
       <div
-        className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
-        style={{ borderRadius: radius.card }}
+        className="px-3 py-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
+        style={{ borderRadius: radius.control }}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Library className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-          <div className="min-w-0">
-            <p className="text-xs font-extrabold text-[var(--ui-text-primary)] truncate">
-              Estilo de citas: {guide.label}
-            </p>
-            <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">
-              Se actualiza en tus capítulos automáticamente
-            </p>
-          </div>
+        <div className="min-w-0">
+          <p className="text-xs font-bold text-[var(--ui-text-primary)]">
+            Bibliografía comentada (resumen debajo)
+          </p>
+          <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">
+            Norma activa: {guide.label} · Se ajusta desde Normas arriba
+          </p>
         </div>
-        {onOpenGlobalBibModal && (
-          <button
-            type="button"
-            onClick={onOpenGlobalBibModal}
-            className="px-2.5 py-1 rounded-full border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer shrink-0"
-          >
-            Cambiar estilo
-          </button>
-        )}
+        <SectionSwitch
+          size="sm"
+          checked={Boolean(draft?.design?.annotatedBibliography)}
+          onChange={(next) =>
+            updateDraft((prev) => ({
+              ...prev,
+              design: { ...(prev?.design || {}), annotatedBibliography: next },
+            }))
+          }
+          label="Bibliografía comentada"
+        />
       </div>
-
-      <ContextualGuideBox title={`Regla activa: ${guide.label}`} moreHelpText={guide.referenceExample}>
-        <p>{guide.shortRule}</p>
-        <p className="mt-1 font-semibold text-[var(--color-accent-text)]">{guide.inTextExample}</p>
-      </ContextualGuideBox>
 
       <PanelSection
         icon={<BookOpenCheck className="w-4 h-4" />}
         title="Pegar citas sueltas (con IA)"
-        helpText="Si tenés links, libros anotados o apuntes sin ordenar, pegalos acá y tocá el botón con el ícono de IA para convertirlos a la norma activa."
+        helpTitle={`Regla activa: ${guide.label}`}
+        helpText={`${guide.shortRule} Ejemplo en el texto: ${guide.inTextExample}. Si tenés links, libros anotados o apuntes sin ordenar, pegalos acá y tocá el botón de IA para estructurarlos.`}
         headerRight={
           <AIButton
             label="Convertir citas con IA"
             onGenerate={handleParseRawWithAi}
             onSuccess={() => {}}
-            helpText="Lidio lee tu borrador y propone los campos estructurados antes de agregarlos."
           />
         }
       >

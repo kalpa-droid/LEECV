@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 11,
-  patch: 1,
-  label: 'V3.11.1',
+  minor: 12,
+  patch: 0,
+  label: 'V3.12.0',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'fix(core): V3.11.1 — Blindaje total contra DataView en vista previa PDF (imágenes DOCX y fuentes TTF/OTF), Undo/Redo conectado en las 6 apps (PC y móvil) y confirmaciones useConfirm() en borrados destructivos.',
+  stage: 'feat(editorial): V3.12.0 — Motor AST Lossless con Asset Vault y biyección 1:1, EditorLee en 7 pasos sin ruido, cascada global-sección real y lienzo limpio con corrector multilingüe.',
 } as const;

@@ -3,8 +3,8 @@ import { ArrowDown, ArrowUp, Edit3, Layers, Plus } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
-import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { VisibilityEyeToggle } from '../../../shared/core/ui/VisibilityEyeToggle';
+import { radius } from '../../../shared/core/uiDesignSystem';
 import {
   EDITORIAL_SECTION_CATALOG,
   createSectionFromDefinition,
@@ -90,12 +90,8 @@ export const EditorialSectionsOverviewPanel: React.FC<EditorialSectionsOverviewP
         icon={<Layers className="w-4 h-4" />}
         title="Capítulos y apartados"
         helpTitle="Estructura viva en la barra"
-        helpText="Cada parte que ves acá también tiene su botón numerado en la barra lateral (i, ii para preliminares, 1, 2 para capítulos y A, B para anexos). Tocá cualquiera para editar su texto."
+        helpText="Cada parte tiene su botón numerado en la barra lateral (i, ii para preliminares, 1, 2 para capítulos y A, B para anexos). Tocá cualquier capítulo para redactar o revisarlo, usá las flechas para ordenar o el ojo para ocultarlo."
       >
-        <ContextualGuideBox title="Cómo organizar tu obra">
-          Tocá el ícono de lápiz para abrir un capítulo en modo enfoque, usá el ojo si querés ocultarlo sin borrarlo, o agregá nuevas secciones abajo.
-        </ContextualGuideBox>
-
         {sections.length === 0 ? (
           <div className="p-5 text-center rounded-xl border border-dashed border-[var(--ui-border)] text-xs text-[var(--ui-text-secondary)]">
             Todavía no hay capítulos cargados. Elegí una plantilla en Inicio o agregá secciones desde abajo.
@@ -189,10 +185,11 @@ export const EditorialSectionsOverviewPanel: React.FC<EditorialSectionsOverviewP
 
       <button
         type="button"
-        onClick={() => setActiveStepTab('editorial_diseño')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-lg text-xs font-bold cursor-pointer"
+        onClick={() => setActiveStepTab('editorial_bibliografia')}
+        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
+        style={{ borderRadius: radius.control }}
       >
-        Continuar a Diseño y Hoja →
+        Continuar a Bibliografía y Citas →
       </button>
     </div>
   );

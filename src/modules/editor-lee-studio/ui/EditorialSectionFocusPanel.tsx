@@ -1,17 +1,20 @@
 import React, { useMemo, useState } from 'react';
-import { BookmarkPlus, Edit3, FilePlus2, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { FilePlus2, Plus, Settings2, SpellCheck, Trash2 } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
-import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
-import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
 import { VisibilityEyeToggle } from '../../../shared/core/ui/VisibilityEyeToggle';
-import { AIButton } from '../../../shared/core/ui/AIButton';
-import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { ManualOverrideBadge } from '../../../shared/core/ui/ManualOverrideBadge';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
-import { encodeImageFileWithinBudget } from '../../../shared/core/cv-import/pageImageEncoder';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
 import { resolveEditorialSectionCoverState } from '../domain/sanitizeEditorialData';
+import {
+  createDefaultEditorialRecord,
+  insertRecordAt,
+  moveRecord,
+  reorderRecord,
+  splitParagraphRecord,
+} from '../domain/editorialBlockOperations';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
   buildInlineCiteToken,
@@ -23,12 +26,18 @@ import {
   resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
-import { computeOptimalTableLayout } from '../domain/editorialLayoutEngines';
+import { CleanBlockCanvas } from './chapter-editor/CleanBlockCanvas';
+import {
+  SectionProofreadDrawer,
+  type ProofreadIssue,
+} from './chapter-editor/SectionProofreadDrawer';
 import type {
   EditorialBibliographySourceType,
   EditorialRecord,
+  EditorialRecordType,
   EditorialSection,
 } from '../domain/editorialTypes';
+import { radius } from '../../../shared/core/uiDesignSystem';
 
 export interface EditorialSectionFocusPanelProps {
   section: EditorialSection;
@@ -37,44 +46,50 @@ export interface EditorialSectionFocusPanelProps {
   updateDraft: (updater: (prev: any) => any) => void;
   setActiveStepTab: (tab: string) => void;
   notify: { success: (msg: string) => void; error: (msg: string) => void };
+  onCommitHistoryBoundary?: () => void;
 }
 
 const SECTION_WRITING_GUIDES: Record<string, string> = {
   prologo: 'Presentá por qué nace la obra, el contexto o quién invita a leerla.',
+  dedicatoria: 'Un párrafo breve, personal o institucional antes de iniciar el contenido.',
+  agradecimientos: 'Reconocé a personas, instituciones o colegas que colaboraron en la obra.',
   resumen: 'Resumí objetivo, método y principales hallazgos en 150 a 250 palabras claras.',
-  resumen_ejecutivo: 'Resumí en media hoja el problema, la recomendación principal y el impacto esperado para quien toma decisiones.',
+  resumen_ejecutivo: 'Resumí en media hoja el problema, la recomendación principal y el impacto esperado.',
   introduccion: 'Explicá qué tema abordás, por qué importa y cuál es el propósito del trabajo.',
-  objetivos_alcance: 'Detallá el objetivo general, las metas concretas y qué queda incluido o fuera del alcance.',
-  diagnostico: 'Describí la situación actual, evidencia relevada, causas raíz o línea base.',
-  propuesta_tecnica: 'Explicá la solución propuesta, arquitectura, entregables y especificaciones técnicas.',
-  cronograma: 'Organizá las etapas, hitos, responsables y plazos usando una lista o tabla clara.',
-  presupuesto: 'Desglosá rubros, horas, materiales, costos unitarios y totales en una tabla ordenada.',
-  riesgos: 'Identificá riesgos probables, su nivel de impacto y la acción preventiva para cada uno.',
+  objetivos_alcance: 'Detallá el objetivo general, las metas concretas y qué queda incluido.',
+  diagnostico: 'Describí la situación actual, evidencia relevada o línea base.',
+  propuesta_tecnica: 'Explicá la solución propuesta, entregables y especificaciones técnicas.',
+  cronograma: 'Organizá las etapas, hitos, responsables y plazos en lista o tabla.',
+  presupuesto_recursos: 'Desglosá rubros, horas, materiales y costos unitarios en una tabla.',
+  riesgos: 'Identificá riesgos probables, nivel de impacto y acción preventiva.',
   marco_teorico: 'Contrastá autores y definiciones clave que respaldan tu desarrollo.',
-  metodologia: 'Detallá qué pasos seguiste, con qué instrumentos y en qué grupo o fuentes.',
+  metodologia: 'Detallá qué pasos seguiste, con qué instrumentos y en qué fuentes.',
   resultados: 'Mostrá datos, hallazgos y tablas en orden claro sin interpretarlos todavía.',
+  resultados_discusion: 'Presentá tus hallazgos y contrastalos con los objetivos planteados.',
   discusion: 'Explicá qué significan tus resultados y cómo dialogan con antecedentes.',
   conclusiones: 'Cerrá respondiendo a tu pregunta inicial con los aportes más firmes.',
-  recomendaciones: 'Enumerá los pasos siguientes, prioridades y decisiones sugeridas para implementar.',
+  recomendaciones: 'Enumerá los pasos siguientes, prioridades y decisiones sugeridas.',
   epilogo: 'Cierre narrativo posterior al desenlace principal.',
-  bibliografia: 'Gestioná todas tus citas desde el paso 4 (Bibliografía y Normas) para ordenarlas según APA 7 o Vancouver.',
-  anexo: 'Sumá encuestas, imágenes de respaldo o gráficos complementarios.',
+  glosario: 'Definí los términos clave o siglas ordenados alfabéticamente.',
+  bibliografia: 'Gestioná todas tus citas desde el paso Bibliografía y Citas para ordenarlas según tu norma.',
+  anexo: 'Sumá encuestas, imágenes de respaldo, cuadros extendidos o gráficos complementarios.',
+  capitulo: 'Escribí por párrafos continuos; tocá cualquier texto para editarlo o usá "+" entre párrafos para intercalar una imagen, cita o tabla.',
+  unidad: 'Organizá la unidad didáctica con subtítulos H2/H3, recuadros clave y ejemplos.',
+  desarrollo: 'Desarrollá tus argumentos en bloques claros e intercalá tablas o figuras cuando aporten claridad.',
 };
 
-const BLOCK_TYPE_LABELS: Record<string, string> = {
-  paragraph: 'Párrafo',
-  subtitle: 'Subtítulo',
-  quote: 'Cita destacada',
-  callout: 'Recuadro didáctico',
-  poem: 'Poema / Versos',
-  figure_placeholder: 'Espacio de figura',
-  epigraph: 'Epígrafe',
-  footnote_list: 'Notas al pie',
-  list: 'Lista',
-  image: 'Imagen',
-  table: 'Tabla',
-  bibliography_item: 'Referencia',
-};
+const QUICK_ADD_TYPES: Array<{ type: EditorialRecordType; label: string }> = [
+  { type: 'paragraph', label: '+ Párrafo' },
+  { type: 'subtitle', label: '+ Subtítulo' },
+  { type: 'image', label: '+ Imagen' },
+  { type: 'table', label: '+ Tabla' },
+  { type: 'quote', label: '+ Cita' },
+  { type: 'list', label: '+ Lista' },
+  { type: 'callout', label: '+ Recuadro' },
+  { type: 'poem', label: '+ Poema' },
+  { type: 'epigraph', label: '+ Epígrafe' },
+  { type: 'figure_placeholder', label: '+ Figura' },
+];
 
 export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProps> = ({
   section,
@@ -83,22 +98,28 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
   updateDraft,
   setActiveStepTab,
   notify,
+  onCommitHistoryBoundary,
 }) => {
   const { confirm } = useConfirm();
-  const [editingRecordId, setEditingRecordId] = useState<string | null>(
+  const [focusedRecordId, setFocusedRecordId] = useState<string | null>(
     section.records?.[0]?.id || null,
   );
-  const [pendingSuggestions, setPendingSuggestions] = useState<
-    Record<string, { mode: 'rewrite' | 'refine'; suggestedText: string }>
-  >({});
+  const [showProofread, setShowProofread] = useState(false);
+  const [showParticularSettings, setShowParticularSettings] = useState(false);
+  const [pendingSuggestions, setPendingSuggestions] = useState<Record<string, string>>({});
   const [citePickerRecordId, setCitePickerRecordId] = useState<string | null>(null);
-  const [showQuickSourceForm, setShowQuickSourceForm] = useState<boolean>(false);
-  const [quickLocator, setQuickLocator] = useState<string>('');
-  const [quickAuthor, setQuickAuthor] = useState<string>('');
-  const [quickYear, setQuickYear] = useState<string>('');
-  const [quickTitle, setQuickTitle] = useState<string>('');
-  const [quickPub, setQuickPub] = useState<string>('');
+  const [showQuickSourceForm, setShowQuickSourceForm] = useState(false);
+  const [quickLocator, setQuickLocator] = useState('');
+  const [quickAuthor, setQuickAuthor] = useState('');
+  const [quickYear, setQuickYear] = useState('');
+  const [quickTitle, setQuickTitle] = useState('');
+  const [quickPub, setQuickPub] = useState('');
   const [quickSourceType, setQuickSourceType] = useState<EditorialBibliographySourceType>('libro');
+
+  const { sectionKey } = resolveCanonicalEditorialKey(section);
+  const guideBody =
+    SECTION_WRITING_GUIDES[sectionKey] ||
+    'Tocá cualquier párrafo para editarlo, dividilo con el ícono de tijera o intercalá imágenes, citas y tablas entre bloques.';
 
   const activeBibStyle = normalizeBibliographyStyle(
     draft?.design?.bibliographyStyle || draft?.design?.normId,
@@ -115,6 +136,183 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
     () => computeCitationAppearanceOrder(allSections),
     [allSections],
   );
+
+  const sectionCoverState = resolveEditorialSectionCoverState(
+    section,
+    draft?.design,
+    draft?.cover,
+  );
+  const globalColumns: 1 | 2 = draft?.design?.bodyColumns === 2 ? 2 : 1;
+  const effectiveColumns: 1 | 2 =
+    section.columnsOverride ?? section.columnCount ?? section.columns ?? globalColumns;
+
+  const particularOverrideCount = [
+    typeof section.startNewPageOverride === 'boolean',
+    typeof section.columnsOverride === 'number' ||
+      (typeof section.columns === 'number' && section.columns !== globalColumns),
+    section.sectionCover?.mode === 'on' || section.sectionCover?.mode === 'off',
+    Boolean(section.kickerLabel?.trim()),
+    section.includeInToc === false,
+    Boolean(section.masterPageMode && section.masterPageMode !== 'auto'),
+  ].filter(Boolean).length;
+
+  const updateSection = (mutator: (s: EditorialSection) => EditorialSection) => {
+    updateDraft((prev) => ({
+      ...prev,
+      sections: (prev?.sections || []).map((s: EditorialSection) =>
+        s.id === section.id ? mutator(s) : s,
+      ),
+    }));
+  };
+
+  const resetAllParticularOverrides = () => {
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      kickerLabel: undefined,
+      startNewPageOverride: undefined,
+      columnsOverride: undefined,
+      columns: undefined,
+      columnCount: undefined,
+      includeInToc: true,
+      masterPageMode: 'auto',
+      sectionCover: {
+        ...(s.sectionCover || {}),
+        mode: 'inherit',
+        enabled: undefined,
+        kicker: undefined,
+        subtitle: undefined,
+      },
+    }));
+    notify.success('Este capítulo vuelve a seguir las reglas globales de la obra.');
+  };
+
+  const handleInsertAt = (index: number, type: EditorialRecordType) => {
+    onCommitHistoryBoundary?.();
+    const created = createDefaultEditorialRecord(type);
+    updateSection((s) => ({
+      ...s,
+      records: insertRecordAt(s.records || [], index, created),
+    }));
+    setFocusedRecordId(created.id);
+  };
+
+  const handleMoveRecord = (index: number, delta: -1 | 1) => {
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      records: moveRecord(s.records || [], index, delta),
+    }));
+  };
+
+  const handleReorderRecord = (fromIndex: number, toIndex: number) => {
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      records: reorderRecord(s.records || [], fromIndex, toIndex),
+    }));
+  };
+
+  const handleSplitRecord = (recordId: string, cursorOffset?: number) => {
+    onCommitHistoryBoundary?.();
+    const res = splitParagraphRecord(section.records || [], recordId, cursorOffset);
+    updateSection((s) => ({ ...s, records: res.records }));
+    if (res.createdId) setFocusedRecordId(res.createdId);
+  };
+
+  const handleUpdateRecord = (recId: string, patch: Partial<EditorialRecord>) => {
+    updateSection((s) => ({
+      ...s,
+      records: (s.records || []).map((r) => (r.id === recId ? { ...r, ...patch } : r)),
+    }));
+  };
+
+  const handleRemoveRecord = async (recId: string) => {
+    const target = (section.records || []).find((r) => r.id === recId);
+    const hasPayload = Boolean(
+      target &&
+        (String(target.content || '').trim() ||
+          target.imagePath ||
+          (Array.isArray(target.tableRows) && target.tableRows.length > 0)),
+    );
+    if (hasPayload) {
+      const ok = await confirm({
+        title: '¿Quitar este bloque del capítulo?',
+        message: 'Podés volver a recuperarlo con Deshacer en la barra superior.',
+        confirmText: 'Sí, quitar',
+        cancelText: 'Conservar',
+      });
+      if (!ok) return;
+    }
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      records: (s.records || []).filter((r) => r.id !== recId),
+    }));
+  };
+
+  const handleDeleteSection = async () => {
+    const ok = await confirm({
+      title: `¿Eliminar "${section.title || 'esta sección'}"?`,
+      message: 'Si solo querés ocultarla sin perder su contenido, usá el ícono del ojo.',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Conservar',
+    });
+    if (!ok) return;
+    onCommitHistoryBoundary?.();
+    updateDraft((prev) => ({
+      ...prev,
+      sections: (prev?.sections || []).filter((s: EditorialSection) => s.id !== section.id),
+    }));
+    setActiveStepTab('editorial_secciones');
+    notify.success('Sección eliminada.');
+  };
+
+  const handleAiImproveRecord = async (rec: EditorialRecord): Promise<string> => {
+    const text = String(rec.content || '').trim();
+    if (!text) throw new Error('Escribí primero algo de texto en este bloque para mejorarlo.');
+    const res = await executeAiTask<{ improvedText: string }>({
+      taskId: 'editorial_rewrite',
+      payload: { text, sectionTitle: section.title, mode: 'improve' },
+      maxTokens: 1600,
+    });
+    const out = String(res.data?.improvedText || '').trim();
+    if (!out) throw new Error('No se recibió sugerencia de mejora.');
+    setPendingSuggestions((prev) => ({ ...prev, [rec.id]: out }));
+    return out;
+  };
+
+  const applySingleProofreadIssue = (issue: ProofreadIssue) => {
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      records: (s.records || []).map((r) => {
+        if (r.id !== issue.blockId || typeof r.content !== 'string') return r;
+        if (!issue.originalSnippet || !r.content.includes(issue.originalSnippet)) return r;
+        return {
+          ...r,
+          content: r.content.replace(issue.originalSnippet, issue.suggestedSnippet),
+        };
+      }),
+    }));
+  };
+
+  const applyBatchProofreadIssues = (list: ProofreadIssue[]) => {
+    onCommitHistoryBoundary?.();
+    updateSection((s) => ({
+      ...s,
+      records: (s.records || []).map((r) => {
+        if (typeof r.content !== 'string') return r;
+        let text = r.content;
+        for (const issue of list) {
+          if (issue.blockId === r.id && issue.originalSnippet && text.includes(issue.originalSnippet)) {
+            text = text.replace(issue.originalSnippet, issue.suggestedSnippet);
+          }
+        }
+        return text === r.content ? r : { ...r, content: text };
+      }),
+    }));
+  };
 
   const insertTokenIntoRecord = (rec: EditorialRecord, token: string) => {
     const currentText = String(rec.content || '');
@@ -154,12 +352,9 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
       bibAuthor: quickAuthor.trim(),
       bibYear: quickYear.trim(),
       bibTitle: quickTitle.trim(),
-      ...(quickSourceType === 'articulo'
-        ? { bibJournal: quickPub.trim() }
-        : { bibEditorial: quickPub.trim() }),
+      ...(quickSourceType === 'articulo' ? { bibJournal: quickPub.trim() } : { bibEditorial: quickPub.trim() }),
       bibOrderNumber: bibItems.length + 1,
     };
-
     const token = buildInlineCiteToken(newBibId, quickLocator);
     const currentText = String(targetRec.content || '');
     const needsSpace = currentText.length > 0 && !/\s$/.test(currentText);
@@ -177,25 +372,14 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             }
           : s,
       );
-
-      const bibSection = withText.find(
-        (s) =>
-          s.sectionKey === 'bibliografia' ||
-          s.id?.includes('bibliografia') ||
-          s.records?.some((r) => r.type === 'bibliography_item'),
-      );
-
-      const withBib = bibSection
-        ? withText.map((s) =>
-            s.id === bibSection.id
-              ? { ...s, records: [...(s.records || []), newBibRec] }
-              : s,
-          )
+      const bibSec = withText.find((s) => s.sectionKey === 'bibliografia' || s.id?.includes('bibliografia'));
+      const withBib = bibSec
+        ? withText.map((s) => (s.id === bibSec.id ? { ...s, records: [...(s.records || []), newBibRec] } : s))
         : [
             ...withText,
             {
               id: `ed_bibliografia_${Date.now()}`,
-              title: activeBibStyle === 'apa7' ? 'Referencias' : activeBibStyle === 'mla' ? 'Obras citadas' : 'Bibliografía',
+              title: activeBibStyle === 'apa7' ? 'Referencias' : 'Bibliografía',
               sectionKey: 'bibliografia',
               category: 'cierre' as const,
               visible: true,
@@ -205,11 +389,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
               records: [newBibRec],
             },
           ];
-
-      return {
-        ...prev,
-        sections: syncSectionsBibliographyOrder(withBib, activeBibStyle),
-      };
+      return { ...prev, sections: syncSectionsBibliographyOrder(withBib, activeBibStyle) };
     });
 
     setQuickAuthor('');
@@ -219,1051 +399,438 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
     setQuickLocator('');
     setShowQuickSourceForm(false);
     setCitePickerRecordId(null);
-    notify.success(`Fuente guardada y citada en formato ${BIBLIOGRAPHY_NORM_GUIDES[activeBibStyle].label}.`);
+    notify.success(`Fuente guardada y citada (${BIBLIOGRAPHY_NORM_GUIDES[activeBibStyle].label}).`);
   };
 
-  const { sectionKey } = resolveCanonicalEditorialKey(section);
-  const sectionCoverState = resolveEditorialSectionCoverState(
-    section,
-    draft?.design,
-    draft?.cover,
-  );
+  const renderCitePickerForRecord = (rec: EditorialRecord) => {
+    const tokens = extractInlineCitationTokens(rec.content || '');
+    if (sectionKey === 'bibliografia') return null;
 
-  const updateSectionCoverPatch = (patch: Record<string, any>) => {
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).map((s: EditorialSection) =>
-        s.id === section.id
-          ? {
-              ...s,
-              sectionCover: {
-                ...(s.sectionCover || {}),
-                ...patch,
-              },
-            }
-          : s,
-      ),
-    }));
-  };
-  const guideBody =
-    SECTION_WRITING_GUIDES[sectionKey] ||
-    'Redactá por bloques claros (párrafos, subtítulos, citas o imágenes). Podés tocar el ícono de IA en cualquier bloque para que Lidio mejore el estilo antes de aplicarlo.';
+    return (
+      <div className="space-y-1.5">
+        {tokens.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            {tokens.map((tok, ti) => {
+              const targetBib = bibMap.get(tok.bibId);
+              const tag = formatInlineCitation(targetBib, activeBibStyle, appearanceOrderMap.get(tok.bibId), tok.locator);
+              return (
+                <span
+                  key={`${tok.rawToken}-${ti}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[10px] font-semibold"
+                >
+                  <span>{tag}</span>
+                  <button
+                    type="button"
+                    aria-label="Quitar esta cita del texto"
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: '¿Quitar esta cita del párrafo?',
+                        message: 'La fuente seguirá guardada en Bibliografía.',
+                        confirmText: 'Sí, quitar',
+                        cancelText: 'Cancelar',
+                      });
+                      if (!ok) return;
+                      handleUpdateRecord(rec.id, {
+                        content: (rec.content || '').replace(tok.rawToken, '').replace(/\s{2,}/g, ' ').trim(),
+                      });
+                    }}
+                    className="text-[var(--color-status-danger-text)] cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
+            <span className="text-[10px] text-[var(--ui-text-secondary)] truncate max-w-[200px]">
+              {resolveInlineCitationsInText(rec.content || '', bibMap, activeBibStyle, appearanceOrderMap).slice(0, 48)}
+            </span>
+          </div>
+        )}
 
-  const updateSectionProp = (prop: keyof EditorialSection, val: any) => {
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).map((s: EditorialSection) =>
-        s.id === section.id ? { ...s, [prop]: val } : s,
-      ),
-    }));
-  };
+        {citePickerRecordId === rec.id && (
+          <div
+            className="p-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <input
+                type="text"
+                value={quickLocator}
+                onChange={(e) => setQuickLocator(e.target.value)}
+                placeholder="Página opcional (ej: p. 42)"
+                className="flex-1 min-w-0 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
+                style={{ borderRadius: radius.control }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowQuickSourceForm((v) => !v)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] cursor-pointer"
+                style={{ borderRadius: radius.control }}
+              >
+                <Plus className="w-3 h-3" /> Nueva fuente
+              </button>
+            </div>
 
-  const addRecord = (type: EditorialRecord['type']) => {
-    const newId = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const newRec: EditorialRecord = {
-      id: newId,
-      type,
-      content: '',
-      quoteAttribution: '',
-      subtitleLevel: 2,
-      ...(type === 'poem' ? { preserveLineBreaks: true } : {}),
-      ...(type === 'callout' ? { calloutVariant: 'nota' as const, calloutTitle: '', calloutItems: [] } : {}),
-      ...(type === 'figure_placeholder'
-        ? { figureNumber: 'Figura 1', figureCaption: '', figureHint: '', keepTogether: true }
-        : {}),
-    };
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).map((s: EditorialSection) =>
-        s.id === section.id ? { ...s, records: [...(s.records || []), newRec] } : s,
-      ),
-    }));
-    setEditingRecordId(newId);
-  };
-
-  const updateRecord = (recId: string, patch: Partial<EditorialRecord>) => {
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).map((s: EditorialSection) =>
-        s.id === section.id
-          ? {
-              ...s,
-              records: (s.records || []).map((r) => (r.id === recId ? { ...r, ...patch } : r)),
-            }
-          : s,
-      ),
-    }));
-  };
-
-  const removeRecord = async (recId: string) => {
-    const target = (section.records || []).find((r) => r.id === recId);
-    const hasPayload = Boolean(
-      target &&
-        (String(target.content || '').trim() ||
-          target.imagePath ||
-          (Array.isArray(target.tableRows) && target.tableRows.length > 0)),
+            {!showQuickSourceForm ? (
+              <div className="max-h-32 overflow-y-auto space-y-1">
+                {bibItems.length === 0 ? (
+                  <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                    No hay fuentes cargadas aún. Tocá <strong>+ Nueva fuente</strong> arriba.
+                  </p>
+                ) : (
+                  bibItems.map((bibItem) => (
+                    <button
+                      key={bibItem.id}
+                      type="button"
+                      onClick={() => {
+                        insertTokenIntoRecord(rec, buildInlineCiteToken(bibItem.id, quickLocator));
+                        setQuickLocator('');
+                        setCitePickerRecordId(null);
+                      }}
+                      className="w-full text-left px-2 py-1 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] flex justify-between gap-2 cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      <span className="truncate">{bibItem.bibAuthor || 'Autor'} ({bibItem.bibYear || 's. f.'})</span>
+                      <span className="font-bold text-[var(--color-accent-text)]">
+                        {formatInlineCitation(bibItem, activeBibStyle, appearanceOrderMap.get(bibItem.id), quickLocator)}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
+                  <input
+                    type="text"
+                    value={quickAuthor}
+                    onChange={(e) => setQuickAuthor(e.target.value)}
+                    placeholder="Autor"
+                    className="col-span-2 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    style={{ borderRadius: radius.control }}
+                  />
+                  <input
+                    type="text"
+                    value={quickYear}
+                    onChange={(e) => setQuickYear(e.target.value)}
+                    placeholder="Año"
+                    className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    style={{ borderRadius: radius.control }}
+                  />
+                </div>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={quickTitle}
+                    onChange={(e) => setQuickTitle(e.target.value)}
+                    placeholder="Título del libro o artículo"
+                    className="flex-1 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    style={{ borderRadius: radius.control }}
+                  />
+                  <select
+                    value={quickSourceType}
+                    onChange={(e) => setQuickSourceType(e.target.value as any)}
+                    className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    style={{ borderRadius: radius.control }}
+                  >
+                    <option value="libro">Libro</option>
+                    <option value="articulo">Artículo</option>
+                    <option value="web">Web</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleQuickAddAndCite(rec)}
+                  className="px-2.5 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[11px] font-bold cursor-pointer"
+                  style={{ borderRadius: radius.control }}
+                >
+                  Guardar y citar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     );
-    if (hasPayload) {
-      const ok = await confirm({
-        title: '¿Quitar este bloque del capítulo?',
-        message: 'Podés volver a recuperarlo con el botón Deshacer en la barra superior.',
-        confirmText: 'Sí, quitar',
-        cancelText: 'Conservar',
-      });
-      if (!ok) return;
-    }
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).map((s: EditorialSection) =>
-        s.id === section.id
-          ? { ...s, records: (s.records || []).filter((r) => r.id !== recId) }
-          : s,
-      ),
-    }));
-  };
-
-  const handleDeleteSection = async () => {
-    const ok = await confirm({
-      title: `¿Eliminar "${section.title || 'esta sección'}"?`,
-      message: 'Si solo querés ocultarla sin perder su contenido, usá el ícono del ojo en lugar de eliminar.',
-      confirmText: 'Sí, eliminar',
-      cancelText: 'Conservar',
-    });
-    if (!ok) return;
-    updateDraft((prev) => ({
-      ...prev,
-      sections: (prev?.sections || []).filter((s: EditorialSection) => s.id !== section.id),
-    }));
-    setActiveStepTab('editorial_secciones');
-    notify.success('Sección eliminada.');
-  };
-
-  const runAiOnRecord = async (rec: EditorialRecord, mode: 'rewrite' | 'refine'): Promise<string> => {
-    const text = String(rec.content || '').trim();
-    if (!text) {
-      throw new Error('Escribí primero algo de texto en este bloque para mejorarlo.');
-    }
-    if (mode === 'rewrite') {
-      const res = await executeAiTask<{ rewrittenText: string }>({
-        taskId: 'editorial_rewrite',
-        payload: { text, sectionTitle: section.title },
-      });
-      const out = (res.data?.rewrittenText || '').trim();
-      if (!out) throw new Error('No se recibió sugerencia.');
-      setPendingSuggestions((prev) => ({ ...prev, [rec.id]: { mode, suggestedText: out } }));
-      return out;
-    }
-    const res = await executeAiTask<{ refinedText: string }>({
-      taskId: 'editorial_refine',
-      payload: { text, sectionTitle: section.title },
-    });
-    const out = (res.data?.refinedText || '').trim();
-    if (!out) throw new Error('No se recibió corrección.');
-    setPendingSuggestions((prev) => ({ ...prev, [rec.id]: { mode, suggestedText: out } }));
-    return out;
-  };
-
-  const applySuggestion = (recId: string) => {
-    const item = pendingSuggestions[recId];
-    if (!item) return;
-    updateRecord(recId, { content: item.suggestedText });
-    setPendingSuggestions((prev) => {
-      const copy = { ...prev };
-      delete copy[recId];
-      return copy;
-    });
-    notify.success('Sugerencia aplicada al bloque.');
-  };
-
-  const dismissSuggestion = (recId: string) => {
-    setPendingSuggestions((prev) => {
-      const copy = { ...prev };
-      delete copy[recId];
-      return copy;
-    });
   };
 
   return (
     <div className="space-y-4">
       <PanelSection
         icon={
-          <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full text-[11px] font-bold bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border border-[var(--color-accent-base)]/40">
+          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-full text-xs font-extrabold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
             {badgeLabel || '§'}
           </span>
         }
-        title={section.title || 'Sección'}
+        title={section.title || 'Apartado sin título'}
         helpTitle="Edición enfocada"
-        helpText="Estás editando únicamente este capítulo o apartado. Tocá el lápiz en cualquier bloque para redactar o pedile a Lidio que mejore la redacción."
+        helpText={guideBody}
         headerRight={
           <div className="flex items-center gap-1.5">
             <VisibilityEyeToggle
-              visible={section.visible !== false}
-              onToggle={(next) => updateSectionProp('visible', next)}
-              targetLabel={section.title || 'Esta sección'}
               size="xs"
+              visible={section.visible !== false}
+              onToggle={(next) => updateSection((s) => ({ ...s, visible: next }))}
+              targetLabel={section.title || 'esta sección'}
             />
             <button
               type="button"
               onClick={() => void handleDeleteSection()}
               aria-label="Eliminar sección"
-              title="Eliminar sección"
-              className="p-1.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--color-status-danger-text)] hover:opacity-80 cursor-pointer"
+              title="Eliminar esta sección"
+              className="p-1.5 bg-[var(--ui-bg-panel)] text-[var(--color-status-danger-text)] hover:opacity-80 cursor-pointer"
+              style={{ borderRadius: radius.control }}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         }
       >
-        <ContextualGuideBox title="Orientación para esta parte">
-          {guideBody}
-        </ContextualGuideBox>
-
         <Field
           label="Título visible en la obra"
           value={section.title || ''}
-          onChange={(e: any) => updateSectionProp('title', e.target.value)}
+          onChange={(e: any) => updateSection((s) => ({ ...s, title: e.target.value }))}
+          placeholder="Ej: Capítulo 1 · Introducción"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Field
-            label="Volanta / Cintillo previo (opcional)"
-            value={section.kickerLabel || ''}
-            onChange={(e: any) => updateSectionProp('kickerLabel', e.target.value)}
-            placeholder="Ej: PARTE I · CAPÍTULO 1"
-          />
-          <Field
-            as="select"
-            label="Encabezado y pie en esta parte"
-            value={section.masterPageMode || 'auto'}
-            onChange={(e: any) => updateSectionProp('masterPageMode', e.target.value)}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => setShowProofread((v) => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-xs font-bold cursor-pointer ${
+              showProofread
+                ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                : 'bg-[var(--color-accent-muted)] border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)]'
+            }`}
+            style={{ borderRadius: radius.control }}
           >
-            <option value="auto">Automático según ubicación</option>
-            <option value="clean">Página limpia (sin encabezado ni pie)</option>
-            <option value="preliminary">Preliminar (numeración romana i, ii)</option>
-            <option value="body">Cuerpo normal (encabezado y folio)</option>
-          </Field>
-        </div>
+            <SpellCheck className="w-3.5 h-3.5" />
+            Revisar ortografía, gramática e idiomas
+          </button>
 
-        <div className="grid grid-cols-3 gap-2 pt-1">
-          <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-            <span className="text-[11px] font-semibold text-[var(--ui-text-primary)]">En índice</span>
-            <SectionSwitch
-              size="sm"
-              checked={section.includeInToc !== false}
-              onChange={(next) => updateSectionProp('includeInToc', next)}
-              label={`${section.title} en índice`}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-            <span className="text-[11px] font-semibold text-[var(--ui-text-primary)]">Hoja aparte</span>
-            <SectionSwitch
-              size="sm"
-              checked={section.startNewPage !== false}
-              onChange={(next) => updateSectionProp('startNewPage', next)}
-              label={`${section.title} en página nueva`}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-            <span className="text-[11px] font-semibold text-[var(--ui-text-primary)]">2 columnas</span>
-            <SectionSwitch
-              size="sm"
-              checked={section.columns === 2}
-              onChange={(next) => updateSectionProp('columns', next ? 2 : 1)}
-              label={`${section.title} en 2 columnas`}
-            />
-          </div>
-        </div>
-
-        {sectionKey !== 'bibliografia' && (
-          <div className="p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[11px] font-bold text-[var(--ui-text-primary)] truncate">
-                  Carátula separadora antes de este capítulo
-                </span>
-                <LidioHelpTrigger
-                  size="xs"
-                  title="Portadilla de capítulo"
-                  text="Inserta una página de carátula para presentar este capítulo (usa el mismo estilo de diseño de tu portada)."
-                />
-              </div>
-              <SectionSwitch
-                size="sm"
-                checked={sectionCoverState.enabled}
-                onChange={(next) => updateSectionCoverPatch({ enabled: next })}
-                label={`Carátula en ${section.title}`}
+          <button
+            type="button"
+            onClick={() => setShowParticularSettings((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs font-bold text-[var(--ui-text-secondary)] cursor-pointer"
+            style={{ borderRadius: radius.control }}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            <span>Ajustes particulares</span>
+            {particularOverrideCount > 0 && (
+              <ManualOverrideBadge
+                isOverridden={true}
+                globalLabel="Obra"
+                onReset={resetAllParticularOverrides}
               />
+            )}
+          </button>
+        </div>
+
+        {showProofread && (
+          <SectionProofreadDrawer
+            sectionTitle={section.title || 'Capítulo'}
+            records={section.records || []}
+            onApplyIssue={applySingleProofreadIssue}
+            onApplyBatchSafe={applyBatchProofreadIssues}
+            onClose={() => setShowProofread(false)}
+            notify={notify}
+          />
+        )}
+
+        {showParticularSettings && (
+          <div
+            className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] space-y-2.5"
+            style={{ borderRadius: radius.control }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-extrabold text-[var(--ui-text-primary)]">
+                Excepciones solo para este apartado
+              </span>
+              {particularOverrideCount > 0 && (
+                <button
+                  type="button"
+                  onClick={resetAllParticularOverrides}
+                  className="text-[11px] font-bold text-[var(--color-accent-text)] underline cursor-pointer"
+                >
+                  Volver a regla global
+                </button>
+              )}
             </div>
 
-            {sectionCoverState.enabled && (
-              <div className="space-y-2 pt-1 border-t border-[var(--ui-border)]">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-[var(--ui-text-secondary)]">
-                    Hoja en blanco detrás (doble cara)
-                  </span>
-                  <SectionSwitch
-                    size="sm"
-                    checked={sectionCoverState.blankBackPage}
-                    onChange={(next) => updateSectionCoverPatch({ blankBackPage: next })}
-                    label="Hoja en blanco detrás de la carátula"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Field
-                    label="Etiqueta superior (opcional)"
-                    value={section.sectionCover?.kicker ?? ''}
-                    onChange={(e: any) => updateSectionCoverPatch({ kicker: e.target.value })}
-                    placeholder={`Ej: CAPÍTULO ${badgeLabel || '1'}`}
-                  />
-                  <Field
-                    label="Subtítulo o epígrafe (opcional)"
-                    value={section.sectionCover?.subtitle ?? ''}
-                    onChange={(e: any) => updateSectionCoverPatch({ subtitle: e.target.value })}
-                    placeholder="Bajada opcional..."
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Field
+                label="Cintillo superior (opcional)"
+                value={section.kickerLabel || section.sectionCover?.kicker || ''}
+                onChange={(e: any) =>
+                  updateSection((s) => ({
+                    ...s,
+                    kickerLabel: e.target.value,
+                    sectionCover: { ...(s.sectionCover || {}), kicker: e.target.value },
+                  }))
+                }
+                placeholder="Ej: PARTE I · CAPÍTULO 1"
+              />
+              <div>
+                <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                  Salto de página
+                </label>
+                <select
+                  value={
+                    typeof section.startNewPageOverride === 'boolean'
+                      ? section.startNewPageOverride
+                        ? 'break'
+                        : 'continuous'
+                      : 'inherit'
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSection((s) => ({
+                      ...s,
+                      startNewPageOverride: v === 'inherit' ? undefined : v === 'break',
+                    }));
+                  }}
+                  className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                  style={{ borderRadius: radius.control }}
+                >
+                  <option value="inherit">Seguir regla de Impresión global</option>
+                  <option value="break">Forzar inicio en hoja nueva</option>
+                  <option value="continuous">Seguir corrido sin corte</option>
+                </select>
               </div>
+              <div>
+                <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                  Columnas en este apartado
+                </label>
+                <select
+                  value={section.columnsOverride ?? 'inherit'}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSection((s) => ({
+                      ...s,
+                      columnsOverride: v === 'inherit' ? undefined : (Number(v) as 1 | 2),
+                      columns: undefined,
+                      columnCount: undefined,
+                    }));
+                  }}
+                  className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                  style={{ borderRadius: radius.control }}
+                >
+                  <option value="inherit">Seguir obra ({globalColumns} col.)</option>
+                  <option value="1">1 columna</option>
+                  <option value="2">2 columnas</option>
+                </select>
+              </div>
+              {sectionKey !== 'bibliografia' && (
+                <div>
+                  <label className="block text-[11px] font-bold text-[var(--ui-text-secondary)] mb-1">
+                    Carátula separadora previa
+                  </label>
+                  <select
+                    value={section.sectionCover?.mode || 'inherit'}
+                    onChange={(e) => {
+                      const mode = e.target.value as 'inherit' | 'on' | 'off';
+                      updateSection((s) => ({
+                        ...s,
+                        sectionCover: {
+                          ...(s.sectionCover || {}),
+                          mode,
+                          enabled: mode === 'inherit' ? undefined : mode === 'on',
+                        },
+                      }));
+                    }}
+                    className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+                    style={{ borderRadius: radius.control }}
+                  >
+                    <option value="inherit">Seguir Estructura global</option>
+                    <option value="on">Con carátula en este capítulo</option>
+                    <option value="off">Sin carátula en este capítulo</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {sectionCoverState.enabled && sectionKey !== 'bibliografia' && (
+              <Field
+                label="Subtítulo en carátula separadora (opcional)"
+                value={section.sectionCover?.subtitle || ''}
+                onChange={(e: any) =>
+                  updateSection((s) => ({
+                    ...s,
+                    sectionCover: { ...(s.sectionCover || {}), subtitle: e.target.value },
+                  }))
+                }
+                placeholder="Resumen o epígrafe de este capítulo..."
+              />
             )}
           </div>
         )}
       </PanelSection>
 
-      {sectionKey === 'bibliografia' && (
-        <button
-          type="button"
-          onClick={() => setActiveStepTab('editorial_bibliografia')}
-          className="w-full py-2 px-3 rounded-lg border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-xs font-bold cursor-pointer"
-        >
-          Abrir gestor de Normas APA 7 / Vancouver →
-        </button>
-      )}
-
       <PanelSection
-        icon={<Edit3 className="w-4 h-4" />}
-        title={`Bloques (${section.records?.length || 0})`}
-        helpText="Cada bloque es un párrafo, subtítulo, cita, lista o imagen. Tocá el lápiz para enfocarte en ese bloque o el ícono de IA para pulirlo con Lidio."
+        icon={<FilePlus2 className="w-4 h-4" />}
+        title="Contenido del capítulo"
+        helpText="Leé corrido como un borrador limpio. Tocá cualquier párrafo para editarlo, ordenarlo con ↑/↓ o usar '+' entre bloques para intercalar imágenes, tablas o citas."
       >
-        <div className="space-y-3">
-          {(section.records || []).map((rec, idx) => {
-            const isEditing = editingRecordId === rec.id || !String(rec.content || '').trim();
-            const suggestion = pendingSuggestions[rec.id];
-
-            return (
-              <div
-                key={rec.id || idx}
-                className="p-3 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-bg-card)] space-y-2.5"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
-                    {BLOCK_TYPE_LABELS[rec.type] || 'Bloque'} #{idx + 1}
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    {rec.type !== 'image' && rec.type !== 'bibliography_item' && (
-                      <>
-                        <AIButton
-                          size="xs"
-                          label="Mejorar estilo con IA"
-                          onGenerate={() => runAiOnRecord(rec, 'rewrite')}
-                          onSuccess={() => {}}
-                          helpText="Lidio propone una redacción más fluida sin inventar datos; después elegís si aplicarla."
-                        />
-                        <button
-                          type="button"
-                          onClick={() => void runAiOnRecord(rec, 'refine').catch((e) => notify.error(e.message))}
-                          className="px-2 py-1 rounded-md border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[10px] font-bold text-[var(--color-secondary-text)] cursor-pointer hover:border-[var(--color-secondary-base)]"
-                          title="Corregir ortografía y puntuación con Lidio"
-                        >
-                          <Sparkles className="w-3 h-3 inline mr-1" />
-                          Pulir
-                        </button>
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setEditingRecordId(isEditing ? null : rec.id)}
-                      aria-label="Editar texto"
-                      title={isEditing ? 'Plegar editor' : 'Editar texto'}
-                      className={`p-1.5 rounded-md border cursor-pointer ${
-                        isEditing
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]'
-                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)]'
-                      }`}
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeRecord(rec.id)}
-                      aria-label="Quitar bloque"
-                      className="p-1.5 text-[var(--color-status-danger-text)] hover:opacity-80 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {rec.type === 'image' ? (
-                  <div className="space-y-2.5">
-                    {rec.imagePath && (
-                      <img
-                        src={rec.imagePath}
-                        alt={rec.imageCaption || 'Imagen editorial'}
-                        className="max-h-40 rounded border border-[var(--ui-border)] object-contain bg-[var(--ui-bg-panel)]"
-                      />
-                    )}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] cursor-pointer">
-                        <span>{rec.imagePath ? 'Cambiar imagen…' : 'Subir imagen…'}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const picked = e.target.files?.[0];
-                            e.currentTarget.value = '';
-                            if (!picked) return;
-                            const encoded = await encodeImageFileWithinBudget(picked);
-                            updateRecord(rec.id, {
-                              imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
-                            });
-                          }}
-                        />
-                      </label>
-                      {rec.imageLayoutMode === 'pair-side-by-side' && (
-                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] cursor-pointer">
-                          <span>{rec.secondaryImagePath ? 'Cambiar 2.ª imagen…' : '+ Subir 2.ª imagen…'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const picked = e.target.files?.[0];
-                              e.currentTarget.value = '';
-                              if (!picked) return;
-                              const encoded = await encodeImageFileWithinBudget(picked);
-                              updateRecord(rec.id, {
-                                secondaryImagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
-                              });
-                            }}
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field
-                        as="select"
-                        label="Posición y tamaño en la hoja"
-                        value={rec.imageLayoutMode || 'centered'}
-                        onChange={(e: any) => updateRecord(rec.id, { imageLayoutMode: e.target.value })}
-                      >
-                        <option value="full-width">De margen a margen (100%)</option>
-                        <option value="centered">Centrada (tamaño regulable)</option>
-                        <option value="pair-side-by-side">2 imágenes lado a lado</option>
-                        <option value="wrap-left">Imagen a la izq. · texto rodea a la der.</option>
-                        <option value="wrap-right">Imagen a la der. · texto rodea a la izq.</option>
-                      </Field>
-
-                      <Field
-                        type="number"
-                        label="Ancho en hoja (%)"
-                        min={25}
-                        max={100}
-                        value={rec.imageWidthPct ?? (rec.imageLayoutMode === 'full-width' ? 100 : rec.imageLayoutMode?.startsWith('wrap-') ? 45 : 75)}
-                        onChange={(e: any) =>
-                          updateRecord(rec.id, {
-                            imageWidthPct: Math.min(100, Math.max(25, Number(e.target.value) || 75)),
-                          })
-                        }
-                      />
-                    </div>
-
-                    {(rec.imageLayoutMode === 'wrap-left' || rec.imageLayoutMode === 'wrap-right') && (
-                      <div className="space-y-2 p-2.5 rounded-lg bg-[var(--ui-bg-panel)] border border-[var(--ui-border)]">
-                        <Field
-                          as="textarea"
-                          rows={3}
-                          label="Texto que rodea la imagen"
-                          value={rec.content || ''}
-                          onChange={(e: any) => updateRecord(rec.id, { content: e.target.value })}
-                          placeholder="Escribí o pegá el párrafo que acompaña esta imagen al costado y debajo..."
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                          <Field
-                            type="number"
-                            label="Espacio con texto (mm)"
-                            min={2}
-                            max={15}
-                            value={rec.imageWrapGapMm ?? 5}
-                            onChange={(e: any) => updateRecord(rec.id, { imageWrapGapMm: Number(e.target.value) || 5 })}
-                          />
-                          <Field
-                            type="number"
-                            label="Ajuste manual (± líneas)"
-                            min={-5}
-                            max={5}
-                            value={rec.imageWrapLineAdjust ?? 0}
-                            onChange={(e: any) => updateRecord(rec.id, { imageWrapLineAdjust: Number(e.target.value) || 0 })}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <Field
-                      label="Epígrafe o descripción"
-                      value={rec.imageCaption || ''}
-                      onChange={(e: any) => updateRecord(rec.id, { imageCaption: e.target.value })}
-                      placeholder="Ej: Figura 1 — Resultados de campo"
-                    />
-                  </div>
-                ) : rec.type === 'table' ? (
-                  <div className="space-y-2.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field
-                        label="Título de tabla (opcional)"
-                        value={rec.tableCaption || ''}
-                        onChange={(e: any) => updateRecord(rec.id, { tableCaption: e.target.value })}
-                        placeholder="Ej: Tabla 1. Resultados comparativos"
-                      />
-                      <Field
-                        as="select"
-                        label="Estilo de tabla"
-                        value={rec.tableStylePreset || 'apa'}
-                        onChange={(e: any) => updateRecord(rec.id, { tableStylePreset: e.target.value })}
-                      >
-                        <option value="apa">Norma APA (solo líneas horizontales)</option>
-                        <option value="grid">Cuadrícula completa</option>
-                        <option value="striped">Filas alternadas</option>
-                        <option value="minimal">Minimalista</option>
-                      </Field>
-                    </div>
-
-                    <div className="overflow-x-auto rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-2 space-y-1.5">
-                      <div className="flex gap-1">
-                        {(rec.tableHeaders || ['Columna 1', 'Columna 2']).map((h, hi) => (
-                          <input
-                            key={hi}
-                            type="text"
-                            value={h}
-                            onChange={(e) => {
-                              const nextH = [...(rec.tableHeaders || ['Columna 1', 'Columna 2'])];
-                              nextH[hi] = e.target.value;
-                              updateRecord(rec.id, { tableHeaders: nextH });
-                            }}
-                            className="flex-1 min-w-[80px] px-2 py-1 text-xs font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                          />
-                        ))}
-                      </div>
-                      {(rec.tableRows || [['Dato 1', 'Dato 2']]).map((row, ri) => (
-                        <div key={ri} className="flex gap-1">
-                          {row.map((cell, ci) => (
-                            <input
-                              key={ci}
-                              type="text"
-                              value={cell}
-                              onChange={(e) => {
-                                const nextRows = (rec.tableRows || []).map((r, idx) =>
-                                  idx === ri ? r.map((c, cIdx) => (cIdx === ci ? e.target.value : c)) : r,
-                                );
-                                updateRecord(rec.id, { tableRows: nextRows });
-                              }}
-                              className="flex-1 min-w-[80px] px-2 py-1 text-xs rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                            />
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const cols = (rec.tableHeaders || ['Columna 1', 'Columna 2']).length;
-                          updateRecord(rec.id, {
-                            tableRows: [...(rec.tableRows || []), Array.from({ length: cols }, () => '')],
-                          });
-                        }}
-                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer"
-                      >
-                        + Fila
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextH = [...(rec.tableHeaders || ['Columna 1', 'Columna 2']), `Col ${(rec.tableHeaders?.length || 2) + 1}`];
-                          const nextRows = (rec.tableRows || [['', '']]).map((r) => [...r, '']);
-                          updateRecord(rec.id, { tableHeaders: nextH, tableRows: nextRows });
-                        }}
-                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer"
-                      >
-                        + Columna
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const layout = computeOptimalTableLayout(
-                            rec.tableHeaders || [],
-                            rec.tableRows || [],
-                            { sectionColumns: section.columns === 2 ? 2 : 1 },
-                          );
-                          updateRecord(rec.id, {
-                            tableColWidthsPct: layout.colWidthsPct,
-                            tableColAlignments: layout.colAlignments,
-                            tableFontSizePt: layout.suggestedFontSizePt,
-                            spanFullWidth: layout.suggestSpanFullWidth,
-                          });
-                          notify.success('Anchos y alineación de tabla optimizados automáticamente.');
-                        }}
-                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--color-secondary-base)]/40 bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] cursor-pointer ml-auto"
-                      >
-                        Auto-acomodar columnas
-                      </button>
-                    </div>
-                  </div>
-                ) : isEditing && rec.type === 'figure_placeholder' ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field
-                        label="Etiqueta de figura"
-                        value={rec.figureNumber || ''}
-                        onChange={(e: any) => updateRecord(rec.id, { figureNumber: e.target.value })}
-                        placeholder="Ej: Figura 1"
-                      />
-                      <Field
-                        label="Epígrafe o pie"
-                        value={rec.figureCaption || ''}
-                        onChange={(e: any) =>
-                          updateRecord(rec.id, { figureCaption: e.target.value, content: e.target.value })
-                        }
-                        placeholder="Descripción breve de la figura"
-                      />
-                    </div>
-                    <Field
-                      as="textarea"
-                      rows={2}
-                      label="Indicación para diseño"
-                      value={rec.figureHint || ''}
-                      onChange={(e: any) => updateRecord(rec.id, { figureHint: e.target.value })}
-                      placeholder="Ej: Insertar mapa conceptual o esquema..."
-                    />
-                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] cursor-pointer">
-                      <span>Subir imagen real y convertir…</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const picked = e.target.files?.[0];
-                          e.currentTarget.value = '';
-                          if (!picked) return;
-                          const encoded = await encodeImageFileWithinBudget(picked);
-                          const caption = rec.figureCaption || rec.content || '';
-                          updateRecord(rec.id, {
-                            type: 'image',
-                            imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
-                            imageCaption: caption,
-                            content: caption,
-                          });
-                          notify.success('Espacio convertido en imagen real.');
-                        }}
-                      />
-                    </label>
-                  </div>
-                ) : isEditing ? (
-                  <div className="space-y-2">
-                    {rec.type === 'callout' && (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div className="sm:col-span-2">
-                          <Field
-                            label="Título del recuadro"
-                            value={rec.calloutTitle || ''}
-                            onChange={(e: any) => updateRecord(rec.id, { calloutTitle: e.target.value })}
-                            placeholder="Ej: CAJA 1 · Concepto clave"
-                          />
-                        </div>
-                        <Field
-                          as="select"
-                          label="Estilo"
-                          value={rec.calloutVariant || 'nota'}
-                          onChange={(e: any) => updateRecord(rec.id, { calloutVariant: e.target.value as any })}
-                        >
-                          <option value="nota">Nota editorial</option>
-                          <option value="caja">Caja didáctica</option>
-                          <option value="clave">Idea clave</option>
-                          <option value="definicion">Definición</option>
-                          <option value="importante">Destacado / Importante</option>
-                          <option value="resguardo">Resguardo / Ética</option>
-                          <option value="consigna">Actividad o consigna</option>
-                          <option value="documento">Fuente documental</option>
-                          <option value="testimonio">Testimonio</option>
-                        </Field>
-                      </div>
-                    )}
-                    <Field
-                      as={rec.type === 'subtitle' ? 'input' : 'textarea'}
-                      rows={rec.type === 'subtitle' ? undefined : rec.type === 'poem' ? 8 : 4}
-                      label={
-                        rec.type === 'poem'
-                          ? 'Versos (cada salto de línea se respeta exacto)'
-                          : rec.type === 'callout'
-                            ? 'Texto principal del recuadro'
-                            : undefined
-                      }
-                      value={rec.content || ''}
-                      onChange={(e: any) =>
-                        updateRecord(rec.id, {
-                          content: e.target.value,
-                          ...(rec.type === 'poem' ? { preserveLineBreaks: true } : {}),
-                        })
-                      }
-                      placeholder={
-                        rec.type === 'subtitle'
-                          ? 'Subtítulo del apartado...'
-                          : rec.type === 'list'
-                            ? 'Un ítem por línea...'
-                            : rec.type === 'poem'
-                              ? 'Escribí cada verso en su línea...'
-                              : 'Escribí o pegá el contenido aquí...'
-                      }
-                    />
-                    {rec.type === 'callout' && (
-                      <Field
-                        as="textarea"
-                        rows={3}
-                        label="Puntos o viñetas del recuadro (una por línea)"
-                        value={(rec.calloutItems || []).join('\n')}
-                        onChange={(e: any) =>
-                          updateRecord(rec.id, {
-                            calloutItems: String(e.target.value || '')
-                              .split(/\r?\n/)
-                              .map((line) => line.trim())
-                              .filter(Boolean),
-                          })
-                        }
-                        placeholder="Primera idea clave&#10;Segunda idea clave"
-                      />
-                    )}
-                    {(rec.type === 'quote' || rec.type === 'epigraph') && (
-                      <Field
-                        label={rec.type === 'epigraph' ? 'Autor del epígrafe' : 'Autor o referencia de la cita'}
-                        value={rec.quoteAttribution || ''}
-                        onChange={(e: any) =>
-                          updateRecord(rec.id, { quoteAttribution: e.target.value })
-                        }
-                        placeholder="Ej: Cortázar, 1963"
-                      />
-                    )}
-
-                    {/* Barra rápida de citas bibliográficas en línea (APA 7 / Vancouver / IEEE / Harvard / Chicago / MLA) */}
-                    {sectionKey !== 'bibliografia' && (
-                      <div className="space-y-2 pt-1 border-t border-[var(--ui-border)]/70">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCitePickerRecordId(citePickerRecordId === rec.id ? null : rec.id);
-                                setShowQuickSourceForm(false);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer hover:opacity-90"
-                            >
-                              <BookmarkPlus className="w-3.5 h-3.5" />
-                              Citar fuente ({BIBLIOGRAPHY_NORM_GUIDES[activeBibStyle].id.toUpperCase()})
-                            </button>
-                            <LidioHelpTrigger
-                              size="xs"
-                              title="Citas automáticas en el texto"
-                              text="Insertá referencias directo mientras escribís. Si cambiás la norma arriba (por ej. de APA 7 a Vancouver o IEEE), todas las citas del capítulo y la lista final se actualizan solas."
-                            />
-                          </div>
-                          {extractInlineCitationTokens(rec.content || '').length > 0 && (
-                            <span className="text-[10px] font-semibold text-[var(--color-secondary-text)]">
-                              En hoja: {resolveInlineCitationsInText(rec.content || '', bibMap, activeBibStyle, appearanceOrderMap).slice(0, 72)}
-                              {resolveInlineCitationsInText(rec.content || '', bibMap, activeBibStyle, appearanceOrderMap).length > 72 ? '…' : ''}
-                            </span>
-                          )}
-                        </div>
-
-                        {extractInlineCitationTokens(rec.content || '').length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {extractInlineCitationTokens(rec.content || '').map((tok, ti) => {
-                              const targetBib = bibMap.get(tok.bibId);
-                              const formattedRef = formatInlineCitation(
-                                targetBib,
-                                activeBibStyle,
-                                appearanceOrderMap.get(tok.bibId),
-                                tok.locator,
-                              );
-                              return (
-                                <span
-                                  key={`${tok.rawToken}-${ti}`}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[10px] font-semibold text-[var(--ui-text-primary)]"
-                                >
-                                  <span>{formattedRef}</span>
-                                  {targetBib?.bibAuthor && (
-                                    <span className="text-[var(--ui-text-secondary)] truncate max-w-[110px]">
-                                      · {targetBib.bibAuthor}
-                                    </span>
-                                  )}
-                                  <button
-                                    type="button"
-                                    aria-label="Quitar esta cita del texto"
-                                    title="Quitar esta cita del texto"
-                                    onClick={async () => {
-                                      const ok = await confirm({
-                                        title: '¿Quitar esta cita del párrafo?',
-                                        message: 'La fuente seguirá guardada en Bibliografía.',
-                                        confirmText: 'Sí, quitar',
-                                        cancelText: 'Cancelar',
-                                      });
-                                      if (!ok) return;
-                                      updateRecord(rec.id, {
-                                        content: (rec.content || '').replace(tok.rawToken, '').replace(/\s{2,}/g, ' ').trim(),
-                                      });
-                                    }}
-                                    className="text-[var(--color-status-danger-text)] hover:opacity-75 cursor-pointer ml-0.5"
-                                  >
-                                    ×
-                                  </button>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {citePickerRecordId === rec.id && (
-                          <div className="p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <input
-                                type="text"
-                                value={quickLocator}
-                                onChange={(e) => setQuickLocator(e.target.value)}
-                                placeholder="Página opcional (ej: p. 42)"
-                                aria-label="Página citada opcional"
-                                className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowQuickSourceForm(!showQuickSourceForm)}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] cursor-pointer shrink-0"
-                              >
-                                <Plus className="w-3 h-3" />
-                                Nueva fuente
-                              </button>
-                            </div>
-
-                            {!showQuickSourceForm ? (
-                              bibItems.length === 0 ? (
-                                <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                                  Todavía no cargaste fuentes en tu bibliografía. Tocá <strong>+ Nueva fuente</strong> para crear la primera sin salir de este capítulo.
-                                </p>
-                              ) : (
-                                <div className="max-h-36 overflow-y-auto space-y-1">
-                                  {bibItems.map((bibItem) => {
-                                    const previewTag = formatInlineCitation(
-                                      bibItem,
-                                      activeBibStyle,
-                                      appearanceOrderMap.get(bibItem.id) || bibItem.bibOrderNumber,
-                                      quickLocator,
-                                    );
-                                    return (
-                                      <button
-                                        key={bibItem.id}
-                                        type="button"
-                                        onClick={() => {
-                                          insertTokenIntoRecord(
-                                            rec,
-                                            buildInlineCiteToken(bibItem.id, quickLocator),
-                                          );
-                                          setQuickLocator('');
-                                          setCitePickerRecordId(null);
-                                          notify.success(`Cita ${previewTag} insertada.`);
-                                        }}
-                                        className="w-full text-left px-2.5 py-1.5 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-[11px] flex items-center justify-between gap-2 cursor-pointer"
-                                      >
-                                        <span className="truncate font-medium text-[var(--ui-text-primary)]">
-                                          {bibItem.bibAuthor || 'Sin autor'} ({bibItem.bibYear || 's. f.'}) — {bibItem.bibTitle || bibItem.content || 'Sin título'}
-                                        </span>
-                                        <span className="font-bold text-[var(--color-accent-text)] shrink-0">
-                                          {previewTag}
-                                        </span>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )
-                            ) : (
-                              <div className="space-y-2 pt-1">
-                                <div className="flex flex-wrap gap-1">
-                                  {(['libro', 'articulo', 'web'] as const).map((t) => (
-                                    <button
-                                      key={t}
-                                      type="button"
-                                      onClick={() => setQuickSourceType(t)}
-                                      className={`px-2 py-0.5 text-[10px] font-bold rounded-full border cursor-pointer ${
-                                        quickSourceType === t
-                                          ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
-                                          : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]'
-                                      }`}
-                                    >
-                                      {t === 'libro' ? 'Libro' : t === 'articulo' ? 'Artículo' : 'Sitio Web'}
-                                    </button>
-                                  ))}
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                  <input
-                                    type="text"
-                                    value={quickAuthor}
-                                    onChange={(e) => setQuickAuthor(e.target.value)}
-                                    placeholder="Autor (ej: Eco, U.)"
-                                    className="col-span-2 px-2 py-1 text-[11px] rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={quickYear}
-                                    onChange={(e) => setQuickYear(e.target.value)}
-                                    placeholder="Año"
-                                    className="px-2 py-1 text-[11px] rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                                  />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={quickTitle}
-                                  onChange={(e) => setQuickTitle(e.target.value)}
-                                  placeholder="Título del libro o artículo"
-                                  className="w-full px-2 py-1 text-[11px] rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                                />
-                                <input
-                                  type="text"
-                                  value={quickPub}
-                                  onChange={(e) => setQuickPub(e.target.value)}
-                                  placeholder={quickSourceType === 'articulo' ? 'Revista científica' : 'Editorial o sitio web'}
-                                  className="w-full px-2 py-1 text-[11px] rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleQuickAddAndCite(rec)}
-                                  className="w-full py-1.5 px-2.5 text-[11px] font-bold rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
-                                >
-                                  Guardar en Bibliografía y Citar Aquí
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p
-                    onClick={() => setEditingRecordId(rec.id)}
-                    className={`text-xs leading-relaxed text-[var(--ui-text-primary)] cursor-pointer hover:opacity-80 ${
-                      rec.type === 'poem' ? 'whitespace-pre-line italic' : 'line-clamp-4'
-                    }`}
-                  >
-                    {rec.type === 'figure_placeholder'
-                      ? `${rec.figureNumber || 'Figura'}: ${rec.figureCaption || rec.figureHint || rec.content || 'Espacio reservado (tocá para editar o subir imagen)'}`
-                      : resolveInlineCitationsInText(
-                          rec.type === 'callout' && rec.calloutTitle
-                            ? `${rec.calloutTitle} — ${rec.content || ''}`
-                            : rec.content || '',
-                          bibMap,
-                          activeBibStyle,
-                          appearanceOrderMap,
-                        ) || 'Elemento vacío (tocá el lápiz para escribir)'}
-                  </p>
-                )}
-
-                {suggestion && (
-                  <div className="p-2.5 rounded-lg border border-[var(--color-accent-base)]/45 bg-[var(--color-accent-muted)] space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-[var(--color-accent-text)]">
-                        {suggestion.mode === 'rewrite'
-                          ? 'Propuesta de redacción (Lidio)'
-                          : 'Propuesta ortotipográfica (Lidio)'}
-                      </span>
-                      <LidioHelpTrigger
-                        size="xs"
-                        title="Confirmación"
-                        text="Compará el borrador sugerido y decidí si reemplazar tu texto actual."
-                      />
-                    </div>
-                    <p className="text-xs text-[var(--ui-text-primary)] leading-relaxed whitespace-pre-wrap">
-                      {suggestion.suggestedText}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => applySuggestion(rec.id)}
-                        className="flex-1 py-1.5 px-2.5 text-[11px] font-bold rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
-                      >
-                        Aplicar cambio
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => dismissSuggestion(rec.id)}
-                        className="py-1.5 px-2.5 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] cursor-pointer"
-                      >
-                        Descartar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {(section.records || []).filter((r) => r.type !== 'bibliography_item').length === 0 ? (
+          <p className="text-xs bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] py-2">
+            Este apartado todavía no tiene párrafos. Agregá el primero abajo.
+          </p>
+        ) : (
+          <CleanBlockCanvas
+            records={section.records || []}
+            focusedRecordId={focusedRecordId}
+            sectionColumns={effectiveColumns}
+            showCitationsAction={sectionKey !== 'bibliografia'}
+            bibMap={bibMap}
+            activeBibStyle={activeBibStyle}
+            appearanceOrderMap={appearanceOrderMap}
+            pendingSuggestions={pendingSuggestions}
+            onFocusRecord={setFocusedRecordId}
+            onUpdateRecord={handleUpdateRecord}
+            onRemoveRecord={(id) => void handleRemoveRecord(id)}
+            onMoveRecord={handleMoveRecord}
+            onReorderRecord={handleReorderRecord}
+            onSplitRecord={handleSplitRecord}
+            onInsertAt={handleInsertAt}
+            onAiImproveRecord={handleAiImproveRecord}
+            onApplyAiSuggestion={(id) => {
+              const txt = pendingSuggestions[id];
+              if (!txt) return;
+              onCommitHistoryBoundary?.();
+              handleUpdateRecord(id, { content: txt });
+              setPendingSuggestions((prev) => {
+                const copy = { ...prev };
+                delete copy[id];
+                return copy;
+              });
+              notify.success('Cambio aplicado.');
+            }}
+            onDiscardAiSuggestion={(id) => {
+              setPendingSuggestions((prev) => {
+                const copy = { ...prev };
+                delete copy[id];
+                return copy;
+              });
+            }}
+            onOpenCitePicker={(recId) => {
+              setCitePickerRecordId((curr) => (curr === recId ? null : recId));
+              setShowQuickSourceForm(false);
+            }}
+            renderCitePickerForRecord={renderCitePickerForRecord}
+            notify={notify}
+          />
+        )}
 
         <div className="flex flex-wrap gap-1.5 pt-2">
-          {([
-            { type: 'paragraph', label: '+ Párrafo' },
-            { type: 'subtitle', label: '+ Subtítulo' },
-            { type: 'quote', label: '+ Cita' },
-            { type: 'callout', label: '+ Recuadro' },
-            { type: 'poem', label: '+ Poema' },
-            { type: 'epigraph', label: '+ Epígrafe' },
-            { type: 'list', label: '+ Lista' },
-            { type: 'table', label: '+ Tabla' },
-            { type: 'image', label: '+ Imagen' },
-            { type: 'figure_placeholder', label: '+ Espacio figura' },
-          ] as const).map((btn) => (
+          {QUICK_ADD_TYPES.map((btn) => (
             <button
               key={btn.type}
               type="button"
-              onClick={() => {
-                if (btn.type === 'table') {
-                  const newTableId = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-                  updateDraft((prev) => ({
-                    ...prev,
-                    sections: (Array.isArray(prev?.sections) ? prev.sections : []).map((s: any) =>
-                      s.id === section.id
-                        ? {
-                            ...s,
-                            records: [
-                              ...(Array.isArray(s.records) ? s.records : []),
-                              {
-                                id: newTableId,
-                                type: 'table',
-                                content: 'Tabla nueva',
-                                tableHeaders: ['Concepto', 'Valor'],
-                                tableRows: [['Ítem 1', '100']],
-                                tableStylePreset: 'apa',
-                              },
-                            ],
-                          }
-                        : s,
-                    ),
-                  }));
-                  setEditingRecordId(newTableId);
-                  return;
-                }
-                addRecord(btn.type);
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] cursor-pointer"
+              onClick={() => handleInsertAt((section.records || []).length, btn.type)}
+              className="px-2.5 py-1.5 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-[var(--ui-text-primary)] cursor-pointer"
+              style={{ borderRadius: radius.control }}
             >
-              <FilePlus2 className="w-3 h-3 text-[var(--color-accent-text)]" />
-              {btn.label.replace('+ ', '')}
+              {btn.label}
             </button>
           ))}
         </div>

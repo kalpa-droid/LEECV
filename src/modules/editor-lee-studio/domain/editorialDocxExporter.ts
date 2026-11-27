@@ -797,6 +797,8 @@ export async function buildEditorialDocxBlob(
     const startsNew = resolveSectionEffectiveStartNewPage(
       sec,
       pagination.effectiveChapterBreakMode,
+      design,
+      draft?.cover,
     );
 
     const sectionBreakType =

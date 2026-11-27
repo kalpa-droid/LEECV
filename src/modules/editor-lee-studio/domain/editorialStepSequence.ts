@@ -9,76 +9,72 @@ export interface EditorialStepItem {
 }
 
 /**
- * Secuencia del Dock lateral de EditorLee (orden compacto de 2 columnas).
- * 1. Herramientas de entrada: Importar/IA + Inicio/Carpeta Segura
- * 2. Diseño y Estructura: Portada + Hoja y Márgenes + Índice
- * 3. Contenido y Datos: Secciones + Bibliografía + Metadatos
- * Debajo se despliegan los capítulos y apartados del manuscrito (i, ii, 1, 2, A).
+ * Secuencia del Dock lateral de EditorLee (7 pasos en grilla compacta de 2 columnas).
+ * Separa claramente:
+ * 1. Inicio y Archivo (obra, borradores, importar AST y Carpeta Segura)
+ * 2. Datos y Portada (identidad de obra y carátula)
+ * 3. Estructura y Hoja (márgenes, interlineado, columnas, separadores, encabezados/pies)
+ * 4. Estilo y Tipografía (fuentes y paleta visual)
+ * 5. Índice General
+ * 6. Partes y Capítulos
+ * 7. Bibliografía y Citas
  */
 export const EDITORIAL_STEP_SEQUENCE: EditorialStepItem[] = [
   {
-    id: 'editorial_import_ai',
-    stepNumber: 1,
-    label: 'Importar y IA',
-    shortLabel: 'IA',
-    description: 'Subir Word, LibreOffice, PDF o fotos con lectura automática e IA.',
-    iconId: 'ed_import_ai',
-  },
-  {
     id: 'editorial_inicio',
-    stepNumber: 2,
-    label: 'Archivo y Carpeta Segura',
-    shortLabel: 'Archivo',
-    description: 'Obra activa, abrir respaldo .leedoc y guardar en carpeta propia.',
+    stepNumber: 1,
+    label: 'Inicio y Archivo',
+    shortLabel: 'Inicio',
+    description: 'Obra activa, borradores guardados, importar manuscrito sin pérdidas y respaldo en PC o Drive.',
     iconId: 'inicio',
   },
   {
     id: 'editorial_portada',
-    stepNumber: 3,
-    label: 'Portada / Carátula',
+    stepNumber: 2,
+    label: 'Datos y Portada',
     shortLabel: 'Portada',
-    description: 'Modo de tapa, título, autor y diseño visual.',
+    description: 'Título, autoría, datos de edición y diseño exterior de portada.',
     iconId: 'ed_cover',
+  },
+  {
+    id: 'editorial_estructura',
+    stepNumber: 3,
+    label: 'Estructura y Hoja',
+    shortLabel: 'Estructura',
+    description: 'Hoja, márgenes, interlineado, columnas globales, carátulas de capítulos y encabezados.',
+    iconId: 'diseno_hoja',
   },
   {
     id: 'editorial_diseño',
     stepNumber: 4,
-    label: 'Hoja y Márgenes',
-    shortLabel: 'Diseño',
-    description: 'Márgenes, lomo, tipografía, tamaño e interlineado.',
+    label: 'Estilo y Tipografía',
+    shortLabel: 'Estilo',
+    description: 'Tipo de letra, tamaño, fuentes locales y paleta de color de la obra.',
     iconId: 'ed_design',
   },
   {
     id: 'editorial_toc',
     stepNumber: 5,
-    label: 'Índice Automático',
+    label: 'Índice General',
     shortLabel: 'Índice',
-    description: 'Encendido/apagado, profundidad H1-H2 y ubicación.',
+    description: 'Encendido/apagado, niveles de subtítulos y qué capítulos entran al índice.',
     iconId: 'ed_toc',
   },
   {
     id: 'editorial_secciones',
     stepNumber: 6,
-    label: 'Secciones y Capítulos',
-    shortLabel: 'Secciones',
-    description: 'Agregar y ordenar preliminares, capítulos y anexos.',
+    label: 'Partes y Capítulos',
+    shortLabel: 'Capítulos',
+    description: 'Agregar, ordenar y organizar preliminares, capítulos y anexos.',
     iconId: 'ed_sections',
   },
   {
     id: 'editorial_bibliografia',
     stepNumber: 7,
-    label: 'Bibliografía y Fuentes',
+    label: 'Bibliografía y Citas',
     shortLabel: 'Citas',
-    description: 'Agregar fuentes, ordenar referencias y convertir citas con IA.',
+    description: 'Agregar fuentes, ordenar referencias y bibliografía comentada.',
     iconId: 'ed_bibliografia',
-  },
-  {
-    id: 'editorial_metadata',
-    stepNumber: 8,
-    label: 'Metadatos y Legales',
-    shortLabel: 'Metadatos',
-    description: 'Ficha de edición, copyright, institución e ISBN.',
-    iconId: 'ed_metadata',
   },
 ];
 

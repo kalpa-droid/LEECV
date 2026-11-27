@@ -243,6 +243,7 @@ export function buildEditorialDockTabs(
 
 const EDITORIAL_PRESET_STEP_IDS = new Set([
   'editorial_portada',
+  'editorial_estructura',
   'editorial_diseño',
   'editorial_toc',
 ]);
@@ -255,13 +256,11 @@ const EDITORIAL_PRESET_STEP_IDS = new Set([
     return true;
   }).map((step) => {
     const role: DockTabItem['role'] =
-      step.id === 'editorial_import_ai'
-        ? 'ai_utility'
-        : step.id === 'editorial_inicio'
-          ? 'catalog'
-          : EDITORIAL_PRESET_STEP_IDS.has(step.id)
-            ? 'preset'
-            : 'record';
+      step.id === 'editorial_inicio'
+        ? 'catalog'
+        : EDITORIAL_PRESET_STEP_IDS.has(step.id)
+          ? 'preset'
+          : 'record';
     return {
       id: step.id,
       label: step.label,
@@ -274,9 +273,7 @@ const EDITORIAL_PRESET_STEP_IDS = new Set([
           ? ('accent' as const)
           : role === 'catalog'
             ? ('success' as const)
-            : role === 'ai_utility'
-              ? ('custom' as const)
-              : ('secondary' as const),
+            : ('secondary' as const),
     };
   });
 

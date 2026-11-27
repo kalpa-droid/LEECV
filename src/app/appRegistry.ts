@@ -35,6 +35,7 @@ import {
   Feather,
   BookText,
   AlignLeft,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   DOCUMENT_TYPE_REGISTRY,
@@ -177,12 +178,11 @@ const FACTURADOR_TAB_ROLES: Record<string, DockButtonRole> = {
 const EDITORIAL_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   editorial_inicio: BookOpen,
   editorial_portada: BookMarked,
-  editorial_secciones: Layers,
-  editorial_bibliografia: Library,
+  editorial_estructura: SlidersHorizontal,
   editorial_diseño: Palette,
   editorial_toc: LayoutGrid,
-  editorial_metadata: Settings,
-  editorial_import_ai: Sparkles,
+  editorial_secciones: Layers,
+  editorial_bibliografia: Library,
 };
 
 const EDITORIAL_SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -269,10 +269,7 @@ export function registerAllDockProviders(): void {
       fallback: Layers,
     }),
   );
-  registerStepIds('editorial', [
-    ...EDITORIAL_STEP_SEQUENCE.map((s) => s.id),
-    'editorial_historial',
-  ]);
+  registerStepIds('editorial', EDITORIAL_STEP_SEQUENCE.map((s) => s.id));
 }
 
 registerAllDockProviders();
