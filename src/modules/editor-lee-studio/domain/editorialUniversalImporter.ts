@@ -632,6 +632,28 @@ function splitAstIntoWindows(ast: DocumentAST, maxWindowChars = AST_WINDOW_BLOCK
   return windows;
 }
 
+export function sectionHasImportableRecords(sec: EditorialSection): boolean {
+  if (!sec || !Array.isArray(sec.records) || sec.records.length === 0) return false;
+  return sec.records.some((r: any) => {
+    if (!r || typeof r !== 'object') return false;
+    if (r.type === 'bibliography_item') {
+      return Boolean(
+        String(r.content || '').trim() ||
+          String(r.bibTitle || '').trim() ||
+          String(r.bibAuthor || '').trim(),
+      );
+    }
+    return Boolean(
+      String(r.content || '').trim() ||
+        r.imagePath ||
+        (Array.isArray(r.tableRows) && r.tableRows.length > 0) ||
+        (Array.isArray(r.calloutItems) && r.calloutItems.some((c: any) => String(c || '').trim())) ||
+        (Array.isArray(r.footnotes) && r.footnotes.length > 0) ||
+        String(r.figureCaption || '').trim(),
+    );
+  });
+}
+
 /**
  * Estructuración Lossless sobre DocumentAST con punteros `blk_XXXXX`.
  * Nunca reescribe párrafos ni descarta tablas/imágenes: agrupa únicamente los `blockIds`
@@ -861,7 +883,43 @@ export async function structureManuscriptInChunks(params: {
     rawFinalSections,
     mergedProposal?.recommendedBibliographyStyle ?? undefined,
   );
-  const finalSections = enrichedFinal.sections;
+  let finalSections = enrichedFinal.sections
+    .filter(sectionHasImportableRecords)
+    .map((s, idx) => ({ ...s, position: idx }));
+
+  if (finalSections.length === 0 && fullText.trim().length > 0) {
+    const heuristicFallback = mergeEditorialChunkedSections([], heuristicSplitManuscript(fullText))
+      .filter(sectionHasImportableRecords)
+      .map((s, idx) => ({ ...s, position: idx }));
+    if (heuristicFallback.length > 0) {
+      finalSections = heuristicFallback;
+    } else {
+      const paras = fullText
+        .trim()
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (paras.length > 0) {
+        finalSections = [
+          {
+            id: `ed_capitulo_${Date.now()}_fallback`,
+            title: 'Contenido importado',
+            sectionKey: 'capitulo',
+            category: 'cuerpo',
+            visible: true,
+            includeInToc: true,
+            startNewPage: true,
+            position: 0,
+            records: paras.map((p, rIdx) => ({
+              id: `rec_fallback_${Date.now()}_${rIdx}`,
+              type: 'paragraph',
+              content: p,
+            })),
+          },
+        ];
+      }
+    }
+  }
 
   onProgress?.({
     stage: 'done',

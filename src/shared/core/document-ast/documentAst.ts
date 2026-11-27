@@ -645,6 +645,9 @@ export function sanitizeHallucinatedSections(
       ...sec,
       title: String(sec.title || '').trim() || existingBlocks[0]?.text?.slice(0, 90) || 'Contenido principal',
       blockIds: existingBlocks.map((b) => b.id),
+      startBlockId: undefined,
+      endBlockId: undefined,
+      excludedBlockIds: undefined,
     });
   }
 
@@ -950,7 +953,13 @@ export function repairProposalToLosslessBijection(
     if (cleanIds.length > 0) {
       const secIdx = repairedSections.length;
       for (const id of cleanIds) sectionOfBlock.set(id, secIdx);
-      repairedSections.push({ ...sec, blockIds: cleanIds });
+      repairedSections.push({
+        ...sec,
+        blockIds: cleanIds,
+        startBlockId: undefined,
+        endBlockId: undefined,
+        excludedBlockIds: undefined,
+      });
     }
   }
 
@@ -1216,6 +1225,9 @@ export function reconstructEditorialSectionsFromAst(
         return;
       }
 
+      const trimmedParagraphText = String(blk.text || '').trim();
+      if (!trimmedParagraphText) return;
+
       records.push({
         id: recId,
         type: 'paragraph',
@@ -1223,6 +1235,8 @@ export function reconstructEditorialSectionsFromAst(
         ...(opts?.sourceOrigin ? { sourceOrigin: opts.sourceOrigin } : {}),
       } as ReconstructedEditorialRecord);
     });
+
+    if (records.length === 0) return;
 
     const secKey = secNode.sectionKey || (idx === 0 ? 'introduccion' : 'capitulo');
     const category =
@@ -1234,17 +1248,72 @@ export function reconstructEditorialSectionsFromAst(
           : 'cuerpo');
 
     sections.push({
-      id: `ed_${secKey}_${Date.now()}_${idx}`,
-      title: secNode.title || `Sección ${idx + 1}`,
+      id: `ed_${secKey}_${Date.now()}_${sections.length}`,
+      title: secNode.title || `Sección ${sections.length + 1}`,
       sectionKey: secKey,
       category,
       visible: true,
       includeInToc: true,
       startNewPage: true,
-      position: idx,
+      position: sections.length,
       records,
     });
   });
+
+  if (sections.length === 0 && ast.blocks.length > 0) {
+    const fallbackRecords: ReconstructedEditorialRecord[] = [];
+    ast.blocks.forEach((blk, idx) => {
+      const recId = `rec_fallback_${blk.id}_${idx}`;
+      if (blk.type === 'table' && blk.tableData) {
+        fallbackRecords.push({
+          id: recId,
+          type: 'table',
+          content: blk.tableData.caption || blk.text || 'Tabla',
+          tableHeaders: blk.tableData.headers,
+          tableRows: blk.tableData.rows,
+          tableCaption: blk.tableData.caption,
+          tableHasHeaderRow: blk.tableData.hasHeaderRow,
+        });
+      } else if (blk.assetRef) {
+        fallbackRecords.push({
+          id: recId,
+          type: 'image',
+          content: blk.assetRef.semanticSummary || blk.text || 'Imagen',
+          imagePath: opts?.assetUrlMap?.[blk.assetRef.assetId] || blk.assetRef.assetId,
+          imageCaption: blk.assetRef.semanticSummary || blk.text || '',
+          imageLayoutMode: 'centered',
+        });
+      } else if (blk.footnotes?.length) {
+        fallbackRecords.push({
+          id: recId,
+          type: 'footnote_list',
+          content: blk.text || '',
+          footnotes: blk.footnotes,
+        });
+      } else if (String(blk.text || '').trim()) {
+        fallbackRecords.push({
+          id: recId,
+          type: blk.type === 'heading' ? 'subtitle' : 'paragraph',
+          content: blk.text || '',
+          ...(opts?.sourceOrigin ? { sourceOrigin: opts.sourceOrigin } : {}),
+        } as ReconstructedEditorialRecord);
+      }
+    });
+
+    if (fallbackRecords.length > 0) {
+      sections.push({
+        id: `ed_capitulo_${Date.now()}_fallback`,
+        title: 'Contenido principal',
+        sectionKey: 'capitulo',
+        category: 'cuerpo',
+        visible: true,
+        includeInToc: true,
+        startNewPage: true,
+        position: 0,
+        records: fallbackRecords,
+      });
+    }
+  }
 
   return sections;
 }

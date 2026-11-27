@@ -30,13 +30,60 @@ import {
   type PdfRichLine,
 } from './pdfGeometryHelpers';
 
-export function hasUsableEditorialDigitalText(lines: PdfRichLine[]): boolean {
+const FOLIO_LINE_RE = /^(?:p[aá]g(?:ina)?\.?\s*)?\d{1,4}(?:\s*(?:de|\/)\s*\d{1,4})?$/i;
+const SCANNER_STAMP_RE =
+  /^(?:scanned\s+(?:by|with)\s+.+|escaneado\s+con\s+.+|camscanner|adobe\s+scan|tapscanner|microsoft\s+lens|genius\s+scan)$/i;
+const PUA_OR_CONTROL_RE = /[\uE000-\uF8FF\uFFFD\u0000-\u001F\u007F-\u009F]/g;
+
+export function hasUsableEditorialDigitalText(
+  lines: PdfRichLine[],
+  pageHeightPt?: number,
+): boolean {
   if (!Array.isArray(lines) || lines.length === 0) return false;
-  let nonWsChars = 0;
+
+  const usableLines: string[] = [];
   for (const ln of lines) {
-    nonWsChars += String(ln?.text || '').replace(/\s+/g, '').length;
+    const t = String(ln?.text || '').replace(/\s+/g, ' ').trim();
+    if (!t) continue;
+    if (FOLIO_LINE_RE.test(t) || SCANNER_STAMP_RE.test(t)) continue;
+    if (
+      pageHeightPt &&
+      pageHeightPt > 0 &&
+      t.length <= 40 &&
+      (ln.y >= pageHeightPt * 0.91 || ln.y <= pageHeightPt * 0.11)
+    ) {
+      continue;
+    }
+    usableLines.push(t);
   }
-  return nonWsChars >= 12 || (lines.length >= 2 && nonWsChars >= 6);
+
+  if (usableLines.length === 0) return false;
+
+  const combinedRaw = usableLines.join(' ');
+  const rawNoWs = combinedRaw.replace(/\s+/g, '');
+  if (!rawNoWs) return false;
+
+  const brokenCount = (rawNoWs.match(PUA_OR_CONTROL_RE) || []).length;
+  if (brokenCount / rawNoWs.length > 0.15) return false;
+
+  const cleaned = combinedRaw.replace(PUA_OR_CONTROL_RE, '').replace(/\s+/g, ' ').trim();
+  const cleanNoWs = cleaned.replace(/\s+/g, '');
+  if (!(cleanNoWs.length >= 12 || (usableLines.length >= 2 && cleanNoWs.length >= 6))) {
+    return false;
+  }
+
+  const letters = cleanNoWs.match(/\p{L}/gu) || [];
+  const digits = cleanNoWs.match(/\d/g) || [];
+  if (letters.length < 4) return false;
+
+  const readableScore = (letters.length + digits.length * 0.5) / cleanNoWs.length;
+  if (readableScore < 0.55) return false;
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  const avgWordLen = words.reduce((acc, w) => acc + w.length, 0) / Math.max(1, words.length);
+  if (avgWordLen > 18) return false;
+
+  return true;
 }
 
 export interface PdfEditorialProgress {
@@ -242,7 +289,7 @@ export async function extractEditorialFromPdfFile(
     if (
       analyzed.mode === 'text' ||
       analyzed.mode === 'hybrid' ||
-      hasUsableEditorialDigitalText(orderedLines)
+      hasUsableEditorialDigitalText(orderedLines, viewportBase.height)
     ) {
       digitalPages++;
       onProgress?.({
@@ -329,7 +376,53 @@ export async function extractEditorialFromPdfFile(
   }
 
   // Limpiar encabezados/pies repetidos y calcular tamaño tipográfico base real del cuerpo
-  const cleanedPages = stripRepeatedHeadersAndFooters(digitalPagesRaw);
+  const cleanedPagesRaw = stripRepeatedHeadersAndFooters(digitalPagesRaw);
+  const rescuedOcrPages = new Set<number>();
+
+  for (const cp of cleanedPagesRaw) {
+    if (signal?.aborted) break;
+    const rawPageInfo = digitalPagesRaw.find((r) => r.page === cp.page);
+    const hasVisualsOnly = Boolean(rawPageInfo && rawPageInfo.visualRegions.length > 0 && cp.lines.length > 0);
+    if (hasUsableEditorialDigitalText(cp.lines) || hasVisualsOnly) continue;
+
+    try {
+      const page = await pdfDoc.getPage(cp.page);
+      const viewportBase = page.getViewport({ scale: 1 });
+      onProgress?.({
+        stage: 'ocr',
+        current: cp.page,
+        total: totalPages,
+        message: `Recuperando texto escaneado de página ${cp.page} de ${totalPages}...`,
+      });
+      const scale = computeRenderScale(viewportBase.width, viewportBase.height);
+      const scaledVp = page.getViewport({ scale });
+      const { canvas, ctx } = prepareOpaquePdfCanvas(scaledVp.width, scaledVp.height);
+      await page.render({ canvasContext: ctx, viewport: scaledVp }).promise;
+      const clamped = clampCanvasSize(canvas);
+      const encoded = encodeCanvasWithinBudget(clamped, undefined, { digitalPage: false });
+      const ocrRes = await runVisionOcrSafe(encoded, cp.page);
+      if (ocrRes && ocrRes.text.trim()) {
+        const figs: Array<{ label: string; dataUrl: string }> = [];
+        for (const fig of ocrRes.figures) {
+          const rawCrop = cropCanvasRegionToDataUrl(clamped, fig.bbox);
+          if (rawCrop) {
+            const clean = await sanitizeImageDataUrlForPdf(rawCrop);
+            if (clean) figs.push({ label: fig.label || `Figura pág. ${cp.page}`, dataUrl: clean });
+          }
+        }
+        ocrPagesData.push({ page: cp.page, text: ocrRes.text, figures: figs });
+        rescuedOcrPages.add(cp.page);
+        ocrPages++;
+        digitalPages = Math.max(0, digitalPages - 1);
+      }
+      clamped.width = 0;
+      clamped.height = 0;
+    } catch {
+      // Mantener flujo resiliente si el rescate OCR falla en esta página
+    }
+  }
+
+  const cleanedPages = cleanedPagesRaw.filter((cp) => !rescuedOcrPages.has(cp.page));
   const allFontSizes = cleanedPages.flatMap((p) => p.lines.map((l) => l.fontSizePt));
   const bodyFontPt = medianNumber(allFontSizes, 11);
 
@@ -344,7 +437,9 @@ export async function extractEditorialFromPdfFile(
   }> = [];
 
   const pageMap = new Map<number, (typeof digitalPagesRaw)[number]>();
-  digitalPagesRaw.forEach((raw) => pageMap.set(raw.page, raw));
+  digitalPagesRaw.forEach((raw) => {
+    if (!rescuedOcrPages.has(raw.page)) pageMap.set(raw.page, raw);
+  });
   const cleanedMap = new Map<number, (typeof cleanedPages)[number]>();
   cleanedPages.forEach((cp) => cleanedMap.set(cp.page, cp));
   const ocrMap = new Map<number, (typeof ocrPagesData)[number]>();
