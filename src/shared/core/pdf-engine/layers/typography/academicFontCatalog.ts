@@ -128,6 +128,7 @@ export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
       regular: 'https://cdn.jsdelivr.net/fontsource/fonts/newsreader@latest/latin-400-normal.ttf',
       bold: 'https://cdn.jsdelivr.net/fontsource/fonts/newsreader@latest/latin-700-normal.ttf',
       italic: 'https://cdn.jsdelivr.net/fontsource/fonts/newsreader@latest/latin-400-italic.ttf',
+      boldItalic: 'https://cdn.jsdelivr.net/fontsource/fonts/newsreader@latest/latin-700-italic.ttf',
     },
   },
   {
@@ -141,6 +142,7 @@ export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
       regular: 'https://cdn.jsdelivr.net/fontsource/fonts/lora@latest/latin-400-normal.ttf',
       bold: 'https://cdn.jsdelivr.net/fontsource/fonts/lora@latest/latin-700-normal.ttf',
       italic: 'https://cdn.jsdelivr.net/fontsource/fonts/lora@latest/latin-400-italic.ttf',
+      boldItalic: 'https://cdn.jsdelivr.net/fontsource/fonts/lora@latest/latin-700-italic.ttf',
     },
   },
   {
@@ -153,6 +155,8 @@ export const ACADEMIC_FONT_CATALOG: readonly AcademicFontSpec[] = [
     ttfUrls: {
       regular: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.ttf',
       bold: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf',
+      italic: 'https://cdn.jsdelivr.net/fontsource/fonts/arimo@latest/latin-400-italic.ttf',
+      boldItalic: 'https://cdn.jsdelivr.net/fontsource/fonts/arimo@latest/latin-700-italic.ttf',
     },
   },
 ];

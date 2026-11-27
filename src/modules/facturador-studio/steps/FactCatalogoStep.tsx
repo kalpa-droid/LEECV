@@ -3,6 +3,7 @@ import { Boxes, Check, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { SearchFilterBar, matchesSearchQuery } from '../../../shared/core/ui/SearchFilterBar';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { FactStepBaseProps, emptyCatalogItem } from '../facturadorStepsShared';
@@ -11,6 +12,7 @@ import { formatARS, isLowStock, resolveTierPrice } from '../domain/invoiceMath';
 
 /** Paso 3 — Catálogo maestro de productos, stock y escalones mayoristas. */
 export const FactCatalogoStep: React.FC<FactStepBaseProps> = ({ vault, updateVault, notify }) => {
+  const { confirm } = useConfirm();
   const [search, setSearch] = useState('');
   const [editingDraft, setEditingDraft] = useState<CatalogItem | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -64,7 +66,15 @@ export const FactCatalogoStep: React.FC<FactStepBaseProps> = ({ vault, updateVau
     setIsCreatingNew(false);
   };
 
-  const removeItem = (id: string) => {
+  const removeItem = async (id: string) => {
+    const target = vault.catalogo.find((item) => item.id === id);
+    const ok = await confirm({
+      title: `¿Eliminar "${target?.nombre || 'este producto'}" del catálogo?`,
+      message: 'Los comprobantes ya emitidos no se verán afectados.',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Conservar',
+    });
+    if (!ok) return;
     updateVault((prev) => ({ ...prev, catalogo: prev.catalogo.filter((item) => item.id !== id) }));
     if (editingDraft?.id === id) {
       setEditingDraft(null);

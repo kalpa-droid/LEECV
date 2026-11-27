@@ -12,6 +12,7 @@ import { PRESET_COLORS } from '../../../shared/core/pdf-engine/layers/presets/pr
 import type { EditorialCoverMode, EditorialLegalFields, EditorialMetadata } from '../domain/editorialTypes';
 import type { ColorPalette } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { sanitizeEditorialText } from '../domain/editorialTypographyEngine';
+import { isRenderablePdfImageSrc } from '../../../shared/core/utils/imageCompressor';
 import {
   EditorialDiamondSeparator,
   resolveEditorialPdfFontStyles,
@@ -235,7 +236,7 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
           <Text style={s.metaLine}>{cleanText(editor)}</Text>
         )}
       </View>
-      {qrCodeUrl && <Image style={s.qrImage} src={qrCodeUrl} />}
+      {isRenderablePdfImageSrc(qrCodeUrl) && <Image style={s.qrImage} src={qrCodeUrl} />}
     </View>
   );
 

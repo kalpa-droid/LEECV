@@ -3,6 +3,7 @@ import { ListPlus, Plus, Trash2, Copy, Tag, FileText, Lock, Printer } from 'luci
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { SearchFilterBar, matchesSearchQuery } from '../../../shared/core/ui/SearchFilterBar';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { FactStepBaseProps, lineFromCatalog, makeId } from '../facturadorStepsShared';
@@ -31,6 +32,7 @@ export const FactItemsStep: React.FC<FactItemsStepProps> = ({
   onNewDraft,
   onExportPDF,
 }) => {
+  const { confirm } = useConfirm();
   const [catalogSearch, setCatalogSearch] = useState('');
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
   const [showObservaciones, setShowObservaciones] = useState(Boolean(draft.observaciones));
@@ -82,8 +84,21 @@ export const FactItemsStep: React.FC<FactItemsStepProps> = ({
     });
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (isReadonly) return;
+    const target = draft.items.find((item) => item.id === id);
+    const hasContent = Boolean(
+      target && (String(target.nombre || '').trim() || String(target.descripcion || '').trim() || Number(target.precioUnitario || 0) > 0),
+    );
+    if (hasContent) {
+      const ok = await confirm({
+        title: '¿Quitar este ítem del comprobante?',
+        message: 'Podés revertirlo con Deshacer si lo quitaste por error.',
+        confirmText: 'Sí, quitar',
+        cancelText: 'Conservar',
+      });
+      if (!ok) return;
+    }
     updateDraft((prev) => ({ ...prev, items: prev.items.filter((item) => item.id !== id) }));
   };
 

@@ -9,6 +9,7 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../../shared/core/documents/documentEngine';
+import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { savePlanner, loadPlannerById } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -119,33 +120,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     [activeTabId],
   );
 
-  // Cargar el borrador guardado (IndexedDB/Supabase, vía loadDocumentById) si existe.
-  // Sin esto, useDraftAutosave escribe pero nadie lee de vuelta: cerrar y reabrir
-  // la pestaña perdía todo lo tipeado pese a que el autoguardado corría bien.
-  useEffect(() => {
-    let cancelled = false;
-    loadPlannerById(plannerId).then((saved) => {
-      if (cancelled || !saved) return;
-      const { id: _id, doc_type_id: _dt, updated_at: _u, isProvisional: _ip, ...restored } = saved;
-      setData((prev) => ({
-        ...prev,
-        ...restored,
-        theme: restored.theme && typeof restored.theme === 'object' ? { ...prev.theme, ...restored.theme } : prev.theme,
-        modules: restored.modules && typeof restored.modules === 'object' ? { ...prev.modules, ...restored.modules } : prev.modules,
-        monthOverrides: restored.monthOverrides && typeof restored.monthOverrides === 'object' ? restored.monthOverrides : prev.monthOverrides,
-      }));
-      if (saved.selectedPresetId) setSelectedPresetId(saved.selectedPresetId);
-    }).catch(() => {
-      // Sin borrador guardado todavía (agenda nueva) — se sigue con el estado en blanco.
-    });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plannerId]);
-  
   const viewport = useDocumentViewport({
     pageSizeId: 'b5'
   });
-  
+
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useViewportGestures({
@@ -155,6 +133,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     zoomLevel: viewport.zoomLevel
   });
 
+  const [isPlannerHydrating, setIsPlannerHydrating] = useState(true);
   const [data, setData] = useState({
     year: new Date().getFullYear(),
     weekStart: 'monday' as 'monday' | 'sunday',
@@ -178,6 +157,43 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     personalInfo: {},
     monthOverrides: {} as Record<number, PlannerMonthOverride>
   });
+
+  const history = useStudioHistory({
+    docId: plannerId,
+    state: data,
+    applyState: setData,
+    isHydrating: isPlannerHydrating,
+  });
+
+  // Cargar el borrador guardado (IndexedDB/Supabase, vía loadDocumentById) si existe.
+  // Sin esto, useDraftAutosave escribe pero nadie lee de vuelta: cerrar y reabrir
+  // la pestaña perdía todo lo tipeado pese a que el autoguardado corría bien.
+  useEffect(() => {
+    let cancelled = false;
+    setIsPlannerHydrating(true);
+    loadPlannerById(plannerId).then((saved) => {
+      if (cancelled || !saved) return;
+      const { id: _id, doc_type_id: _dt, updated_at: _u, isProvisional: _ip, ...restored } = saved;
+      setData((prev) => {
+        const merged = {
+          ...prev,
+          ...restored,
+          theme: restored.theme && typeof restored.theme === 'object' ? { ...prev.theme, ...restored.theme } : prev.theme,
+          modules: restored.modules && typeof restored.modules === 'object' ? { ...prev.modules, ...restored.modules } : prev.modules,
+          monthOverrides: restored.monthOverrides && typeof restored.monthOverrides === 'object' ? restored.monthOverrides : prev.monthOverrides,
+        };
+        history.resetSeed(merged);
+        return merged;
+      });
+      if (saved.selectedPresetId) setSelectedPresetId(saved.selectedPresetId);
+    }).catch(() => {
+      // Sin borrador guardado todavía (agenda nueva) — se sigue con el estado en blanco.
+    }).finally(() => {
+      if (!cancelled) setIsPlannerHydrating(false);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plannerId]);
 
   const plannerTitle = computeAutoDocumentTitle('planner' as any, data);
 
@@ -294,6 +310,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       navbarSlot={
         <StudioNavbar
           docType="planner"
+          undo={history.undo}
+          redo={history.redo}
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
           currentCvData={{ ...data, id: plannerId, selectedPresetId }}
           currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}

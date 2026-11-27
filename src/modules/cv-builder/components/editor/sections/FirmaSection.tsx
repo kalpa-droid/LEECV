@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, PenTool } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
+import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { SectionToggle } from './ui/SectionToggle';
 import { radius, elevationSystem, button } from '../../../../../shared/core/uiDesignSystem';
@@ -13,6 +14,7 @@ interface FirmaSectionProps {
 }
 
 export const FirmaSection: React.FC<FirmaSectionProps> = ({ cvData, setCvData, onOpenSignature }) => {
+  const { confirm } = useConfirm();
   return (
     <div className="space-y-4">
       <SectionToggle sectionKey="firma" sectionTitle="Firma Digital" cvData={cvData} setCvData={setCvData} />
@@ -26,7 +28,15 @@ export const FirmaSection: React.FC<FirmaSectionProps> = ({ cvData, setCvData, o
                   <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
                 </div>
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: '¿Quitar imagen de firma?',
+                      message: 'Podés volver a recuperarla con Deshacer o cargarla nuevamente.',
+                      confirmText: 'Sí, quitar',
+                      cancelText: 'Conservar',
+                    });
+                    if (!ok) return;
                     setCvData((prev: any) => ({
                       ...prev,
                       signature: {

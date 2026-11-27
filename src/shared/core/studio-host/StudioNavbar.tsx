@@ -283,7 +283,7 @@ export function StudioNavbar({
             />
           </button>
 
-          <div className="hidden md:flex items-center gap-1.5 min-w-0 pl-1 border-l border-[var(--ui-border)]">
+          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 pl-1 border-l border-[var(--ui-border)]">
             <UndoRedoControls
               isMobile={isMobile}
               undo={undo}

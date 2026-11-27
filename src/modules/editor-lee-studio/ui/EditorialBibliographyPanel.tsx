@@ -5,6 +5,7 @@ import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
 import { AIButton } from '../../../shared/core/ui/AIButton';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import {
@@ -44,6 +45,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   notify,
   onOpenGlobalBibModal,
 }) => {
+  const { confirm: confirmBib } = useConfirm();
   const sections: EditorialSection[] = useMemo(
     () => (Array.isArray(draft?.sections) ? draft.sections : []),
     [draft?.sections],
@@ -233,7 +235,14 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     );
   };
 
-  const handleRemoveRecord = (recId: string) => {
+  const handleRemoveRecord = async (recId: string) => {
+    const ok = await confirmBib({
+      title: '¿Eliminar esta referencia bibliográfica?',
+      message: 'Si ya la citaste en algún capítulo, la cita quedará sin fuente vinculada hasta deshacer.',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Conservar',
+    });
+    if (!ok) return;
     ensureAndMutateBibRecords((recs) =>
       sortBibliographyRecords(
         recs.filter((r) => r.id !== recId),

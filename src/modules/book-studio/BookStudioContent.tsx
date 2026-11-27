@@ -37,6 +37,7 @@ import { loadBookById } from '../../shared/core/storage/documentStorageService';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
+import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
@@ -107,6 +108,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const sourcePdfPickerRef = useRef<(() => Promise<void>) | null>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
+  const history = useStudioHistory({
+    docId: bookId,
+    state: options,
+    applyState: setOptions,
+  });
   const [isPrintTargetModalOpen, setIsPrintTargetModalOpen] = useState<boolean>(false);
   const [isPaperModalOpen, setIsPaperModalOpen] = useState<boolean>(false);
   const activePrintTarget = inferBookPrintTarget(options);
@@ -427,8 +433,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       const loaded = await loadBookById(activeTabId);
       if (!alive || !loaded || !loaded.options) return;
       const id = loaded.id || activeTabId;
+      const mergedOpts = { ...DEFAULT_BOOK_IMPOSITION_OPTIONS, ...loaded.options };
       setBookId(id);
-      setOptions({ ...DEFAULT_BOOK_IMPOSITION_OPTIONS, ...loaded.options });
+      history.resetSeed(mergedOpts);
+      setOptions(mergedOpts);
       if (Number.isFinite(loaded.pdfPageCount)) setPdfPageCount(loaded.pdfPageCount);
       if (loaded.name) setSavedBookName(loaded.name);
       const restored = await bookAssetManager.restoreSourcePdf(id);
@@ -568,6 +576,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       navbarSlot={
         <StudioNavbar
           docType="book"
+          undo={history.undo}
+          redo={history.redo}
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}

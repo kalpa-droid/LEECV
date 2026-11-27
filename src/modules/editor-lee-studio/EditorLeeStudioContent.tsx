@@ -39,6 +39,7 @@ import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldB
 import { getLastExternalBackupTimestamp } from '../../shared/core/storage/storageResilienceEngine';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
+import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
 import { saveDocumentDraftLocal, loadDocumentById } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
@@ -226,6 +227,18 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [draft, setDraft] = useState<any>(() => createEmptyEditorial());
   const [debouncedDraft, setDebouncedDraft] = useState<any>(draft);
 
+  const applyEditorialSnapshot = useCallback((snapshot: any) => {
+    hasEditedRef.current = true;
+    setDraft(snapshot);
+  }, []);
+
+  const history = useStudioHistory({
+    docId: editorialId,
+    state: draft,
+    applyState: applyEditorialSnapshot,
+    isHydrating: hydratedIdRef.current !== editorialId,
+  });
+
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedDraft(draft), 300);
     return () => window.clearTimeout(t);
@@ -350,7 +363,9 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         const loaded = await loadDocumentById(editorialId, 'editorial');
         const sanitized = sanitizeEditorialData(loaded);
         if (active) {
-          setDraft(sanitized || createEmptyEditorial());
+          const initialDraft = sanitized || createEmptyEditorial();
+          history.resetSeed(initialDraft);
+          setDraft(initialDraft);
         }
       } catch (err) {
         console.warn('Error cargando documento editorial:', err);
@@ -525,11 +540,13 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
 
   const handleNewDraft = useCallback(() => {
     hasEditedRef.current = false;
-    setDraft(createEmptyEditorial());
+    const blank = createEmptyEditorial();
+    history.resetSeed(blank);
+    setDraft(blank);
     setActiveStepTab('editorial_inicio');
     setIsPanelOpen(true);
     showInfo('Nuevo documento editorial listo para redactar.');
-  }, [showInfo]);
+  }, [showInfo, history]);
 
   const handleSaveDocument = useCallback(async () => {
     if (!draft) return;
@@ -716,6 +733,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           const sanitized = sanitizeEditorialData(loadedData);
           if (!sanitized) throw new Error('El archivo no contiene un documento editorial válido.');
           hasEditedRef.current = true;
+          history.resetSeed(sanitized);
           setDraft(sanitized);
           setActiveStepTab('editorial_secciones');
           setIsPanelOpen(true);
@@ -781,6 +799,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           const sanitized = sanitizeEditorialData(loaded);
           if (!sanitized) throw new Error('documento_editorial_invalido');
           hasEditedRef.current = false;
+          history.resetSeed(sanitized);
           setDraft(sanitized);
           setActiveStepTab('editorial_secciones');
           setIsPanelOpen(true);
@@ -840,6 +859,10 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         navbarSlot={
           <StudioNavbar
             docType="editorial"
+            undo={history.undo}
+            redo={history.redo}
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
             currentCvData={draft}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={() => {

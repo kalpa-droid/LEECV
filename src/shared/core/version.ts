@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 11,
-  patch: 0,
-  label: 'V3.11.0',
-  lastUpdated: '2026-11-26',
+  patch: 1,
+  label: 'V3.11.1',
+  lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'feat(editor-lee): V3.11.0 — Motor integral simple/doble faz con inicio de capítulos en página impar e índice sincronizado, presets completos de Informe y Proyecto, encabezados/pies configurables con márgenes automáticos, 3 píldoras globales y exportación Word (.docx).',
+  stage: 'fix(core): V3.11.1 — Blindaje total contra DataView en vista previa PDF (imágenes DOCX y fuentes TTF/OTF), Undo/Redo conectado en las 6 apps (PC y móvil) y confirmaciones useConfirm() en borrados destructivos.',
 } as const;

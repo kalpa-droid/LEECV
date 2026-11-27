@@ -220,9 +220,10 @@ export async function hydrateInlineAssets<T>(value: T): Promise<T> {
         return value;
       }
     }
-    if (/^data:image\/(?:webp|gif|bmp)\b/i.test(resolvedStr) && typeof document !== 'undefined') {
-      const { ensurePdfCompatibleImageDataUrl } = await import('../utils/imageCompressor');
-      resolvedStr = await ensurePdfCompatibleImageDataUrl(resolvedStr);
+    if (/^data:image\//i.test(resolvedStr) && typeof document !== 'undefined') {
+      const { sanitizeImageDataUrlForPdf } = await import('../utils/imageCompressor');
+      const sanitized = await sanitizeImageDataUrlForPdf(resolvedStr);
+      resolvedStr = sanitized ?? '';
     }
     return resolvedStr as unknown as T;
   }

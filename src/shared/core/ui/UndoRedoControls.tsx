@@ -32,7 +32,7 @@ export function UndoRedoControls({
 
   return (
     <div
-      className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 border border-[var(--ui-dock-border)] ${elevationSystem.raised} select-none ${className}`}
+      className={`flex items-center gap-0.5 sm:gap-1 bg-[var(--ui-bg-dock)] px-1 py-0.5 sm:px-2 sm:py-1 border border-[var(--ui-dock-border)] ${elevationSystem.raised} select-none ${className}`}
       style={{ borderRadius: radius.card }}
     >
       <button

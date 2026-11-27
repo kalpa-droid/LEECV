@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Check, Pencil, Plus, Trash2, UserCheck, Users } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { SearchFilterBar, matchesSearchQuery } from '../../../shared/core/ui/SearchFilterBar';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { CONDICIONES_IVA, FactStepBaseProps, emptyCliente } from '../facturadorStepsShared';
@@ -26,6 +27,7 @@ export const FactClientesStep: React.FC<FactClientesStepProps> = ({
   notify,
   onSelectForBilling,
 }) => {
+  const { confirm } = useConfirm();
   const [search, setSearch] = useState('');
   const [editingClient, setEditingClient] = useState<ClienteFactura | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -80,7 +82,15 @@ export const FactClientesStep: React.FC<FactClientesStepProps> = ({
     setIsCreatingNew(false);
   };
 
-  const removeCliente = (id: string) => {
+  const removeCliente = async (id: string) => {
+    const target = vault.clientes.find((c) => c.id === id);
+    const ok = await confirm({
+      title: `¿Eliminar a "${target?.nombre || 'este cliente'}" de tu cartera?`,
+      message: 'Si lo necesitas después, podés volver con Deshacer.',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Conservar',
+    });
+    if (!ok) return;
     updateVault((prev) => ({ ...prev, clientes: prev.clientes.filter((cliente) => cliente.id !== id) }));
     if (draft.cliente?.id === id) {
       updateDraft((prev) => ({ ...prev, cliente: null }));
