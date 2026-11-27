@@ -40,11 +40,11 @@ describe('EditorLee V3.1 — Dock con distintivos numéricos/romanos y Chunker d
     expect(tabs.slice(0, 7).map((t) => t.id)).toEqual([
       'editorial_inicio',
       'editorial_portada',
+      'editorial_secciones',
+      'editorial_bibliografia',
       'editorial_estructura',
       'editorial_diseño',
       'editorial_toc',
-      'editorial_secciones',
-      'editorial_bibliografia',
     ]);
     expect(byId.editorial_inicio.isLarge).toBe(false);
     expect(byId.editorial_inicio.stepNumber).toBeUndefined();

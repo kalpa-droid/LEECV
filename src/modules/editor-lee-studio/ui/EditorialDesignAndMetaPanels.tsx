@@ -11,14 +11,13 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 export interface EditorialTocPanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
-  setActiveStepTab: (tab: string) => void;
+  setActiveStepTab?: (tab: string) => void;
   resolvedTocMap?: Record<string, string>;
 }
 
 export const EditorialTocPanel: React.FC<EditorialTocPanelProps> = ({
   draft,
   updateDraft,
-  setActiveStepTab,
   resolvedTocMap,
 }) => {
   const tocConfig = draft?.tocConfig || {
@@ -146,15 +145,6 @@ export const EditorialTocPanel: React.FC<EditorialTocPanelProps> = ({
           </div>
         )}
       </PanelSection>
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_secciones')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
-        style={{ borderRadius: radius.control }}
-      >
-        Continuar a Partes y Capítulos →
-      </button>
     </div>
   );
 };

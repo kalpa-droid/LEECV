@@ -28,6 +28,10 @@ export function isDynamicFontRegistered(family?: string): boolean {
   return Boolean(family && DYNAMIC_REGISTERED_FONTS.has(family.trim()));
 }
 
+export function clearDynamicFontRegistry(): void {
+  DYNAMIC_REGISTERED_FONTS.clear();
+}
+
 function resolveHelveticaVariant(isBold: boolean, isItalic: boolean): string {
   if (isBold && isItalic) return 'Helvetica-BoldOblique';
   if (isBold) return 'Helvetica-Bold';

@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 12,
+  minor: 13,
   patch: 0,
-  label: 'V3.12.0',
+  label: 'V3.13.0',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'feat(editorial): V3.12.0 — Motor AST Lossless con Asset Vault y biyección 1:1, EditorLee en 7 pasos sin ruido, cascada global-sección real y lienzo limpio con corrector multilingüe.',
+  stage: 'feat(editorial): V3.13.0 — Desarme nativo geométrico/XML + IA híbrida sin pérdidas (Word/ODT/PDF), Mapa Estructural con conciencia global de obra, fusión granular y flujo coherente de 7 pasos.',
 } as const;

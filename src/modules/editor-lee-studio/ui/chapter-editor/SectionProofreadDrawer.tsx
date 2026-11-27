@@ -23,6 +23,7 @@ export interface ProofreadIssue {
 export interface SectionProofreadDrawerProps {
   sectionTitle: string;
   records: EditorialRecord[];
+  draft?: any;
   onApplyIssue: (issue: ProofreadIssue) => void;
   onApplyBatchSafe: (issues: ProofreadIssue[]) => void;
   onClose: () => void;
@@ -34,6 +35,7 @@ type FilterKey = 'all' | 'spelling' | 'grammar' | 'foreign';
 export const SectionProofreadDrawer: React.FC<SectionProofreadDrawerProps> = ({
   sectionTitle,
   records,
+  draft,
   onApplyIssue,
   onApplyBatchSafe,
   onClose,
@@ -63,6 +65,7 @@ export const SectionProofreadDrawer: React.FC<SectionProofreadDrawerProps> = ({
         const res = await executeAiTask<{ issues?: ProofreadIssue[] }>({
           taskId: 'editorial_proofread_section',
           payload: { sectionTitle, blocks: textBlocks },
+          cvData: draft,
           maxTokens: 4096,
           temperature: 0.1,
         });

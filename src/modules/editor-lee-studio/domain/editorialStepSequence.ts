@@ -9,15 +9,14 @@ export interface EditorialStepItem {
 }
 
 /**
- * Secuencia del Dock lateral de EditorLee (7 pasos en grilla compacta de 2 columnas).
- * Separa claramente:
- * 1. Inicio y Archivo (obra, borradores, importar AST y Carpeta Segura)
+ * Secuencia lógica del Dock lateral de EditorLee (7 pasos en grilla compacta de 2 columnas):
+ * 1. Inicio y Archivo (obra, borradores, importar sin pérdidas y respaldo)
  * 2. Datos y Portada (identidad de obra y carátula)
- * 3. Estructura y Hoja (márgenes, interlineado, columnas, separadores, encabezados/pies)
- * 4. Estilo y Tipografía (fuentes y paleta visual)
- * 5. Índice General
- * 6. Partes y Capítulos
- * 7. Bibliografía y Citas
+ * 3. Partes y Capítulos (preliminares, capítulos y anexos)
+ * 4. Bibliografía y Citas (fuentes sincronizadas con capítulos)
+ * 5. Estructura y Hoja (hoja, márgenes, interlineado, columnas, portadillas, encabezados)
+ * 6. Estilo y Tipografía (fuentes y paleta visual)
+ * 7. Índice y Exportación (Índice General verificado + chequeo y salida final)
  */
 export const EDITORIAL_STEP_SEQUENCE: EditorialStepItem[] = [
   {
@@ -37,32 +36,8 @@ export const EDITORIAL_STEP_SEQUENCE: EditorialStepItem[] = [
     iconId: 'ed_cover',
   },
   {
-    id: 'editorial_estructura',
-    stepNumber: 3,
-    label: 'Estructura y Hoja',
-    shortLabel: 'Estructura',
-    description: 'Hoja, márgenes, interlineado, columnas globales, carátulas de capítulos y encabezados.',
-    iconId: 'diseno_hoja',
-  },
-  {
-    id: 'editorial_diseño',
-    stepNumber: 4,
-    label: 'Estilo y Tipografía',
-    shortLabel: 'Estilo',
-    description: 'Tipo de letra, tamaño, fuentes locales y paleta de color de la obra.',
-    iconId: 'ed_design',
-  },
-  {
-    id: 'editorial_toc',
-    stepNumber: 5,
-    label: 'Índice General',
-    shortLabel: 'Índice',
-    description: 'Encendido/apagado, niveles de subtítulos y qué capítulos entran al índice.',
-    iconId: 'ed_toc',
-  },
-  {
     id: 'editorial_secciones',
-    stepNumber: 6,
+    stepNumber: 3,
     label: 'Partes y Capítulos',
     shortLabel: 'Capítulos',
     description: 'Agregar, ordenar y organizar preliminares, capítulos y anexos.',
@@ -70,11 +45,35 @@ export const EDITORIAL_STEP_SEQUENCE: EditorialStepItem[] = [
   },
   {
     id: 'editorial_bibliografia',
-    stepNumber: 7,
+    stepNumber: 4,
     label: 'Bibliografía y Citas',
     shortLabel: 'Citas',
     description: 'Agregar fuentes, ordenar referencias y bibliografía comentada.',
     iconId: 'ed_bibliografia',
+  },
+  {
+    id: 'editorial_estructura',
+    stepNumber: 5,
+    label: 'Estructura y Hoja',
+    shortLabel: 'Estructura',
+    description: 'Hoja, márgenes, interlineado, columnas globales, carátulas de capítulos y encabezados.',
+    iconId: 'diseno_hoja',
+  },
+  {
+    id: 'editorial_diseño',
+    stepNumber: 6,
+    label: 'Estilo y Tipografía',
+    shortLabel: 'Estilo',
+    description: 'Tipo de letra, tamaño, fuentes locales y paleta de color de la obra.',
+    iconId: 'ed_design',
+  },
+  {
+    id: 'editorial_toc',
+    stepNumber: 7,
+    label: 'Índice y Exportación',
+    shortLabel: 'Índice y Salida',
+    description: 'Índice General automático, verificación final y exportación a PDF o Word.',
+    iconId: 'ed_toc',
   },
 ];
 

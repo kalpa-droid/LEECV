@@ -23,7 +23,7 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 export interface EditorialStylePanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
-  setActiveStepTab: (tab: string) => void;
+  setActiveStepTab?: (tab: string) => void;
 }
 
 const CURATED_COVER_PALETTE_KEYS = [
@@ -42,7 +42,6 @@ const CURATED_COVER_PALETTE_KEYS = [
 export const EditorialStylePanel: React.FC<EditorialStylePanelProps> = ({
   draft,
   updateDraft,
-  setActiveStepTab,
 }) => {
   const { showInfo, showSuccess } = useToast() as any;
   const design = draft?.design || {};
@@ -213,15 +212,6 @@ export const EditorialStylePanel: React.FC<EditorialStylePanelProps> = ({
           })}
         </div>
       </PanelSection>
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_toc')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
-        style={{ borderRadius: radius.control }}
-      >
-        Continuar a Índice General →
-      </button>
     </div>
   );
 };

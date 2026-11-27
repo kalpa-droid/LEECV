@@ -12,7 +12,7 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 export interface EditorialCoverPanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
-  setActiveStepTab: (tab: string) => void;
+  setActiveStepTab?: (tab: string) => void;
 }
 
 const COVER_MODE_TILES: Array<{ id: EditorialCoverMode; label: string; help: string }> = [
@@ -41,7 +41,6 @@ const COVER_MODE_TILES: Array<{ id: EditorialCoverMode; label: string; help: str
 export const EditorialCoverPanel: React.FC<EditorialCoverPanelProps> = ({
   draft,
   updateDraft,
-  setActiveStepTab,
 }) => {
   const cover = draft?.cover || {};
   const design = draft?.design || {};
@@ -223,15 +222,6 @@ export const EditorialCoverPanel: React.FC<EditorialCoverPanelProps> = ({
           </ActionGrid>
         </PanelSection>
       )}
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_estructura')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
-        style={{ borderRadius: radius.control }}
-      >
-        Continuar a Estructura y Hoja →
-      </button>
     </div>
   );
 };

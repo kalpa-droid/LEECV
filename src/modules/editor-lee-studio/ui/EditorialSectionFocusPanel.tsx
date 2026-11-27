@@ -271,12 +271,23 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
   const handleAiImproveRecord = async (rec: EditorialRecord): Promise<string> => {
     const text = String(rec.content || '').trim();
     if (!text) throw new Error('Escribí primero algo de texto en este bloque para mejorarlo.');
-    const res = await executeAiTask<{ improvedText: string }>({
+    const records = section.records || [];
+    const idx = records.findIndex((r) => r.id === rec.id);
+    const prevParagraph = idx > 0 ? records[idx - 1]?.content : undefined;
+    const nextParagraph = idx >= 0 && idx + 1 < records.length ? records[idx + 1]?.content : undefined;
+    const res = await executeAiTask<{ improvedText?: string; rewrittenText?: string }>({
       taskId: 'editorial_rewrite',
-      payload: { text, sectionTitle: section.title, mode: 'improve' },
+      payload: {
+        text,
+        sectionTitle: section.title,
+        prevParagraph,
+        nextParagraph,
+        mode: 'improve',
+      },
+      cvData: draft,
       maxTokens: 1600,
     });
-    const out = String(res.data?.improvedText || '').trim();
+    const out = String(res.data?.improvedText || res.data?.rewrittenText || '').trim();
     if (!out) throw new Error('No se recibió sugerencia de mejora.');
     setPendingSuggestions((prev) => ({ ...prev, [rec.id]: out }));
     return out;
@@ -562,7 +573,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             {badgeLabel || '§'}
           </span>
         }
-        title={section.title || 'Apartado sin título'}
+        title="Identidad y ajustes del apartado"
         helpTitle="Edición enfocada"
         helpText={guideBody}
         headerRight={
@@ -630,6 +641,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
           <SectionProofreadDrawer
             sectionTitle={section.title || 'Capítulo'}
             records={section.records || []}
+            draft={draft}
             onApplyIssue={applySingleProofreadIssue}
             onApplyBatchSafe={applyBatchProofreadIssues}
             onClose={() => setShowProofread(false)}

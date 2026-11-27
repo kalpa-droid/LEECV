@@ -10,22 +10,17 @@
  */
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { apiFetch } from '../../../shared/core/utils/apiClient';
-import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
-import { analyzePdfPage } from '../../../shared/core/cv-import/pdfPageLayout';
-import {
-  prepareOpaquePdfCanvas,
-  computeRenderScale,
-  clampCanvasSize,
-  encodeCanvasWithinBudget,
-  encodeImageFileWithinBudget,
-} from '../../../shared/core/cv-import/pageImageEncoder';
+import { encodeImageFileWithinBudget } from '../../../shared/core/cv-import/pageImageEncoder';
 import { localAssetStore } from '../../../shared/core/storage/localAssetStore';
 import {
   CanonicalBlock,
   DocumentAST,
   StructureAnalysis,
   StructureAnalysisSchema,
+  StructureAuditIssue,
   buildCompactSkeleton,
+  buildDeterministicProposalFromAst,
+  buildPanoramicDocumentMap,
   computeSha256Hex,
   detectSafeDocumentMime,
   formatBlockId,
@@ -37,12 +32,14 @@ import {
   buildSectionsFromDocxRichBlocks,
   heuristicSplitManuscript,
   mergeEditorialChunkedSections,
-  type StructuredChunkSectionInput,
 } from './editorialManuscriptChunker';
 import {
   extractDocxInClient,
   type DocxExtractedRichBlock,
+  type ImportedTocEntry,
 } from './docxClientExtractor';
+import { extractOdtInClient } from './odtClientExtractor';
+import { extractEditorialFromPdfFile } from './pdfEditorialExtractor';
 
 export interface ImportProgressUpdate {
   stage: 'reading' | 'ocr' | 'structuring' | 'done';
@@ -56,7 +53,9 @@ export interface ExtractedDocumentStats {
   totalFiles: number;
   pdfDigitalPages: number;
   ocrPages: number;
+  sourceFormat?: 'docx' | 'odt' | 'pdf' | 'text' | 'image';
   richBlocks?: DocxExtractedRichBlock[];
+  importedTocEntries?: ImportedTocEntry[];
   ast?: DocumentAST;
   assetUrlMap?: Record<string, string>;
   warnings?: string[];
@@ -65,8 +64,18 @@ export interface ExtractedDocumentStats {
 export interface StructureResult {
   sections: EditorialSection[];
   metadata?: { title?: string; subtitle?: string; author?: string };
+  legalFields?: {
+    institucion?: string;
+    catedra?: string;
+    docente?: string;
+    integrantes?: string;
+    tema?: string;
+  };
   usedFallbackForChunks: number;
   detectedPresetId?: string;
+  recommendedStructuralNormId?: string;
+  recommendedBibliographyStyle?: string;
+  auditIssues?: StructureAuditIssue[];
   losslessSummary?: {
     totalBlocks: number;
     recoveredBlocks: number;
@@ -76,10 +85,9 @@ export interface StructureResult {
   };
 }
 
-const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
-const MAX_PDF_PAGES = 120;
-const AST_SINGLE_PASS_TOKEN_LIMIT = 35_000;
-const AST_WINDOW_BLOCK_CHARS = 52_000;
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+const AST_SINGLE_PASS_TOKEN_LIMIT = 45_000;
+const AST_WINDOW_BLOCK_CHARS = 58_000;
 
 function readFileAsBase64DataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -129,6 +137,13 @@ function cropCanvasRegionToDataUrl(
   }
 }
 
+interface RawExtractedPageItem {
+  page: number;
+  text: string;
+  heading?: string | null;
+  croppedFigures: Array<{ label: string; bbox: number[]; dataUrl: string }>;
+}
+
 async function runVisionOcrOnImage(
   encoded: { mimeType: 'image/png' | 'image/jpeg' | 'image/webp'; base64: string },
   pageNumber?: number,
@@ -158,113 +173,6 @@ async function runVisionOcrOnImage(
   const figures = Array.isArray(res.data?.figures) ? res.data.figures : [];
   const full = !body ? (heading ? `# ${heading}` : '') : heading && !body.startsWith(heading) ? `# ${heading}\n\n${body}` : body;
   return { text: full, detectedHeading: heading || null, figures };
-}
-
-interface RawExtractedPageItem {
-  page: number;
-  text: string;
-  heading?: string | null;
-  croppedFigures: Array<{ label: string; bbox: number[]; dataUrl: string }>;
-}
-
-async function extractTextFromSinglePdf(
-  file: File,
-  onProgress?: (update: ImportProgressUpdate) => void,
-  signal?: AbortSignal,
-): Promise<{
-  text: string;
-  digitalPages: number;
-  ocrPages: number;
-  pageItems: RawExtractedPageItem[];
-  totalPages: number;
-}> {
-  const buffer = await file.arrayBuffer();
-  const magic = detectSafeDocumentMime(new Uint8Array(buffer));
-  if (magic !== 'pdf') {
-    throw new Error(`"${file.name}" no tiene firma binaria de archivo PDF válido.`);
-  }
-  const pdfDoc = await loadPdfDocumentWithCmaps(buffer);
-  const totalPages = Math.min(Number(pdfDoc.numPages) || 0, MAX_PDF_PAGES);
-  if (totalPages === 0) {
-    throw new Error(`El PDF "${file.name}" no contiene páginas legibles.`);
-  }
-
-  const pageTexts: string[] = [];
-  const pageItems: RawExtractedPageItem[] = [];
-  let digitalPages = 0;
-  let ocrPages = 0;
-
-  for (let p = 1; p <= totalPages; p++) {
-    if (signal?.aborted) throw new Error('Lectura cancelada.');
-    const page = await pdfDoc.getPage(p);
-    const viewportBase = page.getViewport({ scale: 1 });
-    const textContent = await page.getTextContent();
-    const analyzed = analyzePdfPage(
-      textContent?.items || [],
-      viewportBase.width,
-      viewportBase.height,
-    );
-
-    if (analyzed.mode === 'text' || analyzed.mode === 'hybrid') {
-      digitalPages++;
-      onProgress?.({
-        stage: 'reading',
-        current: p,
-        total: totalPages,
-        message: `Leyendo texto de "${file.name}" (página ${p} de ${totalPages})...`,
-      });
-      if (analyzed.text.trim()) {
-        pageTexts.push(analyzed.text.trim());
-        pageItems.push({ page: p, text: analyzed.text.trim(), croppedFigures: [] });
-      }
-      continue;
-    }
-
-    // Página escaneada -> OCR por Visión + recorte automático de gráficos/figuras si existen
-    ocrPages++;
-    onProgress?.({
-      stage: 'ocr',
-      current: p,
-      total: totalPages,
-      message: `Escaneando imagen de página ${p} de ${totalPages} con lectura inteligente...`,
-    });
-
-    const scale = computeRenderScale(viewportBase.width, viewportBase.height);
-    const scaledVp = page.getViewport({ scale });
-    const { canvas, ctx } = prepareOpaquePdfCanvas(scaledVp.width, scaledVp.height);
-    await page.render({ canvasContext: ctx, viewport: scaledVp }).promise;
-    const clamped = clampCanvasSize(canvas);
-    const encoded = encodeCanvasWithinBudget(clamped, undefined, { digitalPage: false });
-    const ocrRes = await runVisionOcrOnImage(encoded, p);
-
-    const croppedFigures: Array<{ label: string; bbox: number[]; dataUrl: string }> = [];
-    for (const fig of ocrRes.figures) {
-      const figUrl = cropCanvasRegionToDataUrl(clamped, fig.bbox);
-      if (figUrl) {
-        croppedFigures.push({ label: fig.label || `Figura pág. ${p}`, bbox: fig.bbox, dataUrl: figUrl });
-      }
-    }
-    clamped.width = 0;
-    clamped.height = 0;
-
-    if (ocrRes.text.trim() || croppedFigures.length > 0) {
-      if (ocrRes.text.trim()) pageTexts.push(ocrRes.text.trim());
-      pageItems.push({
-        page: p,
-        text: ocrRes.text.trim(),
-        heading: ocrRes.detectedHeading,
-        croppedFigures,
-      });
-    }
-  }
-
-  return {
-    text: pageTexts.join('\n\n'),
-    digitalPages,
-    ocrPages,
-    pageItems,
-    totalPages,
-  };
 }
 
 async function storeImageInAssetVault(
@@ -493,20 +401,23 @@ export async function extractEditorialTextFromFiles(
   const segments: string[] = [];
   const allRichBlocks: DocxExtractedRichBlock[] = [];
   const allPdfPageItems: RawExtractedPageItem[] = [];
+  const allImportedTocEntries: ImportedTocEntry[] = [];
   const allWarnings: string[] = [];
   let totalDigital = 0;
   let totalOcr = 0;
+  let totalPdfPages = 0;
   let detectedMime: DocumentAST['sourceMime'] = 'text/plain';
+  let sourceFormat: ExtractedDocumentStats['sourceFormat'] = 'text';
 
   for (let i = 0; i < files.length; i++) {
     if (signal?.aborted) throw new Error('Importación cancelada.');
     const file = files[i];
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new Error(`"${file.name}" supera el límite de 15 MB por archivo.`);
+      throw new Error(`"${file.name}" supera el límite de 50 MB por archivo.`);
     }
 
     const ext = getFileExtension(file.name);
-    const headBuf = new Uint8Array(await file.slice(0, 512).arrayBuffer());
+    const headBuf = new Uint8Array(await file.slice(0, 1024).arrayBuffer());
     const safeMagic = detectSafeDocumentMime(headBuf);
 
     if (ext === '.txt' || ext === '.md') {
@@ -529,16 +440,20 @@ export async function extractEditorialTextFromFiles(
         throw new Error(`"${file.name}" no tiene cabecera válida de documento Word (.docx).`);
       }
       detectedMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      sourceFormat = 'docx';
       onProgress?.({
         stage: 'reading',
         current: i + 1,
         total: files.length,
-        message: `Despiezando Word sin pérdidas (texto, tablas, imágenes y notas) de "${file.name}"...`,
+        message: `Despiezando Word sin pérdidas (texto, tablas, ecuaciones, imágenes y notas) de "${file.name}"...`,
       });
       try {
         const docxRes = await extractDocxInClient(file);
         if (docxRes.blocks.length > 0) {
           allRichBlocks.push(...docxRes.blocks);
+        }
+        if (docxRes.importedTocEntries?.length) {
+          allImportedTocEntries.push(...docxRes.importedTocEntries);
         }
         if (docxRes.warnings.length > 0) {
           allWarnings.push(...docxRes.warnings);
@@ -564,7 +479,40 @@ export async function extractEditorialTextFromFiles(
       continue;
     }
 
-    if (ext === '.odt' || ext === '.rtf' || ext === '.html' || ext === '.htm') {
+    if (ext === '.odt') {
+      detectedMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      sourceFormat = 'odt';
+      onProgress?.({
+        stage: 'reading',
+        current: i + 1,
+        total: files.length,
+        message: `Despiezando LibreOffice (.odt) sin pérdidas de "${file.name}"...`,
+      });
+      try {
+        const odtRes = await extractOdtInClient(file);
+        if (odtRes.blocks.length > 0) allRichBlocks.push(...odtRes.blocks);
+        if (odtRes.importedTocEntries?.length) allImportedTocEntries.push(...odtRes.importedTocEntries);
+        if (odtRes.warnings.length > 0) allWarnings.push(...odtRes.warnings);
+        if (odtRes.plainMarkdownText.trim()) {
+          segments.push(odtRes.plainMarkdownText.trim());
+          continue;
+        }
+      } catch {
+        // Fallback al parser del servidor si falla descompresión local
+      }
+      const base64 = await readFileAsBase64DataUrl(file);
+      const res = await apiFetch<{ text: string }>('/api/editorial/parse-document', {
+        method: 'POST',
+        body: { base64, filename: file.name },
+      });
+      if (!res.ok || !res.data?.text) {
+        throw new Error(res.error || `No pudimos extraer texto de "${file.name}".`);
+      }
+      segments.push(res.data.text.trim());
+      continue;
+    }
+
+    if (ext === '.rtf' || ext === '.html' || ext === '.htm') {
       onProgress?.({
         stage: 'reading',
         current: i + 1,
@@ -588,14 +536,15 @@ export async function extractEditorialTextFromFiles(
         throw new Error(`"${file.name}" no tiene cabecera válida de PDF.`);
       }
       detectedMime = 'application/pdf';
-      const pdfRes = await extractTextFromSinglePdf(file, onProgress, signal);
+      sourceFormat = 'pdf';
+      const pdfRes = await extractEditorialFromPdfFile(file, { onProgress, signal });
       totalDigital += pdfRes.digitalPages;
       totalOcr += pdfRes.ocrPages;
-      if (pdfRes.text.trim()) segments.push(pdfRes.text.trim());
-      allPdfPageItems.push(...pdfRes.pageItems);
-      allWarnings.push(
-        `El archivo PDF "${file.name}" se conservó con todos sus párrafos y figuras recortadas. Si tenés el original en Word (.docx), conservará aún mejor las tablas complejas y notas al pie.`,
-      );
+      totalPdfPages += pdfRes.totalPages;
+      if (pdfRes.blocks.length > 0) allRichBlocks.push(...pdfRes.blocks);
+      if (pdfRes.importedTocEntries.length > 0) allImportedTocEntries.push(...pdfRes.importedTocEntries);
+      if (pdfRes.warnings.length > 0) allWarnings.push(...pdfRes.warnings);
+      if (pdfRes.plainMarkdownText.trim()) segments.push(pdfRes.plainMarkdownText.trim());
       continue;
     }
 
@@ -604,6 +553,7 @@ export async function extractEditorialTextFromFiles(
         throw new Error(`"${file.name}" no tiene firma binaria de imagen válida.`);
       }
       detectedMime = 'image/png';
+      sourceFormat = 'image';
       totalOcr++;
       onProgress?.({
         stage: 'ocr',
@@ -631,17 +581,22 @@ export async function extractEditorialTextFromFiles(
   }
 
   const combined = segments.filter(Boolean).join('\n\n').trim();
-  if (!combined) {
+  if (!combined && allRichBlocks.length === 0) {
     throw new Error('No encontramos texto legible en los archivos seleccionados.');
   }
 
   const { ast, assetUrlMap } = await buildDocumentAstFromRawInputs({
     sourceName: files[0]?.name || 'manuscrito.txt',
     sourceMime: detectedMime,
-    fullText: combined,
+    fullText: combined || 'Documento con contenido visual',
     richBlocks: allRichBlocks.length > 0 ? allRichBlocks : undefined,
     pageItems: allPdfPageItems.length > 0 ? allPdfPageItems : undefined,
-    totalPages: allPdfPageItems.length > 0 ? allPdfPageItems[allPdfPageItems.length - 1].page : undefined,
+    totalPages:
+      totalPdfPages > 0
+        ? totalPdfPages
+        : allPdfPageItems.length > 0
+          ? allPdfPageItems[allPdfPageItems.length - 1].page
+          : undefined,
   });
 
   return {
@@ -649,7 +604,9 @@ export async function extractEditorialTextFromFiles(
     totalFiles: files.length,
     pdfDigitalPages: totalDigital,
     ocrPages: totalOcr,
+    sourceFormat,
     ...(allRichBlocks.length > 0 ? { richBlocks: allRichBlocks } : {}),
+    ...(allImportedTocEntries.length > 0 ? { importedTocEntries: allImportedTocEntries } : {}),
     ...(ast ? { ast, assetUrlMap } : {}),
     ...(allWarnings.length > 0 ? { warnings: allWarnings } : {}),
   };
@@ -681,7 +638,9 @@ function splitAstIntoWindows(ast: DocumentAST, maxWindowChars = AST_WINDOW_BLOCK
  */
 export async function structureManuscriptInChunks(params: {
   fullText: string;
+  sourceFormat?: 'docx' | 'odt' | 'pdf' | 'text' | 'image';
   richBlocks?: DocxExtractedRichBlock[];
+  importedTocEntries?: ImportedTocEntry[];
   ast?: DocumentAST;
   assetUrlMap?: Record<string, string>;
   presetId?: EditorialPresetId;
@@ -689,10 +648,11 @@ export async function structureManuscriptInChunks(params: {
   onPartialSections?: (sectionsSoFar: EditorialSection[], metadata?: StructureResult['metadata']) => void;
   signal?: AbortSignal;
 }): Promise<StructureResult> {
-  const { fullText, richBlocks, presetId, onProgress, onPartialSections, signal } = params;
+  const { fullText, sourceFormat, richBlocks, importedTocEntries, presetId, onProgress, onPartialSections, signal } = params;
 
-  // Vía determinística Zero-Loss cuando el Word trae encabezados de estructura OOXML reales (Heading 1/2)
+  // Vía determinística Zero-Loss cuando el Word (.docx) trae encabezados OOXML reales (Heading 1/2)
   if (
+    sourceFormat === 'docx' &&
     richBlocks &&
     richBlocks.some((b) => b.kind === 'heading' && typeof b.text === 'string' && b.text.trim().length > 0)
   ) {
@@ -700,6 +660,29 @@ export async function structureManuscriptInChunks(params: {
     if (richSections.length > 0) {
       const firstLine = richSections[0]?.title;
       const meta = firstLine && firstLine !== 'Cuerpo principal' ? { title: firstLine } : undefined;
+      const docxAudit: StructureAuditIssue[] = [];
+      const seenDocxTitles = new Map<string, string>();
+      richSections.forEach((sec) => {
+        const norm = sec.title.trim().toLowerCase();
+        if (sec.records.length === 0) {
+          docxAudit.push({
+            type: 'empty_section',
+            title: `Apartado sin contenido: "${sec.title}"`,
+            detail: 'Este capítulo apareció sin bloques debajo en el Word original.',
+          });
+        }
+        if (norm.length >= 4) {
+          if (seenDocxTitles.has(norm)) {
+            docxAudit.push({
+              type: 'duplicate_heading',
+              title: `Título repetido: "${sec.title}"`,
+              detail: 'Podés unir estos apartados o renombrar uno desde el listado.',
+            });
+          } else {
+            seenDocxTitles.set(norm, sec.title);
+          }
+        }
+      });
       onPartialSections?.(richSections, meta);
       onProgress?.({
         stage: 'done',
@@ -711,6 +694,7 @@ export async function structureManuscriptInChunks(params: {
         sections: richSections,
         metadata: meta,
         usedFallbackForChunks: 0,
+        ...(docxAudit.length > 0 ? { auditIssues: docxAudit } : {}),
         losslessSummary: {
           totalBlocks: richBlocks.length,
           recoveredBlocks: 0,
@@ -741,8 +725,8 @@ export async function structureManuscriptInChunks(params: {
     return { sections: [], usedFallbackForChunks: 0 };
   }
 
-  const skeleton = buildCompactSkeleton(workingAst);
-  const estimatedTokens = Math.ceil(skeleton.length / 4);
+  const panoramicMap = buildPanoramicDocumentMap(workingAst, { importedTocEntries });
+  const estimatedTokens = Math.ceil(panoramicMap.length / 4);
   const windows =
     estimatedTokens <= AST_SINGLE_PASS_TOKEN_LIMIT ? [workingAst] : splitAstIntoWindows(workingAst);
 
@@ -755,7 +739,12 @@ export async function structureManuscriptInChunks(params: {
   for (let wIdx = 0; wIdx < windows.length; wIdx++) {
     if (signal?.aborted) break;
     const winAst = windows[wIdx];
-    const winSkeleton = buildCompactSkeleton(winAst);
+    const winMap =
+      windows.length === 1
+        ? panoramicMap
+        : buildPanoramicDocumentMap(winAst, {
+            importedTocEntries: wIdx === 0 ? importedTocEntries : undefined,
+          });
 
     onProgress?.({
       stage: 'structuring',
@@ -763,8 +752,8 @@ export async function structureManuscriptInChunks(params: {
       total: windows.length,
       message:
         windows.length === 1
-          ? 'Analizando estructura con punteros sin perder ninguna palabra, tabla ni imagen...'
-          : `Analizando estructura sin pérdidas (lote ${wIdx + 1} de ${windows.length})...`,
+          ? 'Analizando el mapa completo de la obra sin perder ninguna palabra, tabla ni imagen...'
+          : `Analizando estructura sin pérdidas (parte ${wIdx + 1} de ${windows.length})...`,
     });
 
     try {
@@ -772,13 +761,13 @@ export async function structureManuscriptInChunks(params: {
       const res = await executeAiTask<any>({
         taskId: useLongRoute ? 'editorial_analyze_ast_structure_long' : 'editorial_analyze_ast_structure',
         payload: {
-          skeleton: winSkeleton,
+          skeleton: winMap,
           currentPresetId: presetId || 'libro-ensayo-novela',
           sourceName: winAst.sourceName,
           totalPages: winAst.totalPages,
           runningState,
         },
-        maxTokens: useLongRoute ? 8192 : 6000,
+        maxTokens: 8192,
         temperature: 0.1,
       });
       providerUsed = res.providerUsed || providerUsed;
@@ -794,7 +783,6 @@ export async function structureManuscriptInChunks(params: {
       if (!mergedProposal) {
         mergedProposal = repaired;
       } else {
-        // Unir ventana conservando título previo si la nueva ventana continúa sin cambio real
         const prevSecs = [...mergedProposal.proposedSections];
         for (const incoming of repaired.proposedSections) {
           const lastPrev = prevSecs[prevSecs.length - 1];
@@ -813,6 +801,10 @@ export async function structureManuscriptInChunks(params: {
           improvementSuggestions: [
             ...new Set([...mergedProposal.improvementSuggestions, ...repaired.improvementSuggestions]),
           ].slice(0, 6),
+          auditIssues: [
+            ...(mergedProposal.auditIssues || []),
+            ...(repaired.auditIssues || []),
+          ].slice(0, 12),
           proposedSections: prevSecs,
         };
       }
@@ -824,36 +816,19 @@ export async function structureManuscriptInChunks(params: {
       };
     } catch {
       fallbackCount++;
-      // Respaldo determinista sobre los bloques exactos de la ventana (0 pérdida)
-      const fallbackSections: StructuredChunkSectionInput[] = heuristicSplitManuscript(
-        winAst.blocks.map((b) => b.text || '').filter(Boolean).join('\n\n'),
-      );
-      if (fallbackSections.length === 0) {
-        fallbackSections.push({ title: 'Contenido principal', sectionKey: 'capitulo', records: [] });
-      }
-      // Si falla IA en el AST con tablas/imágenes, construimos un StructureAnalysis por punteros directo
-      const winIds = winAst.blocks.map((b) => b.id);
-      const fallbackProposal: StructureAnalysis = {
-        documentType: 'other',
-        currentStructureScore: 70,
-        keepOriginalStructure: true,
-        diagnosis: ['Estructuración local determinista sin pérdida de contenido.'],
-        improvementSuggestions: [],
-        proposedSections: [
-          {
-            sectionId: `sec_fallback_${wIdx + 1}`,
-            sectionKey: 'capitulo',
-            title: fallbackSections[0]?.title || `Parte ${wIdx + 1}`,
-            level: 1,
-            blockIds: winIds,
-            rationale: 'Preservación 100% íntegra ante indisponibilidad temporal de IA.',
-          },
-        ],
-      };
+      // Respaldo determinista multi-capítulo real sobre los bloques exactos de la ventana (0 pérdida)
+      const detProposal = buildDeterministicProposalFromAst(winAst, {
+        importedTocEntries: wIdx === 0 ? importedTocEntries : undefined,
+      });
+      const { repaired } = repairProposalToLosslessBijection(winAst, detProposal);
       if (!mergedProposal) {
-        mergedProposal = fallbackProposal;
+        mergedProposal = repaired;
       } else {
-        mergedProposal.proposedSections.push(...fallbackProposal.proposedSections);
+        mergedProposal.proposedSections.push(...repaired.proposedSections);
+        mergedProposal.auditIssues = [
+          ...(mergedProposal.auditIssues || []),
+          ...(repaired.auditIssues || []),
+        ];
       }
     }
 
@@ -861,7 +836,16 @@ export async function structureManuscriptInChunks(params: {
       const partial = reconstructEditorialSectionsFromAst(workingAst, mergedProposal, {
         assetUrlMap,
       }) as unknown as EditorialSection[];
-      onPartialSections?.(partial, mergedProposal.extractedMetadata);
+      onPartialSections?.(
+        partial,
+        mergedProposal.extractedMetadata
+          ? {
+              title: mergedProposal.extractedMetadata.title ?? undefined,
+              subtitle: mergedProposal.extractedMetadata.subtitle ?? undefined,
+              author: mergedProposal.extractedMetadata.author ?? undefined,
+            }
+          : undefined,
+      );
     }
   }
 
@@ -878,11 +862,43 @@ export async function structureManuscriptInChunks(params: {
     message: `Listo: ${finalSections.length} apartados reconstruidos con 100% de tus textos, tablas e imágenes intactos.`,
   });
 
+  const cleanMeta = mergedProposal?.extractedMetadata
+    ? {
+        title: mergedProposal.extractedMetadata.title ?? undefined,
+        subtitle: mergedProposal.extractedMetadata.subtitle ?? undefined,
+        author: mergedProposal.extractedMetadata.author ?? undefined,
+      }
+    : undefined;
+
+  const cleanLegal = mergedProposal?.extractedLegalFields
+    ? {
+        ...(mergedProposal.extractedLegalFields.institucion
+          ? { institucion: mergedProposal.extractedLegalFields.institucion }
+          : {}),
+        ...(mergedProposal.extractedLegalFields.catedra
+          ? { catedra: mergedProposal.extractedLegalFields.catedra }
+          : {}),
+        ...(mergedProposal.extractedLegalFields.docente
+          ? { docente: mergedProposal.extractedLegalFields.docente }
+          : {}),
+        ...(mergedProposal.extractedLegalFields.integrantes
+          ? { integrantes: mergedProposal.extractedLegalFields.integrantes }
+          : {}),
+        ...(mergedProposal.extractedLegalFields.tema
+          ? { tema: mergedProposal.extractedLegalFields.tema }
+          : {}),
+      }
+    : undefined;
+
   return {
     sections: finalSections,
-    metadata: mergedProposal?.extractedMetadata,
+    metadata: cleanMeta,
+    legalFields: cleanLegal,
     usedFallbackForChunks: fallbackCount,
-    detectedPresetId: mergedProposal?.detectedPresetId,
+    detectedPresetId: mergedProposal?.detectedPresetId ?? undefined,
+    recommendedStructuralNormId: mergedProposal?.recommendedStructuralNormId ?? undefined,
+    recommendedBibliographyStyle: mergedProposal?.recommendedBibliographyStyle ?? undefined,
+    auditIssues: mergedProposal?.auditIssues ?? undefined,
     losslessSummary: {
       totalBlocks: workingAst.blocks.length,
       recoveredBlocks: recoveredCount,

@@ -8,6 +8,18 @@
 
 import type { EditorialCalloutVariant } from './editorialTypes';
 import { parseWordChartXml, renderParsedWordChartToPngDataUrl } from './docxChartRenderer';
+import {
+  extractBitmapFromMetafile,
+  extractSmartArtDiagram,
+  rasterizeSvgOrBmpDataUrl,
+  serializeOmmlNodeToText,
+} from './ooxmlMathAndDiagramParser';
+
+export interface ImportedTocEntry {
+  title: string;
+  pageLabel?: string;
+  level: number;
+}
 
 export interface DocxExtractedRichBlock {
   kind:
@@ -44,6 +56,7 @@ export interface DocxClientExtractionResult {
   plainMarkdownText: string;
   blocks: DocxExtractedRichBlock[];
   warnings: string[];
+  importedTocEntries?: ImportedTocEntry[];
   stats: {
     headings: number;
     paragraphs: number;
@@ -84,7 +97,23 @@ function getAllByLocal(el: Document | Element, localName: string): Element[] {
   const all = el.getElementsByTagName('*');
   const out: Element[] = [];
   for (let i = 0; i < all.length; i++) {
-    if (all[i].localName === localName) out.push(all[i]);
+    const item = all[i];
+    if (item.localName !== localName) continue;
+    // Evitar duplicar contenido dentro de <mc:Fallback> cuando existe <mc:Choice> hermano
+    let ancestor: Element | null = item.parentElement;
+    let insideSkippedFallback = false;
+    while (ancestor) {
+      if (
+        ancestor.localName === 'Fallback' &&
+        ancestor.parentElement?.localName === 'AlternateContent' &&
+        getLocalChildren(ancestor.parentElement, 'Choice').length > 0
+      ) {
+        insideSkippedFallback = true;
+        break;
+      }
+      ancestor = ancestor.parentElement;
+    }
+    if (!insideSkippedFallback) out.push(item);
   }
   return out;
 }
@@ -125,6 +154,33 @@ interface ExtractTextOptions {
   footnoteNumberByRawId?: Map<string, number>;
   collectedFootnotes?: { number: number; text: string }[];
   footnotesByRawId?: Map<string, string>;
+  endnoteNumberByRawId?: Map<string, number>;
+  endnotesByRawId?: Map<string, string>;
+  relsById?: Map<string, string>;
+}
+
+const SUPERSCRIPT_CHAR_MAP: Record<string, string> = {
+  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+  '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', n: 'ⁿ', i: 'ⁱ',
+};
+const SUBSCRIPT_CHAR_MAP: Record<string, string> = {
+  '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+  '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
+};
+
+function convertScriptText(raw: string, kind: 'superscript' | 'subscript'): string {
+  const map = kind === 'superscript' ? SUPERSCRIPT_CHAR_MAP : SUBSCRIPT_CHAR_MAP;
+  let allMapped = true;
+  let out = '';
+  for (const ch of raw) {
+    if (map[ch]) out += map[ch];
+    else {
+      allMapped = false;
+      break;
+    }
+  }
+  if (allMapped && out) return out;
+  return kind === 'superscript' ? `^${raw}` : `_${raw}`;
 }
 
 function extractNodeRichParts(
@@ -142,8 +198,53 @@ function extractNodeRichParts(
     local === 'fldChar' ||
     local === 'bookmarkStart' ||
     local === 'bookmarkEnd' ||
-    local === 'proofErr'
+    local === 'proofErr' ||
+    local === 'txbxContent' ||
+    local === 'textbox'
   ) {
+    return;
+  }
+
+  if (
+    local === 'Fallback' &&
+    node.parentElement?.localName === 'AlternateContent' &&
+    getLocalChildren(node.parentElement, 'Choice').length > 0
+  ) {
+    return;
+  }
+
+  if (local === 'oMathPara' || local === 'oMath') {
+    const mathText = serializeOmmlNodeToText(node);
+    if (mathText) outParts.push(mathText);
+    return;
+  }
+
+  if (local === 'hyperlink') {
+    const rId = node.getAttribute('r:id') ?? node.getAttribute('id') ?? '';
+    const targetUrl = rId ? options.relsById?.get(rId) : undefined;
+    const innerParts: string[] = [];
+    for (let i = 0; i < node.children.length; i++) {
+      extractNodeRichParts(node.children[i], innerParts, options);
+    }
+    const label = innerParts.join('').trim();
+    if (label) {
+      outParts.push(label);
+      if (
+        targetUrl &&
+        /^https?:\/\//i.test(targetUrl) &&
+        !label.includes(targetUrl) &&
+        !/^(?:ver|aquí|link|enlace)$/i.test(label)
+      ) {
+        // Solo agregar URL si no está ya visible en el texto del enlace (útil en bibliografía/DOIs)
+        if (/doi\.org|http/i.test(targetUrl) && label.length < 100 && !label.includes(' ')) {
+          // Mantener compacto
+        }
+      } else if (targetUrl && /^https?:\/\//i.test(targetUrl) && /^(?:link|enlace|ver|fuente)$/i.test(label)) {
+        outParts.push(` (${targetUrl})`);
+      }
+    } else if (targetUrl && /^https?:\/\//i.test(targetUrl)) {
+      outParts.push(targetUrl);
+    }
     return;
   }
 
@@ -151,6 +252,8 @@ function extractNodeRichParts(
     const rPr = getLocalChildren(node, 'rPr')[0];
     const bold = Boolean(options.preserveFormatting && isRunFlagEnabled(rPr, 'b'));
     const italic = Boolean(options.preserveFormatting && isRunFlagEnabled(rPr, 'i'));
+    const vertAlignEl = rPr ? getLocalChildren(rPr, 'vertAlign')[0] : undefined;
+    const vertVal = (vertAlignEl?.getAttribute('w:val') ?? vertAlignEl?.getAttribute('val') ?? '').toLowerCase();
     const runPieces: string[] = [];
 
     for (let i = 0; i < node.children.length; i++) {
@@ -179,6 +282,19 @@ function extractNodeRichParts(
             options.collectedFootnotes.push({ number: mappedNum, text: fnText });
           }
         }
+      } else if (cLocal === 'endnoteReference') {
+        const rawId = child.getAttribute('w:id') ?? child.getAttribute('id') ?? '';
+        const mappedNum = rawId ? options.endnoteNumberByRawId?.get(rawId) : undefined;
+        const enText = rawId ? options.endnotesByRawId?.get(rawId) : undefined;
+        if (mappedNum !== undefined && enText) {
+          outParts.push(`[^${mappedNum}]`);
+          if (
+            options.collectedFootnotes &&
+            !options.collectedFootnotes.some((f) => f.number === mappedNum)
+          ) {
+            options.collectedFootnotes.push({ number: mappedNum, text: enText });
+          }
+        }
       } else if (cLocal === 'sym') {
         const charHex = child.getAttribute('w:char') ?? child.getAttribute('char');
         if (charHex) {
@@ -190,8 +306,11 @@ function extractNodeRichParts(
       }
     }
 
-    const joined = runPieces.join('');
+    let joined = runPieces.join('');
     if (joined) {
+      if (vertVal === 'superscript' || vertVal === 'subscript') {
+        joined = convertScriptText(joined, vertVal);
+      }
       outParts.push(wrapInlineFormatting(joined, bold, italic));
     }
     return;
@@ -208,10 +327,8 @@ export function extractParagraphRichText(
 ): string {
   const parts: string[] = [];
   extractNodeRichParts(p, parts, {
+    ...options,
     preserveFormatting: options.preserveFormatting !== false,
-    footnoteNumberByRawId: options.footnoteNumberByRawId,
-    collectedFootnotes: options.collectedFootnotes,
-    footnotesByRawId: options.footnotesByRawId,
   });
   return parts
     .join('')
@@ -619,13 +736,13 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     }
   }
 
-  // 2. Notas al pie (word/footnotes.xml)
+  // 2. Notas al pie (word/footnotes.xml) y al final (word/endnotes.xml)
   const footnotesByRawId = new Map<string, string>();
   const footnoteNumberByRawId = new Map<string, number>();
+  let nextFnNumber = 1;
   const footnotesXml = await zip.file('word/footnotes.xml')?.async('string');
   if (footnotesXml) {
     const fnDoc = parser.parseFromString(footnotesXml, 'application/xml');
-    let nextFnNumber = 1;
     for (const fnEl of getAllByLocal(fnDoc, 'footnote')) {
       const fnId = fnEl.getAttribute('w:id') ?? fnEl.getAttribute('id') ?? '';
       const fnType = (fnEl.getAttribute('w:type') ?? fnEl.getAttribute('type') ?? '').toLowerCase();
@@ -644,7 +761,30 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     }
   }
 
-  // 3. Relaciones (media & charts)
+  const endnotesByRawId = new Map<string, string>();
+  const endnoteNumberByRawId = new Map<string, number>();
+  const endnotesXml = await zip.file('word/endnotes.xml')?.async('string');
+  if (endnotesXml) {
+    const enDoc = parser.parseFromString(endnotesXml, 'application/xml');
+    for (const enEl of getAllByLocal(enDoc, 'endnote')) {
+      const enId = enEl.getAttribute('w:id') ?? enEl.getAttribute('id') ?? '';
+      const enType = (enEl.getAttribute('w:type') ?? enEl.getAttribute('type') ?? '').toLowerCase();
+      if (!enId || enType === 'separator' || enType === 'continuationseparator' || enId === '-1' || enId === '0') {
+        continue;
+      }
+      const enText = getLocalChildren(enEl, 'p')
+        .map((ep) => extractParagraphPlainText(ep))
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      if (enText) {
+        endnotesByRawId.set(enId, enText);
+        endnoteNumberByRawId.set(enId, nextFnNumber++);
+      }
+    }
+  }
+
+  // 3. Relaciones (media, hipervínculos, charts y diagramas SmartArt)
   const relsById = new Map<string, string>();
   const relsXml = await zip.file('word/_rels/document.xml.rels')?.async('string');
   if (relsXml) {
@@ -652,8 +792,13 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     for (const rel of getAllByLocal(rDoc, 'Relationship')) {
       const id = rel.getAttribute('Id') || '';
       const target = rel.getAttribute('Target') || '';
+      const targetMode = (rel.getAttribute('TargetMode') || '').toLowerCase();
       if (id && target) {
-        relsById.set(id, target.startsWith('word/') ? target : `word/${target.replace(/^\/+/, '')}`);
+        if (targetMode === 'external' || /^https?:\/\//i.test(target)) {
+          relsById.set(id, target);
+        } else {
+          relsById.set(id, target.startsWith('word/') ? target : `word/${target.replace(/^\/+/, '')}`);
+        }
       }
     }
   }
@@ -666,6 +811,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
   const blocks: DocxExtractedRichBlock[] = [];
   const markdownLines: string[] = [];
   const warnings: string[] = [];
+  const importedTocEntries: ImportedTocEntry[] = [];
   const stats = {
     headings: 0,
     paragraphs: 0,
@@ -679,10 +825,22 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     figurePlaceholders: 0,
   };
 
-  let warnedSmartArt = false;
   let chapterFootnotes: { number: number; text: string }[] = [];
   let inManualTocBlock = false;
   let lastHeadingWasLevel = 0;
+
+  const parseTocLine = (line: string, level = 1) => {
+    const m = line.trim().match(/^(.+?)(?:\.{2,}|\s{2,}|\s+)(\d{1,4}|[ivxlcdm]+)$/i);
+    if (m && m[1].trim().length >= 2) {
+      importedTocEntries.push({
+        title: m[1].replace(/[.·\s]+$/, '').trim(),
+        pageLabel: m[2],
+        level,
+      });
+    } else if (line.trim().length >= 3) {
+      importedTocEntries.push({ title: line.trim(), level });
+    }
+  };
 
   const flushChapterFootnotes = () => {
     if (chapterFootnotes.length > 0) {
@@ -700,78 +858,120 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
   const bodyChildren = Array.from(body.children);
   let i = 0;
 
-  const extractMediaFromParagraph = async (p: Element) => {
-    // Imágenes embebidas (<a:blip r:embed="rId..."/>)
-    const blips = getAllByLocal(p, 'blip');
-    for (const blip of blips) {
-      const rId = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
-      const targetPath = rId ? relsById.get(rId) : undefined;
-      if (targetPath && /\.(png|jpe?g|webp|gif|bmp|tiff?|emf|wmf|svg|avif|heic)$/i.test(targetPath)) {
-        if (stats.images >= MAX_DOCX_EMBEDDED_IMAGES) {
-          warnings.push(
-            `Se alcanzó el límite máximo de ${MAX_DOCX_EMBEDDED_IMAGES} imágenes por documento; las restantes se marcaron como espacio de figura.`,
-          );
-          blocks.push({
-            kind: 'figure_placeholder',
-            figureCaption: `Figura adicional (${targetPath.split('/').pop() || 'límite por documento'})`,
-          });
-          stats.figurePlaceholders++;
-          continue;
-        }
-        const mediaFile = zip.file(targetPath);
-        if (mediaFile) {
-          const mediaBytes = await mediaFile.async('uint8array');
-          unpackedBytesAcc += mediaBytes.byteLength;
-          if (unpackedBytesAcc > MAX_DOCX_UNCOMPRESSED_BYTES) {
-            throw new Error('El documento Word supera el límite seguro de tamaño interno (50 MB).');
-          }
-          const {
-            detectImageMagicMime,
-            encodeUint8ArrayToBase64,
-            sanitizeImageDataUrlForPdf,
-          } = await import('../../../shared/core/utils/imageCompressor');
+  const processEmbeddedMediaByRelId = async (rId: string | null | undefined) => {
+    const targetPath = rId ? relsById.get(rId) : undefined;
+    if (!targetPath || !/\.(png|jpe?g|webp|gif|bmp|tiff?|emf|wmf|svg|avif|heic)$/i.test(targetPath)) {
+      return;
+    }
+    if (stats.images >= MAX_DOCX_EMBEDDED_IMAGES) {
+      warnings.push(
+        `Se alcanzó el límite máximo de ${MAX_DOCX_EMBEDDED_IMAGES} imágenes por documento; las restantes se marcaron como espacio de figura.`,
+      );
+      blocks.push({
+        kind: 'figure_placeholder',
+        figureCaption: `Figura adicional (${targetPath.split('/').pop() || 'límite por documento'})`,
+      });
+      stats.figurePlaceholders++;
+      return;
+    }
+    const mediaFile = zip.file(targetPath);
+    if (!mediaFile) return;
+    let mediaBytes = await mediaFile.async('uint8array');
+    unpackedBytesAcc += mediaBytes.byteLength;
+    if (unpackedBytesAcc > MAX_DOCX_UNCOMPRESSED_BYTES) {
+      throw new Error('El documento Word supera el límite seguro de tamaño interno (50 MB).');
+    }
 
-          const magic = detectImageMagicMime(mediaBytes);
-          if (magic === 'empty' || magic === 'unsupported') {
-            blocks.push({
-              kind: 'figure_placeholder',
-              figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen no compatible'}, reemplazar por PNG o JPG)`,
-              figureHint: 'Formato de dibujo interno de Word no compatible directo con PDF',
-            });
-            stats.figurePlaceholders++;
-            warnings.push(
-              `Se detectó "${targetPath.split('/').pop()}" en formato no compatible directo; se preservó como espacio de figura editable.`,
-            );
-            continue;
-          }
+    const {
+      detectImageMagicMime,
+      encodeUint8ArrayToBase64,
+      sanitizeImageDataUrlForPdf,
+    } = await import('../../../shared/core/utils/imageCompressor');
 
-          const rawDataUrl = `data:${magic};base64,${encodeUint8ArrayToBase64(mediaBytes)}`;
-          const sanitizedDataUrl = await sanitizeImageDataUrlForPdf(rawDataUrl);
-          if (!sanitizedDataUrl) {
-            blocks.push({
-              kind: 'figure_placeholder',
-              figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen dañada'}, volver a cargar)`,
-            });
-            stats.figurePlaceholders++;
-            warnings.push(
-              `La imagen "${targetPath.split('/').pop()}" tenía datos binarios dañados; se convirtió en espacio de figura para no romper la vista previa.`,
-            );
-            continue;
-          }
+    // Soporte nativo para .svg y metafiles .emf/.wmf (extracción de bitmap o rasterizado)
+    if (/\.svg$/i.test(targetPath)) {
+      const pngUrl = await rasterizeSvgOrBmpDataUrl(mediaBytes, 'image/svg+xml');
+      if (pngUrl) {
+        blocks.push({ kind: 'image', imageDataUrl: pngUrl, imageCaption: '' });
+        stats.images++;
+        return;
+      }
+    }
 
-          blocks.push({
-            kind: 'image',
-            imageDataUrl: sanitizedDataUrl,
-            imageCaption: '',
-          });
-          stats.images++;
+    let magic = detectImageMagicMime(mediaBytes);
+    if ((magic === 'empty' || magic === 'unsupported') && /\.(emf|wmf)$/i.test(targetPath)) {
+      const extracted = extractBitmapFromMetafile(mediaBytes);
+      if (extracted) {
+        if (extracted.mime === 'image/bmp') {
+          const bmpPng = await rasterizeSvgOrBmpDataUrl(extracted.bytes, 'image/bmp');
+          if (bmpPng) {
+            blocks.push({ kind: 'image', imageDataUrl: bmpPng, imageCaption: '' });
+            stats.images++;
+            return;
+          }
+        } else {
+          mediaBytes = extracted.bytes;
+          magic = detectImageMagicMime(mediaBytes);
         }
       }
     }
 
+    if (magic === 'empty' || magic === 'unsupported') {
+      blocks.push({
+        kind: 'figure_placeholder',
+        figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen no compatible'}, reemplazar por PNG o JPG)`,
+        figureHint: 'Formato de dibujo interno de Word no compatible directo con PDF',
+      });
+      stats.figurePlaceholders++;
+      warnings.push(
+        `Se detectó "${targetPath.split('/').pop()}" en formato no compatible directo; se preservó como espacio de figura editable.`,
+      );
+      return;
+    }
+
+    const rawDataUrl = `data:${magic};base64,${encodeUint8ArrayToBase64(mediaBytes)}`;
+    const sanitizedDataUrl = await sanitizeImageDataUrlForPdf(rawDataUrl);
+    if (!sanitizedDataUrl) {
+      blocks.push({
+        kind: 'figure_placeholder',
+        figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen dañada'}, volver a cargar)`,
+      });
+      stats.figurePlaceholders++;
+      warnings.push(
+        `La imagen "${targetPath.split('/').pop()}" tenía datos binarios dañados; se convirtió en espacio de figura para no romper la vista previa.`,
+      );
+      return;
+    }
+
+    blocks.push({
+      kind: 'image',
+      imageDataUrl: sanitizedDataUrl,
+      imageCaption: '',
+    });
+    stats.images++;
+  };
+
+  const processedDiagramIds = new Set<string>();
+  const extractMediaFromNode = async (node: Element) => {
+    const seenRelIds = new Set<string>();
+    // Imágenes modernas (<a:blip>), SVG (<asvg:svgBlip>) y clásicas VML (<v:imagedata>)
+    for (const blip of [...getAllByLocal(node, 'blip'), ...getAllByLocal(node, 'svgBlip')]) {
+      const rId = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
+      if (rId && !seenRelIds.has(rId)) {
+        seenRelIds.add(rId);
+        await processEmbeddedMediaByRelId(rId);
+      }
+    }
+    for (const vmlImg of getAllByLocal(node, 'imagedata')) {
+      const rId = vmlImg.getAttribute('r:id') ?? vmlImg.getAttribute('id');
+      if (rId && !seenRelIds.has(rId)) {
+        seenRelIds.add(rId);
+        await processEmbeddedMediaByRelId(rId);
+      }
+    }
+
     // Gráficos (<c:chart r:id="rId..."/>)
-    const charts = getAllByLocal(p, 'chart');
-    for (const ch of charts) {
+    for (const ch of getAllByLocal(node, 'chart')) {
       const rId = ch.getAttribute('r:id') ?? ch.getAttribute('id');
       const targetPath = rId ? relsById.get(rId) : undefined;
       if (targetPath) {
@@ -781,11 +981,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
           if (parsed) {
             const png = renderParsedWordChartToPngDataUrl(parsed);
             if (png) {
-              blocks.push({
-                kind: 'image',
-                imageDataUrl: png,
-                imageCaption: parsed.title,
-              });
+              blocks.push({ kind: 'image', imageDataUrl: png, imageCaption: parsed.title });
               stats.chartsConverted++;
             } else {
               blocks.push({
@@ -805,21 +1001,84 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
       }
     }
 
-    if (!warnedSmartArt && (getAllByLocal(p, 'relIds').length > 0 || getAllByLocal(p, 'textpath').length > 0)) {
-      warnedSmartArt = true;
-      warnings.push(
-        'Se detectó un diagrama complejo de Word: su texto se conservó intacto. Si querés el dibujo exacto, guardalo en Word como imagen y pegalo como bloque visual.',
-      );
+    // Diagramas SmartArt (<dgm:relIds r:dm="rId..." r:lo="rId..."/>)
+    for (const relIdsNode of getAllByLocal(node, 'relIds')) {
+      const dmId = relIdsNode.getAttribute('r:dm') ?? relIdsNode.getAttribute('dm') ?? '';
+      if (!dmId || processedDiagramIds.has(dmId)) continue;
+      processedDiagramIds.add(dmId);
+      const dataPath = relsById.get(dmId);
+      const numMatch = dataPath?.match(/data(\d+)\.xml$/i);
+      const drawingPath = numMatch ? `word/diagrams/drawing${numMatch[1]}.xml` : undefined;
+      const dataXml = dataPath ? await zip.file(dataPath)?.async('string') : undefined;
+      const drawingXml = drawingPath ? await zip.file(drawingPath)?.async('string') : undefined;
+      const smartArt = await extractSmartArtDiagram({ dataXml, drawingXml });
+      if (smartArt) {
+        if (smartArt.imageDataUrl) {
+          blocks.push({
+            kind: 'image',
+            imageDataUrl: smartArt.imageDataUrl,
+            imageCaption: smartArt.summaryText,
+          });
+          stats.chartsConverted++;
+        } else {
+          blocks.push({
+            kind: 'callout',
+            calloutTitle: 'Diagrama del documento',
+            calloutItems: smartArt.items,
+            calloutVariant: 'nota',
+            text: smartArt.summaryText,
+          });
+          stats.callouts++;
+        }
+      }
+    }
+  };
+
+  const seenTextBoxes = new Set<Element>();
+  const extractTextBoxesFromNode = (node: Element) => {
+    const txbxs = [...getAllByLocal(node, 'txbxContent'), ...getAllByLocal(node, 'textbox')];
+    for (const tb of txbxs) {
+      if (seenTextBoxes.has(tb)) continue;
+      seenTextBoxes.add(tb);
+      const boxParas = getLocalChildren(tb, 'p')
+        .map((tp) =>
+          extractParagraphRichText(tp, {
+            preserveFormatting: true,
+            footnoteNumberByRawId,
+            collectedFootnotes: chapterFootnotes,
+            footnotesByRawId,
+            endnoteNumberByRawId,
+            endnotesByRawId,
+            relsById,
+          }),
+        )
+        .filter(Boolean);
+      if (boxParas.length > 0) {
+        const structured = parseCalloutParagraphsToStructured(boxParas);
+        blocks.push({
+          kind: 'callout',
+          calloutTitle: structured.calloutTitle,
+          calloutItems: structured.calloutItems,
+          calloutVariant: structured.calloutVariant,
+          text: structured.text,
+          keepTogether: structured.text.length < 450,
+        });
+        markdownLines.push(boxParas.join('\n'));
+        stats.callouts++;
+      }
     }
   };
 
   const processSingleParagraph = async (p: Element, lookaheadIndex: number): Promise<number> => {
     if (isTocParagraph(p, stylesById)) {
+      const tocText = extractParagraphPlainText(p);
+      if (tocText) parseTocLine(tocText);
       stats.ignoredTocBlocks++;
       return lookaheadIndex + 1;
     }
 
-    await extractMediaFromParagraph(p);
+    await extractMediaFromNode(p);
+    extractTextBoxesFromNode(p);
 
     const plainText = extractParagraphPlainText(p);
     if (!plainText) {
@@ -828,7 +1087,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
 
     const headingLvl = resolveHeadingLevel(p, stylesById);
     if (headingLvl) {
-      // Omitir encabezado de índice manual ("ÍNDICE GENERAL") si va seguido de entradas con número de página
+      // Omitir encabezado de índice manual ("ÍNDICE GENERAL") guardando sus entradas como mapa de referencia
       if (isManualTocHeadingText(plainText)) {
         let k = lookaheadIndex + 1;
         let tocMatches = 0;
@@ -839,6 +1098,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
             continue;
           }
           if (isTocParagraph(bodyChildren[k], stylesById) || isManualTocLineText(nextPlain)) {
+            parseTocLine(nextPlain);
             tocMatches++;
             k++;
             continue;
@@ -868,6 +1128,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     }
 
     if (inManualTocBlock && isManualTocLineText(plainText)) {
+      parseTocLine(plainText);
       stats.ignoredTocBlocks++;
       return lookaheadIndex + 1;
     }
@@ -878,6 +1139,9 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
       footnoteNumberByRawId,
       collectedFootnotes: chapterFootnotes,
       footnotesByRawId,
+      endnoteNumberByRawId,
+      endnotesByRawId,
+      relsById,
     });
 
     // Placeholder de figura ([Insertar Figura 1...])
@@ -925,6 +1189,9 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
           footnoteNumberByRawId,
           collectedFootnotes: chapterFootnotes,
           footnotesByRawId,
+          endnoteNumberByRawId,
+          endnotesByRawId,
+          relsById,
         });
         boxParts.push(nextRich);
         k++;
@@ -1005,27 +1272,51 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
 
     if (child.localName === 'tbl') {
       const trNodes = getLocalChildren(child, 'tr');
-      const matrix: string[][] = trNodes.map((tr) =>
-        getLocalChildren(tr, 'tc').map((tc) =>
-          getLocalChildren(tc, 'p')
+      const matrix: string[][] = [];
+      for (const tr of trNodes) {
+        const rowCells: string[] = [];
+        for (const tc of getLocalChildren(tr, 'tc')) {
+          // Extraer imágenes/gráficos/cuadros alojados dentro de celdas antes de leer texto
+          await extractMediaFromNode(tc);
+          const cellText = getLocalChildren(tc, 'p')
             .map((tp) =>
               extractParagraphRichText(tp, {
                 preserveFormatting: true,
                 footnoteNumberByRawId,
                 collectedFootnotes: chapterFootnotes,
                 footnotesByRawId,
+                endnoteNumberByRawId,
+                endnotesByRawId,
+                relsById,
               }),
             )
             .filter(Boolean)
-            .join('\n'),
-        ),
-      );
+            .join('\n');
+          const tcPr = getLocalChildren(tc, 'tcPr')[0];
+          const gridSpanEl = tcPr ? getLocalChildren(tcPr, 'gridSpan')[0] : undefined;
+          const span = Math.max(
+            1,
+            Number(gridSpanEl?.getAttribute('w:val') ?? gridSpanEl?.getAttribute('val') ?? 1) || 1,
+          );
+          rowCells.push(cellText);
+          for (let sp = 1; sp < span; sp++) rowCells.push('');
+        }
+        matrix.push(rowCells);
+      }
 
       if (matrix.length > 0) {
         const maxCols = matrix.reduce((m, row) => Math.max(m, row.length), 0);
+        const hasTextContent = matrix.some((row) => row.some((c) => c.trim().length > 0));
+        if (!hasTextContent) {
+          i++;
+          continue;
+        }
+        const normalizedMatrix = matrix.map((row) =>
+          row.length < maxCols ? [...row, ...new Array(maxCols - row.length).fill('')] : row,
+        );
         if (maxCols <= 1) {
           // Tabla de 1 sola columna (ej. Resguardo ético Ley 26.061 o CAJA didáctica en recuadro)
-          const cellParagraphs = matrix.flat().filter(Boolean);
+          const cellParagraphs = normalizedMatrix.flat().filter(Boolean);
           const structured = parseCalloutParagraphsToStructured(cellParagraphs);
           const itemsList = Array.isArray(structured.calloutItems) ? structured.calloutItems : [];
           const totalBoxChars =
@@ -1041,16 +1332,16 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
           markdownLines.push(cellParagraphs.join('\n'));
           stats.callouts++;
         } else {
-          const hasHeaderRow = !shouldTreatMultiColTableWithoutHeader(trNodes[0], matrix);
-          const tableHeaders = matrix[0];
-          const tableRows = matrix.slice(1);
+          const hasHeaderRow = !shouldTreatMultiColTableWithoutHeader(trNodes[0], normalizedMatrix);
+          const tableHeaders = normalizedMatrix[0];
+          const tableRows = normalizedMatrix.slice(1);
           blocks.push({
             kind: 'table',
             tableHeaders,
             tableRows,
             tableHasHeaderRow: hasHeaderRow,
           });
-          markdownLines.push(matrix.map((r) => r.join(' | ')).join('\n'));
+          markdownLines.push(normalizedMatrix.map((r) => r.join(' | ')).join('\n'));
           stats.tables++;
         }
       }
@@ -1061,7 +1352,11 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     if (child.localName === 'sdt') {
       const sdtXml = child.outerHTML || '';
       if (/Table of Contents|\bTOC\b|Índice|Indice|Tabla de contenido/i.test(sdtXml)) {
-        stats.ignoredTocBlocks++;
+        for (const p of getAllByLocal(child, 'p')) {
+          const line = extractParagraphPlainText(p);
+          if (line) parseTocLine(line);
+          stats.ignoredTocBlocks++;
+        }
       } else {
         for (const p of getAllByLocal(child, 'p')) {
           await processSingleParagraph(p, i);
@@ -1086,6 +1381,7 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     plainMarkdownText: markdownLines.join('\n\n').trim(),
     blocks: poemPass.blocks,
     warnings,
+    ...(importedTocEntries.length > 0 ? { importedTocEntries } : {}),
     stats,
   };
 }

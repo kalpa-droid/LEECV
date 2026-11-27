@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leecv-pwa-v4';
+const CACHE_NAME = 'leecv-pwa-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -84,7 +84,14 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+        const contentType = networkResponse?.headers?.get('content-type') || '';
+        const isBinaryAssetPath = /\.(?:ttf|otf|woff2?|bcmap|wasm|png|jpe?g|webp|svg)$/i.test(url.pathname);
+        if (
+          !networkResponse ||
+          networkResponse.status !== 200 ||
+          networkResponse.type !== 'basic' ||
+          (isBinaryAssetPath && contentType.includes('text/html'))
+        ) {
           return networkResponse;
         }
         const responseToCache = networkResponse.clone();

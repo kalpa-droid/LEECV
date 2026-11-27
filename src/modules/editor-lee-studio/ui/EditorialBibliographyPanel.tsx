@@ -199,6 +199,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     const res = await executeAiTask<{ citations: Array<Record<string, string>> }>({
       taskId: 'editorial_format_citation',
       payload: { rawText: rawNotes, style: activeStyle },
+      cvData: draft,
     });
     const list = Array.isArray(res.data?.citations) ? res.data.citations : [];
     if (list.length === 0) throw new Error('No pudimos detectar citas válidas en ese texto.');
