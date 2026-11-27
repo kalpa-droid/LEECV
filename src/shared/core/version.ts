@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 14,
-  patch: 2,
-  label: 'V3.14.2',
+  patch: 3,
+  label: 'V3.14.3',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'fix(editor-lee): V3.14.2 — Cero pérdida de texto en AST, extractores PDF/DOCX, persistencia/pestañas y guardas anti-alucinación.',
+  stage: 'fix(editor-lee): V3.14.3 — Auto-aplicación inmediata al importar sobre borrador vacío, modal raíz persistente y coherencia digital PDF con rescate OCR.',
 } as const;

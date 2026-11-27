@@ -60,7 +60,7 @@ export function StructuredImportReviewModal({
       : 100;
 
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} title={title} size="4xl" footer={footer}>
+    <Modal isOpen={isOpen} onClose={onCancel} title={title} size="4xl" footer={footer} closeOnOverlayClick={false}>
       <div className="space-y-4">
         {subtitle && (
           <p className="text-xs sm:text-sm text-[var(--ui-text-secondary)] leading-relaxed">{subtitle}</p>

@@ -66,7 +66,11 @@ import {
   getBoundNativeFileName,
 } from '../../shared/core/storage/nativeFileDocumentService';
 import { unpackDocumentFromDisk } from '../../shared/core/storage/leecvPackageCodec';
-import { EditorialInicioArchivoPanel } from './ui/EditorialInicioArchivoPanel';
+import {
+  EditorialInicioArchivoPanel,
+  type PendingEditorialImportPayload,
+} from './ui/EditorialInicioArchivoPanel';
+import { EditorialImportReviewModal } from './ui/EditorialImportReviewModal';
 import { EditorialCoverPanel } from './ui/EditorialCoverPanel';
 import { EditorialStructurePanel } from './ui/EditorialStructurePanel';
 import { EditorialStylePanel } from './ui/EditorialStylePanel';
@@ -228,6 +232,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [isPreflightOpen, setIsPreflightOpen] = useState<boolean>(false);
   const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
   const [isPrintFlowModalOpen, setIsPrintFlowModalOpen] = useState<boolean>(false);
+  const [pendingImportReview, setPendingImportReview] = useState<PendingEditorialImportPayload | null>(null);
+  const [postponedImportReview, setPostponedImportReview] = useState<PendingEditorialImportPayload | null>(null);
   const pendingExportFormatRef = useRef<'pdf' | 'docx'>('pdf');
 
   const { showSuccess, showError, showInfo } = useToast();
@@ -691,8 +697,103 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       onSelectTab?.(nextId);
       setActiveStepTab(stepTab);
       setIsPanelOpen(true);
+      setPendingImportReview(null);
+      setPostponedImportReview(null);
     },
     [editorialId, history, onSelectTab, onTabsChanged],
+  );
+
+  const applyEditorialImportPayload = useCallback(
+    (result: {
+      metadata: { title: string; subtitle: string; author: string };
+      legalFields?: Record<string, string>;
+      sections: EditorialSection[];
+      applyMetadata: boolean;
+      applyDetectedPreset: boolean;
+      presetRecommendation?: PendingEditorialImportPayload['presetRecommendation'];
+    }) => {
+      if (!Array.isArray(result.sections) || result.sections.length === 0) return;
+      history.commitBoundary();
+      const baseDraft = latestDraftRef.current || createEmptyEditorial();
+      const cleanTitle = String(result.metadata?.title || '').trim();
+      let nextDraft: any = {
+        ...baseDraft,
+        ...(result.applyMetadata
+          ? {
+              metadata: {
+                ...(baseDraft?.metadata || {}),
+                title: cleanTitle || baseDraft?.metadata?.title || 'Mi obra',
+                subtitle: result.metadata?.subtitle ?? baseDraft?.metadata?.subtitle ?? '',
+                author: result.metadata?.author || baseDraft?.metadata?.author || '',
+              },
+              cover: {
+                ...(baseDraft?.cover || {}),
+                ...(cleanTitle ? { title: cleanTitle } : {}),
+                ...(result.metadata?.subtitle ? { subtitle: result.metadata.subtitle } : {}),
+                ...(result.metadata?.author ? { author: result.metadata.author } : {}),
+              },
+              ...(result.legalFields && Object.keys(result.legalFields).length > 0
+                ? { legalFields: { ...(baseDraft?.legalFields || {}), ...result.legalFields } }
+                : {}),
+            }
+          : {}),
+        sections: result.sections,
+      };
+      if (result.applyDetectedPreset && result.presetRecommendation) {
+        nextDraft = applyEditorialGlobalConfig(nextDraft, {
+          presetId: result.presetRecommendation.recommendedPresetId,
+          presetMode: 'apply-design',
+          structuralNormId: result.presetRecommendation.recommendedStructuralNormId,
+          bibliographyStyle: result.presetRecommendation.recommendedBibliographyStyle,
+          applyMode: 'preserve-manual',
+        });
+      }
+
+      const activeId = latestIdRef.current;
+      hasEditedRef.current = true;
+      prevSavedSectionsCountRef.current = nextDraft.sections.length;
+      setDraft(nextDraft);
+      setDebouncedDraft(nextDraft);
+      persistLastEditorialId(activeId);
+      void saveDocumentDraftLocal(
+        {
+          ...nextDraft,
+          id: activeId,
+          type: 'editorial',
+          updatedAt: Date.now(),
+        },
+        'editorial',
+      );
+      setPendingImportReview(null);
+      setPostponedImportReview(null);
+      const firstId = result.sections[0]?.id || 'editorial_secciones';
+      setActiveStepTab(firstId);
+      setIsPanelOpen(true);
+      focusSectionInPreview(firstId);
+      showSuccess(`Listo: ${result.sections.length} secciones importadas en tu documento.`);
+    },
+    [focusSectionInPreview, history, showSuccess],
+  );
+
+  const handleImportReady = useCallback(
+    (payload: PendingEditorialImportPayload) => {
+      const hasContentNow = hasEditorialSubstantiveContent(latestDraftRef.current?.sections);
+      if (!hasContentNow) {
+        applyEditorialImportPayload({
+          metadata: payload.metadata,
+          legalFields: payload.legalFields,
+          sections: payload.sections,
+          applyMetadata: true,
+          applyDetectedPreset: Boolean(payload.presetRecommendation),
+          presetRecommendation: payload.presetRecommendation,
+        });
+        return;
+      }
+      setPostponedImportReview(null);
+      setPendingImportReview(payload);
+      showSuccess(`${payload.sections.length} secciones detectadas listas para revisar.`);
+    },
+    [applyEditorialImportPayload, showSuccess],
   );
 
   const updateDraft = useCallback((updater: (prev: any) => any) => {
@@ -1196,6 +1297,34 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 </div>
               </div>
             )}
+            {postponedImportReview && !pendingImportReview && (
+              <div
+                className="p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] flex flex-wrap items-center justify-between gap-2 text-xs"
+                style={{ borderRadius: radius.card }}
+              >
+                <span className="font-bold">
+                  Tenés {postponedImportReview.sections.length} secciones detectadas listas para sumar o aplicar.
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPendingImportReview(postponedImportReview)}
+                    className="px-2.5 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold cursor-pointer"
+                    style={{ borderRadius: radius.control }}
+                  >
+                    Revisar e importar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPostponedImportReview(null)}
+                    className="px-2 py-1 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-semibold cursor-pointer"
+                    style={{ borderRadius: radius.control }}
+                  >
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            )}
             {activeStepTab === 'editorial_inicio' && (
               <EditorialInicioArchivoPanel
                 docId={editorialId}
@@ -1209,6 +1338,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 onDuplicateSaved={handleDuplicate}
                 onSaveToDisk={() => void handleSaveToDisk(true)}
                 onOpenDiskFile={handleOpenDiskFile}
+                onImportReady={handleImportReady}
               />
             )}
             {activeStepTab === 'editorial_portada' && (
@@ -1458,6 +1588,31 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           }
         }}
       />
+      {pendingImportReview && (
+        <EditorialImportReviewModal
+          key={pendingImportReview.sections.map((s) => s.id).join(',')}
+          isOpen={true}
+          sourceChars={pendingImportReview.sourceChars}
+          initialMetadata={pendingImportReview.metadata}
+          initialLegalFields={pendingImportReview.legalFields}
+          initialSections={pendingImportReview.sections}
+          existingSections={Array.isArray(draft?.sections) ? draft.sections : []}
+          presetRecommendation={pendingImportReview.presetRecommendation}
+          auditIssues={pendingImportReview.auditIssues}
+          losslessSummary={pendingImportReview.losslessSummary}
+          warnings={pendingImportReview.warnings}
+          onCancel={() => {
+            setPostponedImportReview(pendingImportReview);
+            setPendingImportReview(null);
+          }}
+          onConfirm={(res) =>
+            applyEditorialImportPayload({
+              ...res,
+              presetRecommendation: pendingImportReview.presetRecommendation,
+            })
+          }
+        />
+      )}
       <EditorialGlobalNormModal
         isOpen={globalModalAxis !== null}
         axis={globalModalAxis || 'preset'}

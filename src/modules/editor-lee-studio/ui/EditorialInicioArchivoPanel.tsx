@@ -43,6 +43,22 @@ import type { DocxExtractedRichBlock } from '../domain/docxClientExtractor';
 import type { EditorialPresetId, EditorialSection } from '../domain/editorialTypes';
 import { button, radius } from '../../../shared/core/uiDesignSystem';
 
+export interface PendingEditorialImportPayload {
+  sections: EditorialSection[];
+  sourceChars: number;
+  metadata: { title: string; subtitle: string; author: string };
+  legalFields?: Record<string, string>;
+  auditIssues?: StructureAuditIssue[];
+  losslessSummary?: {
+    totalBlocks: number;
+    recoveredBlocks: number;
+    preservedTables: number;
+    preservedImages: number;
+  };
+  warnings: string[];
+  presetRecommendation?: EditorialPresetRecommendation | null;
+}
+
 export interface EditorialInicioArchivoPanelProps {
   docId: string;
   draft: any;
@@ -56,6 +72,7 @@ export interface EditorialInicioArchivoPanelProps {
   onSaveToDisk: () => void;
   onOpenDiskFile: (file: File) => void;
   onOpenUniversalBackup?: () => void;
+  onImportReady?: (payload: PendingEditorialImportPayload) => void;
 }
 
 function coerceEditorialMetaString(val: unknown): string {
@@ -82,6 +99,7 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
   onSaveToDisk,
   onOpenDiskFile,
   onOpenUniversalBackup,
+  onImportReady,
 }) => {
   const showSuccess = notify?.success ?? (() => {});
   const showError = notify?.error ?? (() => {});
@@ -176,6 +194,11 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
 
   const buildPendingReviewFromResult = (
     result: Awaited<ReturnType<typeof structureManuscriptInChunks>>,
+    extras?: {
+      sourceChars?: number;
+      warnings?: string[];
+      presetRec?: EditorialPresetRecommendation | null;
+    },
   ) => {
     if (result.sections.length === 0) {
       throw new Error('No encontramos secciones legibles en el texto.');
@@ -192,14 +215,17 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
     const aiSubtitle = coerceEditorialMetaString(result.metadata?.subtitle);
     const aiAuthor = coerceEditorialMetaString(result.metadata?.author);
 
-    if (result.losslessSummary) {
-      setLosslessSummaryNote(
-        `Integridad 1:1 verificada (${result.losslessSummary.totalBlocks} bloques · ${result.losslessSummary.preservedTables} tablas · ${result.losslessSummary.preservedImages} figuras).`,
-      );
+    const summaryLine = result.losslessSummary
+      ? `Integridad 1:1 verificada (${result.losslessSummary.totalBlocks} bloques · ${result.losslessSummary.preservedTables} tablas · ${result.losslessSummary.preservedImages} figuras).`
+      : null;
+
+    if (summaryLine) {
+      setLosslessSummaryNote(summaryLine);
     }
 
-    setPendingReview({
+    const payload: PendingEditorialImportPayload = {
       sections: normalizedSections,
+      sourceChars: extras?.sourceChars ?? manuscriptText.replace(/\s+/g, '').length,
       metadata: {
         title: isDefaultTitle && aiTitle ? aiTitle : aiTitle || currentTitle,
         subtitle: aiSubtitle || coerceEditorialMetaString(draft?.metadata?.subtitle),
@@ -208,7 +234,26 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
       legalFields: result.legalFields,
       auditIssues: result.auditIssues,
       losslessSummary: result.losslessSummary,
-    });
+      warnings: [
+        ...(summaryLine ? [summaryLine] : []),
+        ...(extras?.warnings ?? importWarnings),
+      ],
+      presetRecommendation:
+        extras?.presetRec !== undefined ? extras.presetRec : presetRecommendation,
+    };
+
+    if (onImportReady) {
+      setPendingReview(null);
+      onImportReady(payload);
+    } else {
+      setPendingReview({
+        sections: payload.sections,
+        metadata: payload.metadata,
+        legalFields: payload.legalFields,
+        auditIssues: payload.auditIssues,
+        losslessSummary: payload.losslessSummary,
+      });
+    }
     return normalizedSections;
   };
 
@@ -255,18 +300,24 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
           }),
         ]);
 
-        if (presetRec && presetRec.recommendedPresetId !== (draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id)) {
-          setPresetRecommendation({
-            ...presetRec,
-            detectedLabel: coerceEditorialMetaString(presetRec.detectedLabel) || 'Obra detectada',
-            reason: coerceEditorialMetaString(presetRec.reason),
-          });
-        } else {
-          setPresetRecommendation(null);
-        }
+        const resolvedPresetRec =
+          presetRec && presetRec.recommendedPresetId !== (draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id)
+            ? {
+                ...presetRec,
+                detectedLabel: coerceEditorialMetaString(presetRec.detectedLabel) || 'Obra detectada',
+                reason: coerceEditorialMetaString(presetRec.reason),
+              }
+            : null;
+        setPresetRecommendation(resolvedPresetRec);
 
-        const built = buildPendingReviewFromResult(structured);
-        showSuccess(`${built.length} secciones detectadas listas para revisar.`);
+        const built = buildPendingReviewFromResult(structured, {
+          sourceChars: extracted.text.replace(/\s+/g, '').length,
+          warnings: extracted.warnings || [],
+          presetRec: resolvedPresetRec,
+        });
+        if (!onImportReady) {
+          showSuccess(`${built.length} secciones detectadas listas para revisar.`);
+        }
         return extracted;
       },
       {
@@ -312,8 +363,10 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
         onProgress: (upd) => setProgress(upd),
       });
 
-      const built = buildPendingReviewFromResult(result);
-      return `${built.length} secciones listas para revisar`;
+      const built = buildPendingReviewFromResult(result, {
+        sourceChars: raw.replace(/\s+/g, '').length,
+      });
+      return `${built.length} secciones procesadas`;
     } finally {
       setIsBusy(false);
     }
