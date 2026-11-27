@@ -1,3 +1,23 @@
+## [2026-11-27] - PR #177 (V3.13.0): EditorLee — Desarme Nativo sin Pérdidas (.docx/.odt/.pdf), Mapa Panorámico, Conciencia Global de IA, Vista Previa Blindada y Flujo de 7 Pasos
+
+**Commit en `main`:** `4910a9401e0137169b50b4c027f0a3f9b5059c09`
+
+**Resumen:**
+- **Vista Previa PDF Blindada contra `DataView` / `fontkit` / EXIF (`pdfFontRegistry.ts`, `fontSanitizer.ts`, `imageCompressor.ts`, `VectorDocViewer.tsx`, `EditorLeeStudioContent.tsx`, `sw.js`, `vercel.json`)**:
+  - Verificación SFNT previa con `fontkit.create()` antes de `Font.register()`, limpieza de segmentos APP1 EXIF corruptos e imágenes truncadas (con guardas anti-bloqueo), hidratación `asset://` al abrir paquetes locales, cache bust `leecv-pwa-v5`, exclusión de assets estáticos del fallback SPA en Vercel y reintento automático en `VectorDocViewer`.
+- **Desarme Nativo sin Pérdidas en Navegador (`docxClientExtractor.ts`, `ooxmlMathAndDiagramParser.ts`, `odtClientExtractor.ts`, `pdfGeometryHelpers.ts`, `pdfEditorialExtractor.ts`)**:
+  - Word OOXML (`.docx`): deduplicación `mc:AlternateContent` / `mc:Fallback`, cuadros `<w:txbxContent>` / `<v:textbox>`, fórmulas `<m:oMath>`, SmartArt, imágenes dentro de celdas y `gridSpan`, `endnotes.xml` (corrigiendo reenvío en `extractParagraphRichText`), extracción DIB desde EMF y captura de índice original hasta 50 MB.
+  - LibreOffice Writer (`.odt`): soporte cliente completo con encabezados, tablas, notas al pie, fórmulas MathML e imágenes.
+  - PDF geométrico + visión selectiva: detección tolerante `%PDF` en los primeros 1024 bytes, limpieza de encabezados/pies repetidos, ordenamiento multicolumna XY-Cut, tablas por grilla, rastreo CTM de diagramas/imágenes y asistencia multimodal acotada (`editorial_assist_complex_objects`).
+- **Mapa Panorámico, Auditoría Estructural y Conciencia Global de IA (`documentAst.ts`, `editorialUniversalImporter.ts`, `candidateContext.ts`, `catalog.ts`, `ai-generate.ts`, `aiClient.ts`, `editorial.ts`)**:
+  - Esquema `StructureAnalysisSchema` tolerante a `null` y expansión de rangos `startBlockId..endBlockId` evitando el colapso en un solo `Capítulo 1`, extracción automática de portada y auditoría (`auditIssues`: títulos duplicados, apartados vacíos, diferencias contra `<imported_toc>`).
+  - Inyección de `EditorialDocumentDigest` (`buildCandidateContext`) en todas las tareas editoriales y conocimiento modular de Lidio.
+- **Importación Directa, Fusión Granular y Reordenamiento en 7 Pasos (`EditorialInicioArchivoPanel.tsx`, `EditorialImportReviewModal.tsx`, `editorialStepSequence.ts`, `EditorLeeStudioContent.tsx`)**:
+  - Eliminado el paso intermedio `"Armar capítulos"` al subir archivos (conservado solo en pegado manual), modal de revisión con fusión granular por capítulo (`agregar debajo`, `sobreescribir`, `sección nueva`, `omitir`) y reordenamiento lógico de 7 pasos (`Inicio → Portada → Capítulos → Citas → Estructura → Estilo → Índice y Salida`).
+- **Verificación:** `tests/v3130EditorialDisassemblyAndMap.test.ts` (11/11), `tests/editorLeeDockAndChunker.test.ts` (5/5), `npm run check-all` en 0 errores en local y GitHub Actions (`check-all` + Vercel Preview) en verde antes del merge.
+
+---
+
 ## [2026-11-27] - PR #175 (V3.12.0): EditorLee — Motor AST Canónico Lossless con Asset Vault, Reorganización en 7 Pasos, Lienzo Limpio y Corrector Multilingüe
 
 **Commit en `main`:** `4a90dbabea76c8b8146c9c8e5ab8b0b698317fb6`
