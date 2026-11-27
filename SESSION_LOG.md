@@ -1,3 +1,34 @@
+## [2026-11-27] - PR #175 (V3.12.0): EditorLee — Motor AST Canónico Lossless con Asset Vault, Reorganización en 7 Pasos, Lienzo Limpio y Corrector Multilingüe
+
+**Commit en `main`:** `4a90dbabea76c8b8146c9c8e5ab8b0b698317fb6`
+
+**Resumen:**
+- **Motor AST Canónico Lossless y Seguridad de Ingesta (`documentAst.ts`, `docxClientExtractor.ts`, `editorialUniversalImporter.ts`, `catalog.ts`)**:
+  - Esquema Zod canónico (`DocumentASTSchema`, `CanonicalBlockSchema`, bloques `blk_00001..`) que separa los binarios/figuras (`localAssetStore` por hash) del razonamiento estructural por punteros (`buildCompactSkeleton`), auditoría determinista (`assertLosslessIntegrity`) y autoreparación contigua de biyección 1:1 (`repairProposalToLosslessBijection`, `reconstructEditorialSectionsFromAst`).
+  - Validación por magic bytes reales (`detectSafeDocumentMime`), límites anti Zip-Bomb en `.docx`, recorte canvas por `bbox` en PDFs y tareas de IA tipadas con esquema OpenAPI compartido (`editorial_analyze_ast_structure`, `editorial_analyze_ast_structure_long` en `tier: 'fast'`, `editorial_proofread_section`).
+- **Reorganización de EditorLee en 7 Pasos sin Ruido (`editorialStepSequence.ts`, `editorialDockEngine.ts`, `EditorLeeStudioContent.tsx`)**:
+  - Entrada unificada **Inicio y Archivo** (`EditorialInicioArchivoPanel.tsx`), **Datos y Portada** (`EditorialCoverPanel.tsx`), **Estructura y Hoja** (`EditorialStructurePanel.tsx`), **Estilo y Tipografía** (`EditorialStylePanel.tsx`) e **Índice General** (`EditorialTocPanel`).
+  - Eliminación del banner repetido `LocalBackupShieldBanner`, guías redundantes y paneles huérfanos (`EditorialPresetInicioPanel.tsx`, `EditorialImportAiPanel.tsx`), además de registro de respaldo en disco sin ciclos de importación (`fileHandleStore.ts` + `nativeFileDocumentService.ts` + `storageResilienceEngine.ts`).
+- **Cascada Global-Sección, Lienzo Limpio y Corrector Multilingüe (`editorialPaginationEngine.ts`, `sanitizeEditorialData.ts`, `editorialBlockOperations.ts`, `chapter-editor/*`, `EditorialSectionFocusPanel.tsx`)**:
+  - Soporte en cascada de `bodyColumns`, `columnsOverride`, `startNewPageOverride` y `sectionCover.mode` (`'inherit' | 'on' | 'off'`) en paginación, PDF de dos pasadas y Word (`.docx`).
+  - Editor de capítulos **Lienzo Limpio** (`CleanBlockCanvas`, `InsertBetweenDivider`, `CleanBlockMediaEditor`) con lectura corrida sin botones en bloques inactivos, división de párrafos, inserción entre bloques, `useConfirm()` y cajón `SectionProofreadDrawer`.
+- **Verificación:** `tests/editorial/v3120AstLosslessAndCleanCanvas.test.ts` (5/5), `npm run check-all` en 0 errores en local y GitHub Actions (`2m13s`) + Vercel Preview en verde antes del merge.
+
+---
+
+## [2026-11-27] - PR #174 (V3.11.1): Blindaje de Vista Previa contra DataView (Imágenes DOCX y Fuentes TTF/OTF), Undo/Redo Universal en las 6 Apps y Confirmaciones useConfirm()
+
+**Commit en `main`:** `a1f9b77121710d233997257b5d5498468cc342ea`
+
+**Resumen:**
+- **Blindaje DataView / PDF Preview (`imageCompressor.ts`, `localAssetStore.ts`, `docxClientExtractor.ts`, `localFontStore.ts`, `academicFontCatalog.ts`, `pdfFontRegistry.ts`, `EditorialPdfDocument.tsx`, `EditorialPdfCovers.tsx`)**:
+  - Saneamiento y validación binaria SFNT/imagen antes de entregar activos o fuentes TTF/OTF al motor `@react-pdf/renderer`, evitando el fallo `Offset is outside the bounds of the DataView` y convirtiendo formatos `.emf`/`.wmf` no compatibles en placeholders editables.
+- **Undo/Redo Universal en las 6 Apps y Confirmaciones Canónicas (`useStudioHistory.ts`, `StudioNavbar.tsx`, `UndoRedoControls.tsx`, estudios y secciones)**:
+  - Conexión de `useStudioHistory` (coalescing 800 ms, tope 50 estados, móvil + escritorio) en CV/Carta, EditorLee, FacturLee, CardStudio, BookStudio y PlannerStudio, y reemplazo de confirmaciones nativas por `useConfirm()` en acciones destructivas.
+- **Verificación:** `tests/v3111DataViewAndStudioHistory.test.ts` (4/4), `npm run check-all` en 0 errores en local, GitHub Actions (`1m23s`) y Vercel Preview antes del merge.
+
+---
+
 ## [2026-11-26] - PR #172 (V3.11.0): EditorLee — Motor Editorial Integral: Doble Faz / Simple Faz, Capítulos en Hoja Aparte / Página Impar, Presets Informes/Proyectos y Exportación Word (.docx) con Márgenes Simétricos
 
 **Commit en `main`:** `cfcc533e8c85db88fd42379c65a283b78539e1d8`
