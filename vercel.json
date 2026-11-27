@@ -235,7 +235,7 @@
       "destination": "/api/cron-downgrade"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|fonts/|cmaps/|assets/|brand/).*)",
       "destination": "/index.html"
     }
   ]

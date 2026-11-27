@@ -186,7 +186,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const isProTask = taskDef.tier === 'pro';
   const defaultTokens = taskDef.defaultMaxTokens ?? 1200;
-  const maxTokensCeiling = isProTask ? 8192 : 4000;
+  const maxTokensCeiling = Math.min(8192, Math.max(taskDef.maxTokensCeiling ?? (isProTask ? 8192 : 4000), 256));
   const parsedMaxTokens = Number(maxTokens);
   const clampedMaxTokens = Number.isFinite(parsedMaxTokens) && parsedMaxTokens > 0
     ? Math.min(Math.max(parsedMaxTokens, 256), maxTokensCeiling)

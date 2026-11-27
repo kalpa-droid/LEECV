@@ -105,8 +105,159 @@ export function detectImageMagicMime(bytes: Uint8Array): ImageMagicMime {
 }
 
 /**
+ * Valida estructuralmente un buffer PNG (firma de 8 bytes, IHDR válido con dimensiones > 0,
+ * longitudes de chunks dentro de rango sin desbordar uint32 y cierre IEND).
+ */
+export function isStructurallyValidPng(bytes: Uint8Array): boolean {
+  if (!bytes || bytes.length < 33) return false;
+  const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  for (let s = 0; s < sig.length; s++) {
+    if (bytes[s] !== sig[s]) return false;
+  }
+
+  let offset = 8;
+  let sawIhdr = false;
+  let sawIend = false;
+
+  while (offset + 12 <= bytes.length) {
+    const chunkLen =
+      ((bytes[offset] << 24) |
+        (bytes[offset + 1] << 16) |
+        (bytes[offset + 2] << 8) |
+        bytes[offset + 3]) >>>
+      0;
+    const type =
+      String.fromCharCode(bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7]);
+
+    if (chunkLen > bytes.length - (offset + 12)) return false;
+
+    if (!sawIhdr) {
+      if (type !== 'IHDR' || chunkLen !== 13) return false;
+      const width =
+        ((bytes[offset + 8] << 24) |
+          (bytes[offset + 9] << 16) |
+          (bytes[offset + 10] << 8) |
+          bytes[offset + 11]) >>>
+        0;
+      const height =
+        ((bytes[offset + 12] << 24) |
+          (bytes[offset + 13] << 16) |
+          (bytes[offset + 14] << 8) |
+          bytes[offset + 15]) >>>
+        0;
+      if (width === 0 || height === 0) return false;
+      sawIhdr = true;
+    }
+
+    offset += 12 + chunkLen;
+    if (type === 'IEND') {
+      sawIend = true;
+      break;
+    }
+  }
+
+  return sawIhdr && sawIend;
+}
+
+function isValidExifApp1Segment(seg: Uint8Array): boolean {
+  // seg empieza después del length (2 bytes): contiene "Exif\0\0" + cabecera TIFF
+  if (seg.length < 6) return true;
+  if (
+    seg[0] !== 0x45 ||
+    seg[1] !== 0x78 ||
+    seg[2] !== 0x69 ||
+    seg[3] !== 0x66 ||
+    seg[4] !== 0x00 ||
+    seg[5] !== 0x00
+  ) {
+    return true;
+  }
+
+  const tiff = seg.subarray(6);
+  if (tiff.length < 8) return false;
+  const little = tiff[0] === 0x49 && tiff[1] === 0x49;
+  const big = tiff[0] === 0x4d && tiff[1] === 0x4d;
+  if (!little && !big) return false;
+
+  const u16 = (off: number) =>
+    little ? tiff[off] | (tiff[off + 1] << 8) : (tiff[off] << 8) | tiff[off + 1];
+  const u32 = (off: number) =>
+    (little
+      ? tiff[off] | (tiff[off + 1] << 8) | (tiff[off + 2] << 16) | (tiff[off + 3] << 24)
+      : (tiff[off] << 24) | (tiff[off + 1] << 16) | (tiff[off + 2] << 8) | tiff[off + 3]) >>> 0;
+
+  if (u16(2) !== 0x002a) return false;
+  const ifd0Offset = u32(4);
+  if (ifd0Offset < 8 || ifd0Offset + 2 > tiff.length) return false;
+  const entryCount = u16(ifd0Offset);
+  if (ifd0Offset + 2 + entryCount * 12 > tiff.length) return false;
+
+  for (let e = 0; e < entryCount; e++) {
+    const entryBase = ifd0Offset + 2 + e * 12;
+    const type = u16(entryBase + 2);
+    const count = u32(entryBase + 4);
+    const typeSizes = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8];
+    const unitSize = typeSizes[type] ?? 0;
+    if (unitSize === 0) continue;
+    const totalBytes = unitSize * count;
+    if (totalBytes > 4) {
+      const valOff = u32(entryBase + 8);
+      if (valOff + totalBytes > tiff.length) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Elimina segmentos APP1 EXIF de un JPEG válido en stream sin requerir DOM/canvas.
+ */
+export function stripJpegApp1Exif(bytes: Uint8Array): Uint8Array {
+  if (!bytes || bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return bytes;
+  const out: number[] = [0xff, 0xd8];
+  let i = 2;
+  while (i < bytes.length) {
+    if (bytes[i] !== 0xff) {
+      for (let k = i; k < bytes.length; k++) out.push(bytes[k]);
+      break;
+    }
+    const markerStart = i;
+    while (i < bytes.length && bytes[i] === 0xff) i++;
+    if (i >= bytes.length) break;
+    const marker = bytes[i++];
+    if (marker === 0xd9) {
+      out.push(0xff, 0xd9);
+      break;
+    }
+    if ((marker >= 0xd0 && marker <= 0xd7) || marker === 0x01 || marker === 0x00) {
+      out.push(0xff, marker);
+      continue;
+    }
+    if (marker === 0xda) {
+      for (let k = markerStart; k < bytes.length; k++) out.push(bytes[k]);
+      break;
+    }
+    if (i + 2 > bytes.length) break;
+    const segLen = (bytes[i] << 8) | bytes[i + 1];
+    if (segLen < 2 || i + segLen > bytes.length) break;
+    const isApp1Exif =
+      marker === 0xe1 &&
+      segLen >= 8 &&
+      bytes[i + 2] === 0x45 &&
+      bytes[i + 3] === 0x78 &&
+      bytes[i + 4] === 0x69 &&
+      bytes[i + 5] === 0x66;
+    if (!isApp1Exif) {
+      out.push(0xff, marker);
+      for (let k = i; k < i + segLen; k++) out.push(bytes[k]);
+    }
+    i += segLen;
+  }
+  return new Uint8Array(out);
+}
+
+/**
  * Valida estructuralmente los segmentos de un JPEG para prevenir `RangeError: Offset is outside the bounds of the DataView`
- * en `jay-peg`/`restructure` (SOI, longitudes de marcadores dentro de rango hasta SOS, y EOI sin byte 0xFF suelto final).
+ * en `jay-peg`/`restructure` (SOI, longitudes de marcadores dentro de rango, APP1 EXIF íntegro y EOI).
  */
 export function isStructurallyValidJpeg(bytes: Uint8Array): boolean {
   if (!bytes || bytes.length < 16) return false;
@@ -142,6 +293,9 @@ export function isStructurallyValidJpeg(bytes: Uint8Array): boolean {
     if (i + 2 > bytes.length) return false;
     const segLen = (bytes[i] << 8) | bytes[i + 1];
     if (segLen < 2 || i + segLen > bytes.length) return false;
+    if (marker === 0xe1 && !isValidExifApp1Segment(bytes.subarray(i + 2, i + segLen))) {
+      return false;
+    }
     i += segLen;
   }
 
@@ -176,7 +330,7 @@ export function isRenderablePdfImageSrc(src: unknown): src is string {
   if (typeof src !== 'string') return false;
   const trimmed = src.trim();
   if (!trimmed || trimmed.startsWith('asset://')) return false;
-  if (/^(?:https?:|blob:)/i.test(trimmed)) return true;
+  if (/^\/[a-z0-9_./-]+\.(?:png|jpe?g)$/i.test(trimmed)) return true;
 
   const cached = PDF_IMAGE_VALID_CACHE.get(trimmed);
   if (cached !== undefined) return cached;
@@ -191,7 +345,7 @@ export function isRenderablePdfImageSrc(src: unknown): src is string {
   if (!bytes) return cacheImageValidation(trimmed, false);
 
   const magic = detectImageMagicMime(bytes);
-  if (magic === 'image/png') return cacheImageValidation(trimmed, bytes.length >= 24);
+  if (magic === 'image/png') return cacheImageValidation(trimmed, isStructurallyValidPng(bytes));
   if (magic === 'image/jpeg') return cacheImageValidation(trimmed, isStructurallyValidJpeg(bytes));
   return cacheImageValidation(trimmed, false);
 }
@@ -203,17 +357,26 @@ function reencodeDataUrlViaCanvas(
   keepPng: boolean,
 ): Promise<string | null> {
   return new Promise((resolve) => {
-    if (typeof document === 'undefined' || typeof Image === 'undefined') {
+    const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent || '');
+    if (typeof document === 'undefined' || typeof Image === 'undefined' || isJsdom) {
       resolve(null);
       return;
     }
+    let settled = false;
+    const finish = (val: string | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(val);
+    };
+    const timer = setTimeout(() => finish(null), 2500);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       let width = img.naturalWidth || img.width || 0;
       let height = img.naturalHeight || img.height || 0;
       if (width <= 0 || height <= 0) {
-        resolve(null);
+        finish(null);
         return;
       }
 
@@ -227,7 +390,7 @@ function reencodeDataUrlViaCanvas(
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve(null);
+        finish(null);
         return;
       }
 
@@ -243,14 +406,14 @@ function reencodeDataUrlViaCanvas(
           : canvas.toDataURL('image/jpeg', quality);
         canvas.width = 0;
         canvas.height = 0;
-        resolve(outDataUrl);
+        finish(outDataUrl);
       } catch {
         canvas.width = 0;
         canvas.height = 0;
-        resolve(null);
+        finish(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => finish(null);
     img.src = imageSrc;
   });
 }
@@ -285,13 +448,17 @@ export async function sanitizeImageDataUrlForPdf(
 
   if (typeof document !== 'undefined' && typeof Image !== 'undefined') {
     const clean = await reencodeDataUrlViaCanvas(normalizedDataUrl, maxWidth, 0.88, keepPng);
-    return clean;
+    if (clean) return clean;
   }
 
-  // Entorno sin DOM (Node/SSR): solo aceptar PNG o JPEG estructuralmente válido
-  if (magic === 'image/png') return normalizedDataUrl;
+  // Entorno sin DOM (Node/SSR): validar estructura PNG o sanear EXIF en JPEG
+  if (magic === 'image/png') return isStructurallyValidPng(bytes) ? normalizedDataUrl : null;
   if (magic === 'image/jpeg') {
-    return isStructurallyValidJpeg(bytes) ? normalizedDataUrl : null;
+    if (isStructurallyValidJpeg(bytes)) return normalizedDataUrl;
+    const stripped = stripJpegApp1Exif(bytes);
+    return isStructurallyValidJpeg(stripped)
+      ? `data:image/jpeg;base64,${encodeUint8ArrayToBase64(stripped)}`
+      : null;
   }
   return null;
 }

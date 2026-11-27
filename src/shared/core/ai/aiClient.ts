@@ -2,9 +2,9 @@ import { apiClient } from '../utils/apiClient';
 import type { CVData } from '../../../types/cv';
 
 export interface AiTaskParams<T = any> {
-  taskId: 'improve_bullet' | 'generate_summary' | 'generate_objective' | 'suggest_competencies' | 'cover_letter' | 'generate_slogan' | 'explain_ats' | 'ats_analysis' | 'first_job_interview' | 'classify_raw_data' | 'suggest_achievement_acr' | 'suggest_records' | 'rewrite_record' | 'app_guide_assistant' | 'editorial_structure' | 'editorial_rewrite' | 'editorial_refine' | 'editorial_ocr_page' | 'editorial_format_citation' | 'editorial_detect_preset' | 'editorial_analyze_ast_structure' | 'editorial_analyze_ast_structure_long' | 'editorial_proofread_section' | 'book_detect_orientation' | 'book_detect_page_numbers' | 'suggest_job_profiles' | 'tailor_cv_for_application';
+  taskId: 'improve_bullet' | 'generate_summary' | 'generate_objective' | 'suggest_competencies' | 'cover_letter' | 'generate_slogan' | 'explain_ats' | 'ats_analysis' | 'first_job_interview' | 'classify_raw_data' | 'suggest_achievement_acr' | 'suggest_records' | 'rewrite_record' | 'app_guide_assistant' | 'editorial_structure' | 'editorial_rewrite' | 'editorial_refine' | 'editorial_ocr_page' | 'editorial_format_citation' | 'editorial_detect_preset' | 'editorial_analyze_ast_structure' | 'editorial_analyze_ast_structure_long' | 'editorial_assist_complex_objects' | 'editorial_proofread_section' | 'book_detect_orientation' | 'book_detect_page_numbers' | 'suggest_job_profiles' | 'tailor_cv_for_application';
   payload: T;
-  cvData?: CVData;
+  cvData?: CVData | Record<string, any>;
   maxTokens?: number;
   temperature?: number;
   /** Callback opcional y NO bloqueante: se invoca antes de cada reintento automático (1, 2, ...). Por defecto silencioso. */

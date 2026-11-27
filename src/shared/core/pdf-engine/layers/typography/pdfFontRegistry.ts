@@ -1,5 +1,6 @@
 import { Font } from '@react-pdf/renderer';
 import {
+  clearDynamicFontRegistry,
   isDynamicFontRegistered,
   registerDynamicFontFamily,
   sanitizeFontFamilyPure,
@@ -10,7 +11,7 @@ import {
   removeCustomFont,
   saveCustomFont,
 } from '../../../storage/localFontStore';
-import { decodeBase64ToUint8Array } from '../../../utils/imageCompressor';
+import { decodeBase64ToUint8Array, encodeUint8ArrayToBase64 } from '../../../utils/imageCompressor';
 
 /**
  * NÚCLEO — REGISTRO Y HIGIENE TIPOGRÁFICA PARA PDF (@react-pdf/renderer)
@@ -85,30 +86,108 @@ export function isValidSfntDataUrl(dataUrl?: string | null): boolean {
   return isValidSfntFontBytes(bytes);
 }
 
-function buildSpecFontEntries(spec: AcademicFontSpec) {
-  const styleItalic = 'italic' as const;
-  const canUseLocalOrigin =
-    typeof window !== 'undefined' &&
-    /^https?:/i.test(window.location?.origin || '');
-  const selectedUrls = canUseLocalOrigin && spec.localTtfUrls ? spec.localTtfUrls : spec.ttfUrls;
-  const toSrc = (rawUrl: string): string =>
-    canUseLocalOrigin && rawUrl.startsWith('/')
-      ? new URL(rawUrl, window.location.origin).href
-      : rawUrl;
+const VERIFIED_FONT_DATA_URL_CACHE = new Map<string, string | null>();
 
-  const fonts: Array<{ src: string; fontWeight?: 'normal' | 'bold'; fontStyle?: 'normal' | 'italic' }> = [
-    { src: toSrc(selectedUrls.regular), fontWeight: 'normal', fontStyle: 'normal' },
-  ];
-  if (selectedUrls.bold) {
-    fonts.push({ src: toSrc(selectedUrls.bold), fontWeight: 'bold', fontStyle: 'normal' });
+async function verifyFontBytesSafe(bytes: Uint8Array): Promise<boolean> {
+  if (!isValidSfntFontBytes(bytes)) return false;
+  try {
+    const fkModule: any = await import('fontkit');
+    const fontkit = fkModule?.default || fkModule;
+    if (typeof fontkit?.create === 'function') {
+      const parsed = fontkit.create(bytes);
+      if (!parsed || 'fonts' in parsed) return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
-  if (selectedUrls.italic) {
-    fonts.push({ src: toSrc(selectedUrls.italic), fontWeight: 'normal', fontStyle: styleItalic });
+}
+
+export async function fetchVerifiedSfntDataUrl(url: string): Promise<string | null> {
+  const cleanUrl = String(url || '').trim();
+  if (!cleanUrl) return null;
+  if (cleanUrl.startsWith('data:')) {
+    return isValidSfntDataUrl(cleanUrl) ? cleanUrl : null;
   }
-  if (selectedUrls.boldItalic) {
-    fonts.push({ src: toSrc(selectedUrls.boldItalic), fontWeight: 'bold', fontStyle: styleItalic });
+  if (VERIFIED_FONT_DATA_URL_CACHE.has(cleanUrl)) {
+    return VERIFIED_FONT_DATA_URL_CACHE.get(cleanUrl) ?? null;
   }
-  return fonts;
+
+  let bytes: Uint8Array | null = null;
+  try {
+    if (typeof window === 'undefined') {
+      if (cleanUrl.startsWith('/fonts/')) {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const diskPath = path.join(process.cwd(), 'public', cleanUrl.replace(/^\/+/, ''));
+        if (fs.existsSync(diskPath)) {
+          bytes = new Uint8Array(fs.readFileSync(diskPath));
+        }
+      }
+    } else {
+      const res = await fetch(cleanUrl);
+      if (res.ok) {
+        bytes = new Uint8Array(await res.arrayBuffer());
+      }
+    }
+  } catch {
+    bytes = null;
+  }
+
+  if (!bytes || !(await verifyFontBytesSafe(bytes))) {
+    VERIFIED_FONT_DATA_URL_CACHE.set(cleanUrl, null);
+    return null;
+  }
+
+  const dataUrl = `data:font/ttf;base64,${encodeUint8ArrayToBase64(bytes)}`;
+  VERIFIED_FONT_DATA_URL_CACHE.set(cleanUrl, dataUrl);
+  return dataUrl;
+}
+
+export function resetBrokenDynamicFonts(): void {
+  clearDynamicFontRegistry();
+  try {
+    (Font as any)?.clear?.();
+  } catch {
+    // noop
+  }
+}
+
+async function resolveVerifiedSpecDataUrls(spec: AcademicFontSpec): Promise<{
+  regular: string;
+  bold: string;
+  italic: string;
+  boldItalic: string;
+} | null> {
+  const tryOrder = (localUrl?: string, remoteUrl?: string) =>
+    [localUrl, remoteUrl].filter((u): u is string => Boolean(u));
+
+  const pickFirstValid = async (candidates: string[]): Promise<string | null> => {
+    for (const url of candidates) {
+      const dataUrl = await fetchVerifiedSfntDataUrl(url);
+      if (dataUrl) return dataUrl;
+    }
+    return null;
+  };
+
+  const regular = await pickFirstValid(
+    tryOrder(spec.localTtfUrls?.regular, spec.ttfUrls.regular),
+  );
+  if (!regular) return null;
+
+  const [bold, italic, boldItalic] = await Promise.all([
+    pickFirstValid(tryOrder(spec.localTtfUrls?.bold, spec.ttfUrls.bold)),
+    pickFirstValid(tryOrder(spec.localTtfUrls?.italic, spec.ttfUrls.italic)),
+    pickFirstValid(tryOrder(spec.localTtfUrls?.boldItalic, spec.ttfUrls.boldItalic)),
+  ]);
+
+  const resolvedBold = bold || regular;
+  return {
+    regular,
+    bold: resolvedBold,
+    italic: italic || regular,
+    boldItalic: boldItalic || resolvedBold,
+  };
 }
 
 export async function ensureAcademicOrCustomFontRegistered(family: string): Promise<boolean> {
@@ -128,22 +207,19 @@ export async function ensureAcademicOrCustomFontRegistered(family: string): Prom
       await removeCustomFont(clean);
     } else {
       try {
-        const specEntries = spec ? buildSpecFontEntries(spec) : [];
-        const findSpecUrl = (w: 'normal' | 'bold', st: 'normal' | 'italic') =>
-          specEntries.find((e) => (e.fontWeight || 'normal') === w && (e.fontStyle || 'normal') === st)?.src;
-
+        const specData = spec ? await resolveVerifiedSpecDataUrls(spec) : null;
         const boldSrc =
           stored.variants?.bold && isValidSfntDataUrl(stored.variants.bold)
             ? stored.variants.bold
-            : findSpecUrl('bold', 'normal') || stored.dataUrl;
+            : specData?.bold || stored.dataUrl;
         const italicSrc =
           stored.variants?.italic && isValidSfntDataUrl(stored.variants.italic)
             ? stored.variants.italic
-            : findSpecUrl('normal', styleItalic) || stored.dataUrl;
+            : specData?.italic || stored.dataUrl;
         const boldItalicSrc =
           stored.variants?.boldItalic && isValidSfntDataUrl(stored.variants.boldItalic)
             ? stored.variants.boldItalic
-            : findSpecUrl('bold', styleItalic) || boldSrc;
+            : specData?.boldItalic || boldSrc;
 
         Font.register({
           family: clean,
@@ -162,10 +238,17 @@ export async function ensureAcademicOrCustomFontRegistered(family: string): Prom
     }
   }
 
-  // 2. Registrar desde el catálogo universitario / Google TTF (bajo demanda, 0 KB en bundle inicial)
+  // 2. Registrar desde catálogo descargando y validando los bytes SFNT ANTES de Font.register()
   if (spec) {
     try {
-      const fonts = buildSpecFontEntries(spec);
+      const verified = await resolveVerifiedSpecDataUrls(spec);
+      if (!verified) return false;
+      const fonts = [
+        { src: verified.regular, fontWeight: 'normal' as const, fontStyle: 'normal' as const },
+        { src: verified.bold, fontWeight: 'bold' as const, fontStyle: 'normal' as const },
+        { src: verified.italic, fontWeight: 'normal' as const, fontStyle: styleItalic },
+        { src: verified.boldItalic, fontWeight: 'bold' as const, fontStyle: styleItalic },
+      ];
       Font.register({ family: spec.family, fonts });
       registerDynamicFontFamily(spec.family);
       if (spec.openEquivalentName && spec.openEquivalentName !== spec.family) {
@@ -276,13 +359,11 @@ export async function importWindowsLocalFonts(targetFamilies: string[] = ['Times
     ]);
 
     const spec = findAcademicFontSpec(target);
-    const specEntries = spec ? buildSpecFontEntries(spec) : [];
-    const fallbackSpec = (w: 'normal' | 'bold', st: 'normal' | 'italic') =>
-      specEntries.find((e) => (e.fontWeight || 'normal') === w && (e.fontStyle || 'normal') === st)?.src;
+    const specData = spec ? await resolveVerifiedSpecDataUrls(spec) : null;
 
-    const resolvedBold = boldUrl || fallbackSpec('bold', 'normal') || regularUrl;
-    const resolvedItalic = italicUrl || fallbackSpec('normal', styleItalic) || regularUrl;
-    const resolvedBoldItalic = boldItalicUrl || fallbackSpec('bold', styleItalic) || resolvedBold;
+    const resolvedBold = boldUrl || specData?.bold || regularUrl;
+    const resolvedItalic = italicUrl || specData?.italic || regularUrl;
+    const resolvedBoldItalic = boldItalicUrl || specData?.boldItalic || resolvedBold;
 
     await saveCustomFont({
       familyName: target,

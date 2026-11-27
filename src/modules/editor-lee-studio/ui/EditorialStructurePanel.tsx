@@ -23,13 +23,12 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 export interface EditorialStructurePanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
-  setActiveStepTab: (tab: string) => void;
+  setActiveStepTab?: (tab: string) => void;
 }
 
 export const EditorialStructurePanel: React.FC<EditorialStructurePanelProps> = ({
   draft,
   updateDraft,
-  setActiveStepTab,
 }) => {
   const design = draft?.design || {};
   const structuralNorm = resolveStructuralNormFromDraft(draft);
@@ -446,15 +445,6 @@ export const EditorialStructurePanel: React.FC<EditorialStructurePanelProps> = (
           />
         )}
       </PanelSection>
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_diseño')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
-        style={{ borderRadius: radius.control }}
-      >
-        Continuar a Estilo y Tipografía →
-      </button>
     </div>
   );
 };

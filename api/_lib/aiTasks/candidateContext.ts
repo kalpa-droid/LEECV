@@ -48,6 +48,10 @@ function isMeaningful(value: any): boolean {
 export function buildCandidateContext(cvData: any): string {
   if (!cvData) return 'No context available';
 
+  if (cvData.type === 'editorial' || (Array.isArray(cvData.sections) && (cvData.design || cvData.designConfig))) {
+    return buildEditorialDocumentDigest(cvData);
+  }
+
   // Allowlist + deep clone por sección (no se muta el objeto original)
   const compact: Record<string, any> = {};
   for (const key of ALLOWLISTED_TOP_KEYS) {
@@ -126,4 +130,81 @@ export function buildCandidateContext(cvData: any): string {
   redactFreeText(compact);
 
   return JSON.stringify(compact);
+}
+
+function redactPrivateStrings(raw: unknown): string {
+  const txt = typeof raw === 'string' ? raw : '';
+  if (!txt) return '';
+  return txt
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[DATO_PROTEGIDO]')
+    .replace(/(?:(?:\+|00)\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,4}/g, (m) => {
+      const t = m.trim();
+      if (/^(19|20)\d{2}[-\s./]?(19|20)\d{2}$/.test(t) || /^\d{1,4}$/.test(t)) return m;
+      return t.length >= 8 || t.startsWith('+') ? '[DATO_PROTEGIDO]' : m;
+    });
+}
+
+function buildEditorialDocumentDigest(doc: any): string {
+  const sections: any[] = Array.isArray(doc?.sections) ? doc.sections : [];
+  const meta = doc?.metadata || doc?.docMeta || {};
+  const design = doc?.design || doc?.designConfig || {};
+  const tables: string[] = [];
+  const figures: string[] = [];
+  const bibliography: string[] = [];
+
+  if (Array.isArray(doc?.bibliography)) {
+    for (const b of doc.bibliography) {
+      if (!b) continue;
+      bibliography.push(
+        `${b.bibAuthor || b.author || 'Autor'} (${b.bibYear || b.year || 's.f.'}) ${String(b.bibTitle || b.title || b.content || '').slice(0, 70)}`.trim(),
+      );
+    }
+  }
+
+  const outline = sections.slice(0, 40).map((sec, idx) => {
+    const records: any[] = Array.isArray(sec?.records) ? sec.records : [];
+    const subtitles: string[] = [];
+    for (const r of records) {
+      if (!r) continue;
+      if (r.type === 'subtitle' && r.content) {
+        subtitles.push(redactPrivateStrings(String(r.content).slice(0, 70)));
+      } else if (r.type === 'table') {
+        tables.push(
+          `${sec.title || `Sección ${idx + 1}`}: ${r.tableCaption || r.content || (r.tableHeaders || []).join(' / ').slice(0, 60)}`,
+        );
+      } else if (r.type === 'image' || r.type === 'figure_placeholder') {
+        figures.push(`${sec.title || `Sección ${idx + 1}`}: ${r.imageCaption || r.figureCaption || 'Figura'}`);
+      } else if (r.type === 'bibliography_item') {
+        bibliography.push(
+          `${r.bibAuthor || 'Autor'} (${r.bibYear || 's.f.'}) ${String(r.bibTitle || r.content || '').slice(0, 70)}`.trim(),
+        );
+      }
+    }
+    const firstSnippet = records.find((r) => typeof r?.content === 'string' && r.content.trim())?.content || '';
+    return {
+      pos: idx + 1,
+      key: sec?.sectionKey || 'capitulo',
+      title: redactPrivateStrings(String(sec?.title || `Apartado ${idx + 1}`).slice(0, 90)),
+      blocks: records.length,
+      subtitles: subtitles.slice(0, 8),
+      ...(firstSnippet ? { lead: redactPrivateStrings(String(firstSnippet).replace(/\s+/g, ' ').slice(0, 110)) } : {}),
+    };
+  });
+
+  const digest = {
+    docType: 'editorial',
+    title: redactPrivateStrings(String(meta?.title || 'Sin título').slice(0, 120)),
+    subtitle: redactPrivateStrings(String(meta?.subtitle || '').slice(0, 120)),
+    author: redactPrivateStrings(String(meta?.author || '').slice(0, 80)),
+    presetId: design?.presetId || meta?.presetId || 'libro-ensayo-novela',
+    structuralNormId: design?.structuralNormId || 'libre',
+    bibliographyStyle: design?.bibliographyStyle || design?.normId || meta?.citationNorm || 'tradicional',
+    totalSections: sections.length,
+    outline,
+    tables: tables.slice(0, 20),
+    figures: figures.slice(0, 20),
+    bibliography: bibliography.slice(0, 25),
+  };
+
+  return JSON.stringify(digest);
 }

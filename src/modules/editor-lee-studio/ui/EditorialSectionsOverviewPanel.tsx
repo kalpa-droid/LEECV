@@ -4,7 +4,6 @@ import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
 import { VisibilityEyeToggle } from '../../../shared/core/ui/VisibilityEyeToggle';
-import { radius } from '../../../shared/core/uiDesignSystem';
 import {
   EDITORIAL_SECTION_CATALOG,
   createSectionFromDefinition,
@@ -182,15 +181,6 @@ export const EditorialSectionsOverviewPanel: React.FC<EditorialSectionsOverviewP
           ))}
         </ActionGrid>
       </PanelSection>
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_bibliografia')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
-        style={{ borderRadius: radius.control }}
-      >
-        Continuar a Bibliografía y Citas →
-      </button>
     </div>
   );
 };

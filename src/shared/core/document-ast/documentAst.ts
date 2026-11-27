@@ -80,13 +80,23 @@ export const DocumentASTSchema = z.object({
 
 export const SectionNodeSchema = z.object({
   sectionId: z.string(),
-  sectionKey: z.string().optional(),
-  category: z.enum(['preliminares', 'cuerpo', 'cierre', 'personalizada']).optional(),
+  sectionKey: z.string().nullish(),
+  category: z.enum(['preliminares', 'cuerpo', 'cierre', 'personalizada']).nullish(),
   title: z.string(),
-  level: z.number().int().min(1).max(4).default(1),
-  blockIds: z.array(z.string()),
-  roleOverrides: z.record(z.string(), BlockTypeSchema).optional(),
-  rationale: z.string().default(''),
+  level: z.number().int().min(1).max(4).nullish().transform((v) => v ?? 1),
+  blockIds: z.array(z.string()).nullish().transform((v) => v ?? []),
+  startBlockId: z.string().nullish(),
+  endBlockId: z.string().nullish(),
+  excludedBlockIds: z.array(z.string()).nullish(),
+  roleOverrides: z.record(z.string(), BlockTypeSchema).nullish(),
+  rationale: z.string().nullish().transform((v) => v ?? ''),
+});
+
+export const StructureAuditIssueSchema = z.object({
+  type: z.enum(['duplicate_heading', 'empty_section', 'toc_mismatch', 'missing_section']),
+  title: z.string(),
+  detail: z.string(),
+  sectionId: z.string().nullish(),
 });
 
 export const StructureAnalysisSchema = z.object({
@@ -99,18 +109,34 @@ export const StructureAnalysisSchema = z.object({
     'legal_contract',
     'other',
   ]),
-  detectedPresetId: z.string().optional(),
+  detectedPresetId: z.string().nullish(),
+  recommendedStructuralNormId: z.enum(['libre', 'apa7', 'chicago', 'mla']).nullish(),
+  recommendedBibliographyStyle: z
+    .enum(['apa7', 'vancouver', 'ieee', 'harvard', 'chicago', 'mla', 'tradicional'])
+    .nullish(),
   currentStructureScore: z.number().min(0).max(100),
   keepOriginalStructure: z.boolean(),
   extractedMetadata: z
     .object({
-      title: z.string().optional(),
-      subtitle: z.string().optional(),
-      author: z.string().optional(),
+      title: z.string().nullish(),
+      subtitle: z.string().nullish(),
+      author: z.string().nullish(),
     })
-    .optional(),
-  diagnosis: z.array(z.string()),
-  improvementSuggestions: z.array(z.string()),
+    .nullish(),
+  extractedLegalFields: z
+    .object({
+      institucion: z.string().nullish(),
+      catedra: z.string().nullish(),
+      docente: z.string().nullish(),
+      integrantes: z.string().nullish(),
+      tema: z.string().nullish(),
+    })
+    .nullish(),
+  coverBlockIds: z.array(z.string()).nullish(),
+  tocBlockIds: z.array(z.string()).nullish(),
+  auditIssues: z.array(StructureAuditIssueSchema).nullish(),
+  diagnosis: z.array(z.string()).nullish().transform((v) => v ?? []),
+  improvementSuggestions: z.array(z.string()).nullish().transform((v) => v ?? []),
   proposedSections: z.array(SectionNodeSchema),
 });
 
@@ -118,6 +144,7 @@ export type CanonicalBlockType = z.infer<typeof BlockTypeSchema>;
 export type CanonicalBlock = z.infer<typeof CanonicalBlockSchema>;
 export type DocumentAST = z.infer<typeof DocumentASTSchema>;
 export type SectionNode = z.infer<typeof SectionNodeSchema>;
+export type StructureAuditIssue = z.infer<typeof StructureAuditIssueSchema>;
 export type StructureAnalysis = z.infer<typeof StructureAnalysisSchema>;
 
 export function formatBlockId(index: number): string {
@@ -132,9 +159,12 @@ export function detectSafeDocumentMime(
 ): 'pdf' | 'docx' | 'png' | 'jpeg' | 'webp' | 'text' | null {
   if (!buf || buf.length < 4) return null;
 
-  // PDF: "%PDF" -> 25 50 44 46
-  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46) {
-    return 'pdf';
+  // PDF: "%PDF" en los primeros 1024 bytes (tolera BOM o bytes previos válidos según spec PDF)
+  const pdfSearchLimit = Math.min(buf.length - 4, 1024);
+  for (let i = 0; i <= pdfSearchLimit; i++) {
+    if (buf[i] === 0x25 && buf[i + 1] === 0x50 && buf[i + 2] === 0x44 && buf[i + 3] === 0x46) {
+      return 'pdf';
+    }
   }
   // DOCX / ODT / ZIP container: "PK\x03\x04" -> 50 4B 03 04
   if (buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 0x03 && buf[3] === 0x04) {
@@ -196,6 +226,366 @@ export async function computeSha256Hex(input: string | Uint8Array): Promise<stri
   return `${(h1 >>> 0).toString(16).padStart(8, '0')}${(h2 >>> 0).toString(16).padStart(8, '0')}`;
 }
 
+export interface ImportedTocRef {
+  title: string;
+  pageLabel?: string;
+  level: number;
+}
+
+function normalizeAstAscii(raw: string): string {
+  return String(raw || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function isHeadingLikeAstBlock(b: CanonicalBlock): boolean {
+  if (b.type === 'heading') return true;
+  if (b.type !== 'paragraph') return false;
+  const txt = (b.text || '').trim();
+  if (!txt || txt.length > 130) return false;
+  if (/^(?:\d+(?:\.\d+)?|[IVXL]{1,5})\.\s+[A-ZÁÉÍÓÚÜÑ]/.test(txt)) return true;
+  if (
+    /^(?:CAP[IÍ]TULO|UNIDAD|SECCI[ÓO]N|ANEXO|AP[ÉE]NDICE|PR[ÓO]LOGO|INTRODUCCI[ÓO]N|RESUMEN|ABSTRACT|MARCO TE[ÓO]RICO|METODOLOG[IÍ]A|RESULTADOS|DISCUSI[ÓO]N|CONCLUSI[ÓO]N(?:ES)?|BIBLIOGRAF[IÍ]A|REFERENCIAS|GLOSARIO)\b/i.test(
+      txt,
+    )
+  ) {
+    return true;
+  }
+  return Boolean(b.isBoldLead && txt.length <= 95 && !txt.endsWith('.'));
+}
+
+function inferSectionKeyFromHeading(title: string): {
+  sectionKey: string;
+  category: 'preliminares' | 'cuerpo' | 'cierre';
+} {
+  const norm = normalizeAstAscii(title).replace(/^(?:\d+(?:\.\d+)?|[ivxl]+)[.)]\s*/, '');
+  if (/^(?:prologo|prefacio)\b/.test(norm)) return { sectionKey: 'prologo', category: 'preliminares' };
+  if (/^(?:dedicatoria)\b/.test(norm)) return { sectionKey: 'dedicatoria', category: 'preliminares' };
+  if (/^(?:agradecimientos?)\b/.test(norm)) return { sectionKey: 'agradecimientos', category: 'preliminares' };
+  if (/^(?:resumen\s+ejecutivo)\b/.test(norm)) return { sectionKey: 'resumen_ejecutivo', category: 'preliminares' };
+  if (/^(?:resumen|abstract)\b/.test(norm)) return { sectionKey: 'resumen', category: 'preliminares' };
+  if (/^(?:introduccion|fundamentacion)\b/.test(norm)) return { sectionKey: 'introduccion', category: 'preliminares' };
+  if (/^(?:objetivos?|alcance)\b/.test(norm)) return { sectionKey: 'objetivos_alcance', category: 'cuerpo' };
+  if (/^(?:diagnostico)\b/.test(norm)) return { sectionKey: 'diagnostico', category: 'cuerpo' };
+  if (/^(?:marco\s+teorico|estado\s+del\s+arte|antecedentes)\b/.test(norm)) return { sectionKey: 'marco_teorico', category: 'cuerpo' };
+  if (/^(?:metodologia|materiales\s+y\s+metodos)\b/.test(norm)) return { sectionKey: 'metodologia', category: 'cuerpo' };
+  if (/^(?:resultados?)\b/.test(norm)) return { sectionKey: 'resultados', category: 'cuerpo' };
+  if (/^(?:discusion)\b/.test(norm)) return { sectionKey: 'discusion', category: 'cuerpo' };
+  if (/^(?:conclusiones?)\b/.test(norm)) return { sectionKey: 'conclusiones', category: 'cierre' };
+  if (/^(?:recomendaciones)\b/.test(norm)) return { sectionKey: 'recomendaciones', category: 'cierre' };
+  if (/^(?:epilogo)\b/.test(norm)) return { sectionKey: 'epilogo', category: 'cierre' };
+  if (/^(?:bibliografia|referencias|fuentes|obras\s+citadas)\b/.test(norm)) return { sectionKey: 'bibliografia', category: 'cierre' };
+  if (/^(?:glosario)\b/.test(norm)) return { sectionKey: 'glosario', category: 'cierre' };
+  if (/^(?:anexo|apendice)\b/.test(norm)) return { sectionKey: 'anexo', category: 'cierre' };
+  if (/^(?:unidad)\b/.test(norm)) return { sectionKey: 'unidad', category: 'cuerpo' };
+  return { sectionKey: 'capitulo', category: 'cuerpo' };
+}
+
+/**
+ * Construye un Mapa Panorámico de la obra completa (100% de la estructura en pocos miles de caracteres):
+ * - Comprime rachas largas de párrafos comunes contiguos en 1 sola línea de rango (`blk_00014..blk_00031`).
+ * - Muestra íntegros los encabezados, candidatos en negrita, tablas, imágenes/diagramas y notas.
+ * - Incluye `<imported_toc>` (si el archivo traía índice) y `<local_pre_audit>` (duplicados y huecos vacíos).
+ */
+export function buildPanoramicDocumentMap(
+  ast: DocumentAST,
+  options?: { importedTocEntries?: ImportedTocRef[]; maxSnippetChars?: number },
+): string {
+  const maxChars = options?.maxSnippetChars ?? 200;
+  const lines: string[] = [];
+  const blocks = ast.blocks;
+
+  let i = 0;
+  const headingHistory = new Map<string, string[]>();
+  const emptyCandidates: string[] = [];
+
+  while (i < blocks.length) {
+    const b = blocks[i];
+
+    if (
+      b.type === 'paragraph' &&
+      !isHeadingLikeAstBlock(b) &&
+      i + 2 < blocks.length &&
+      blocks[i + 1].type === 'paragraph' &&
+      !isHeadingLikeAstBlock(blocks[i + 1]) &&
+      blocks[i + 2].type === 'paragraph' &&
+      !isHeadingLikeAstBlock(blocks[i + 2])
+    ) {
+      let end = i + 2;
+      let totalChars = (b.text?.length || 0) + (blocks[i + 1].text?.length || 0) + (blocks[i + 2].text?.length || 0);
+      while (
+        end + 1 < blocks.length &&
+        blocks[end + 1].type === 'paragraph' &&
+        !isHeadingLikeAstBlock(blocks[end + 1])
+      ) {
+        end++;
+        totalChars += blocks[end].text?.length || 0;
+      }
+      const startText = (b.text || '').replace(/\s+/g, ' ').trim().slice(0, 95);
+      const endText = (blocks[end].text || '').replace(/\s+/g, ' ').trim().slice(0, 95);
+      lines.push(
+        `[${b.id}..${blocks[end].id}|P${b.page}-P${blocks[end].page}|PARAGRAPHS:${end - i + 1}|chars:${totalChars}] "${startText}" ... "${endText}"`,
+      );
+      i = end + 1;
+      continue;
+    }
+
+    if (b.type === 'table' && b.tableData) {
+      const hdrs = b.tableData.headers.filter(Boolean).join(', ');
+      lines.push(
+        `[${b.id}|P${b.page}|TABLE|${b.tableData.headers.length}x${b.tableData.rows.length}|headers:${hdrs}]`,
+      );
+    } else if (b.assetRef) {
+      lines.push(
+        `[${b.id}|P${b.page}|${b.type.toUpperCase()}|asset:${b.assetRef.assetId.slice(0, 14)}|desc:${b.assetRef.semanticSummary.slice(0, maxChars)}]`,
+      );
+    } else {
+      const snippet = (b.text ?? '').replace(/\s+/g, ' ').trim().slice(0, maxChars);
+      const isHead = isHeadingLikeAstBlock(b);
+      const lvl = b.headingLevel ? `H${b.headingLevel}` : isHead ? 'HEADING_CANDIDATE' : b.type.toUpperCase();
+      lines.push(`[${b.id}|P${b.page}|${lvl}] ${snippet}`);
+
+      if (isHead && snippet) {
+        const normH = normalizeAstAscii(snippet).replace(/^(?:\d+(?:\.\d+)?|[ivxl]+)[.)]\s*/, '');
+        if (normH.length >= 3) {
+          const list = headingHistory.get(normH) || [];
+          list.push(b.id);
+          headingHistory.set(normH, list);
+        }
+        const nextBlk = blocks[i + 1];
+        if (!nextBlk || isHeadingLikeAstBlock(nextBlk)) {
+          emptyCandidates.push(`${b.id} ("${snippet.slice(0, 60)}")`);
+        }
+      }
+    }
+
+    i++;
+  }
+
+  const extraSections: string[] = [];
+  if (options?.importedTocEntries && options.importedTocEntries.length > 0) {
+    const tocStr = options.importedTocEntries
+      .slice(0, 60)
+      .map((t) => `- ${t.title}${t.pageLabel ? ` (pág. ${t.pageLabel})` : ''}`)
+      .join('\n');
+    extraSections.push(`<imported_toc>\n${tocStr}\n</imported_toc>`);
+  }
+
+  const dupNotes: string[] = [];
+  for (const [hKey, ids] of headingHistory.entries()) {
+    if (ids.length > 1) {
+      dupNotes.push(`Título repetido "${hKey}" en [${ids.join(', ')}]`);
+    }
+  }
+  if (dupNotes.length > 0 || emptyCandidates.length > 0) {
+    const auditLines = [
+      ...dupNotes.map((d) => `- DUPLICADO: ${d}`),
+      ...emptyCandidates.map((e) => `- SIN_CONTENIDO: ${e}`),
+    ];
+    extraSections.push(`<local_pre_audit>\n${auditLines.join('\n')}\n</local_pre_audit>`);
+  }
+
+  return [...extraSections, lines.join('\n')].filter(Boolean).join('\n\n');
+}
+
+/**
+ * Expande rangos `startBlockId..endBlockId` (y `excludedBlockIds`) de un `SectionNode`
+ * hacia la lista exacta de IDs presentes en el AST.
+ */
+export function expandSectionNodeBlockIds(ast: DocumentAST, node: SectionNode): string[] {
+  const explicit = Array.isArray(node.blockIds) ? node.blockIds.filter(Boolean) : [];
+  if (!node.startBlockId && !node.endBlockId) {
+    return explicit;
+  }
+
+  const excluded = new Set(Array.isArray(node.excludedBlockIds) ? node.excludedBlockIds : []);
+  const startIdx = node.startBlockId
+    ? ast.blocks.findIndex((b) => b.id === node.startBlockId)
+    : -1;
+  const endIdx = node.endBlockId
+    ? ast.blocks.findIndex((b) => b.id === node.endBlockId)
+    : startIdx;
+
+  const rangeIds: string[] = [];
+  if (startIdx >= 0) {
+    const safeEnd = endIdx >= startIdx ? endIdx : startIdx;
+    for (let i = startIdx; i <= safeEnd && i < ast.blocks.length; i++) {
+      const id = ast.blocks[i].id;
+      if (!excluded.has(id)) rangeIds.push(id);
+    }
+  }
+
+  if (explicit.length === 0) return rangeIds;
+  const merged = new Set<string>(rangeIds);
+  for (const id of explicit) {
+    if (!excluded.has(id)) merged.add(id);
+  }
+  return Array.from(merged);
+}
+
+/**
+ * Respaldo determinista multi-capítulo real sobre el AST (sin aplastar en "Capítulo 1"):
+ * - Extrae metadatos de portada de página 1 (`Tema:`, `Proyecto:`, `Autor:`, etc.).
+ * - Separa cada capítulo/sección por encabezados y títulos numerados reales.
+ * - Detecta títulos duplicados, secciones vacías y diferencias contra el índice original.
+ */
+export function buildDeterministicProposalFromAst(
+  ast: DocumentAST,
+  options?: { importedTocEntries?: ImportedTocRef[] },
+): StructureAnalysis {
+  const blocks = ast.blocks;
+  const coverBlockIds: string[] = [];
+  const extractedMetadata: { title?: string; subtitle?: string; author?: string } = {};
+  const extractedLegalFields: {
+    institucion?: string;
+    catedra?: string;
+    docente?: string;
+    integrantes?: string;
+    tema?: string;
+  } = {};
+
+  let bodyStartIdx = 0;
+  while (bodyStartIdx < blocks.length && bodyStartIdx < 8 && blocks[bodyStartIdx].page === 1) {
+    const blk = blocks[bodyStartIdx];
+    const txt = (blk.text || '').trim();
+    if (!txt || blk.type !== 'paragraph') break;
+    const temaM = /^tema\s*:\s*(.+)$/i.exec(txt);
+    const proyM = /^(?:proyecto|t[ií]tulo|trabajo)\s*:\s*(.+)$/i.exec(txt);
+    const autorM = /^(?:autor(?:es)?|alumn[oa]s?|integrantes?)\s*:\s*(.+)$/i.exec(txt);
+    const docM = /^(?:docente|profesor(?:a)?|tutor(?:a)?)\s*:\s*(.+)$/i.exec(txt);
+    const instM = /^(?:instituci[oó]n|universidad|escuela|colegio|facultad)\s*:\s*(.+)$/i.exec(txt);
+    if (temaM || proyM || autorM || docM || instM) {
+      if (temaM) extractedLegalFields.tema = temaM[1].trim();
+      if (proyM && !extractedMetadata.title) extractedMetadata.title = proyM[1].trim();
+      if (autorM && !extractedMetadata.author) extractedMetadata.author = autorM[1].trim();
+      if (docM) extractedLegalFields.docente = docM[1].trim();
+      if (instM) extractedLegalFields.institucion = instM[1].trim();
+      coverBlockIds.push(blk.id);
+      bodyStartIdx++;
+      continue;
+    }
+    break;
+  }
+
+  const sections: SectionNode[] = [];
+  let curTitle = 'Contenido inicial';
+  let curKey = 'introduccion';
+  let curCat: 'preliminares' | 'cuerpo' | 'cierre' = 'preliminares';
+  let curIds: string[] = [];
+
+  const auditIssues: StructureAuditIssue[] = [];
+  const seenHeadingNorms = new Map<string, string>();
+
+  const flush = () => {
+    if (curIds.length === 0) return;
+    sections.push({
+      sectionId: `sec_det_${sections.length + 1}`,
+      sectionKey: curKey,
+      category: curCat,
+      title: curTitle,
+      level: 1,
+      blockIds: curIds,
+      rationale: 'Estructuración automática por encabezados y jerarquía del documento.',
+    });
+    curIds = [];
+  };
+
+  for (let i = bodyStartIdx; i < blocks.length; i++) {
+    const blk = blocks[i];
+    const txt = (blk.text || '').trim();
+    const isH = isHeadingLikeAstBlock(blk);
+    const isSub = blk.type === 'heading' && (blk.headingLevel || 1) >= 2 && sections.length > 0;
+
+    if (isH && !isSub && txt) {
+      const cleanTitle = txt.replace(/^#+\s*/, '').trim();
+      const normTitle = normalizeAstAscii(cleanTitle).replace(/^(?:\d+(?:\.\d+)?|[ivxl]+)[.)]\s*/, '');
+
+      if (curIds.length === 1 && isHeadingLikeAstBlock(blocks[i - 1])) {
+        auditIssues.push({
+          type: 'empty_section',
+          title: `Apartado sin contenido: "${curTitle}"`,
+          detail: 'Este título apareció sin párrafos debajo antes del siguiente apartado.',
+        });
+      }
+
+      if (seenHeadingNorms.has(normTitle) && normTitle.length >= 4) {
+        auditIssues.push({
+          type: 'duplicate_heading',
+          title: `Título repetido: "${cleanTitle}"`,
+          detail: `Coincide con "${seenHeadingNorms.get(normTitle)}". Podés unirlos o renombrar uno.`,
+        });
+      } else if (normTitle.length >= 4) {
+        seenHeadingNorms.set(normTitle, cleanTitle);
+      }
+
+      if (/^(?:\d+\.\s*)?t[ií]tulo\s+del\s+proyecto$/i.test(cleanTitle) && blocks[i + 1]?.text) {
+        const nextLine = blocks[i + 1].text!.trim();
+        if (nextLine.length <= 120 && !extractedMetadata.title) {
+          extractedMetadata.title = nextLine;
+        }
+      }
+
+      flush();
+      const inferred = inferSectionKeyFromHeading(cleanTitle);
+      curTitle = cleanTitle;
+      curKey = inferred.sectionKey;
+      curCat = inferred.category;
+      curIds = [blk.id];
+      continue;
+    }
+
+    curIds.push(blk.id);
+  }
+  flush();
+
+  if (sections.length === 0 && blocks.length > 0) {
+    sections.push({
+      sectionId: 'sec_det_1',
+      sectionKey: 'capitulo',
+      category: 'cuerpo',
+      title: extractedMetadata.title || 'Cuerpo principal',
+      level: 1,
+      blockIds: blocks.map((b) => b.id),
+      rationale: 'Preservación íntegra del contenido.',
+    });
+  }
+
+  if (options?.importedTocEntries && options.importedTocEntries.length > 0) {
+    const bodyTitlesNorm = sections.map((s) => normalizeAstAscii(s.title));
+    for (const tocItem of options.importedTocEntries) {
+      const tocNorm = normalizeAstAscii(tocItem.title);
+      if (!tocNorm || tocNorm.length < 3) continue;
+      const found = bodyTitlesNorm.some((bt) => bt.includes(tocNorm) || tocNorm.includes(bt));
+      if (!found) {
+        auditIssues.push({
+          type: 'toc_mismatch',
+          title: `Falta apartado del índice: "${tocItem.title}"`,
+          detail: 'Figura en el índice original pero no se detectó como sección en el cuerpo.',
+        });
+      }
+    }
+  }
+
+  return {
+    documentType: 'other',
+    currentStructureScore: Math.max(40, 88 - auditIssues.length * 10),
+    keepOriginalStructure: true,
+    ...(Object.keys(extractedMetadata).length > 0 ? { extractedMetadata } : {}),
+    ...(Object.keys(extractedLegalFields).length > 0 ? { extractedLegalFields } : {}),
+    ...(coverBlockIds.length > 0 ? { coverBlockIds } : {}),
+    auditIssues,
+    diagnosis:
+      auditIssues.length > 0
+        ? auditIssues.map((a) => a.title)
+        : [`Se identificaron ${sections.length} apartado(s) manteniendo el 100% del contenido.`],
+    improvementSuggestions: [],
+    proposedSections: sections,
+  };
+}
+
 /**
  * Convierte el AST en un esqueleto liviano (ahorra 80-90% de tokens)
  * preservando cada bloque y sus metadatos visuales/tabulares.
@@ -237,8 +627,16 @@ export function assertLosslessIntegrity(
   const duplicateIds: string[] = [];
   const extraIds: string[] = [];
 
+  for (const id of proposal.coverBlockIds || []) {
+    if (originalIds.has(id)) seen.add(id);
+  }
+  for (const id of proposal.tocBlockIds || []) {
+    if (originalIds.has(id)) seen.add(id);
+  }
+
   for (const sec of proposal.proposedSections) {
-    for (const id of sec.blockIds) {
+    const resolvedIds = expandSectionNodeBlockIds(ast, sec);
+    for (const id of resolvedIds) {
       if (!originalIds.has(id)) {
         extraIds.push(id);
       }
@@ -260,8 +658,8 @@ export function assertLosslessIntegrity(
 
 /**
  * Repara determinísticamente cualquier propuesta de IA para garantizar biyección 1:1 exacta:
- * elimina IDs inexistentes o duplicados e inserta todo bloque omitido junto a su predecesor contiguo
- * (o en un Anexo recuperado si estaba suelto al inicio).
+ * expande rangos `startBlockId..endBlockId`, elimina IDs inexistentes o duplicados e inserta
+ * todo bloque omitido junto a su predecesor contiguo.
  */
 export function repairProposalToLosslessBijection(
   ast: DocumentAST,
@@ -277,10 +675,18 @@ export function repairProposalToLosslessBijection(
   const seen = new Set<string>();
   const sectionOfBlock = new Map<string, number>();
 
+  for (const id of proposal.coverBlockIds || []) {
+    if (originalIds.has(id)) seen.add(id);
+  }
+  for (const id of proposal.tocBlockIds || []) {
+    if (originalIds.has(id)) seen.add(id);
+  }
+
   const repairedSections: SectionNode[] = [];
   for (const sec of proposal.proposedSections) {
+    const expandedIds = expandSectionNodeBlockIds(ast, sec);
     const cleanIds: string[] = [];
-    for (const id of sec.blockIds) {
+    for (const id of expandedIds) {
       if (!originalIds.has(id) || seen.has(id)) continue;
       seen.add(id);
       cleanIds.push(id);

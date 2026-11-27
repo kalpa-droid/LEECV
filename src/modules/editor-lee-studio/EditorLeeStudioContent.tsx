@@ -40,6 +40,7 @@ import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocument
 import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
 import { saveDocumentDraftLocal, loadDocumentById } from '../../shared/core/storage/documentStorageService';
+import { hydrateInlineAssets } from '../../shared/core/storage/localAssetStore';
 import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
@@ -47,7 +48,11 @@ import { useExportEntitlement } from '../../shared/core/entitlements/useExportEn
 import PdfCheckoutModal from '../../shared/core/studio-host/PdfCheckoutModal';
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
-import { EDITORIAL_STEP_SEQUENCE } from './domain/editorialStepSequence';
+import {
+  EDITORIAL_STEP_SEQUENCE,
+  getNextEditorialStepId,
+  getPrevEditorialStepId,
+} from './domain/editorialStepSequence';
 import { resolveSectionBadgeLabel } from './domain/editorialDockEngine';
 import {
   areTocMapsEqual,
@@ -726,7 +731,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             openedName = picked.fileName;
           }
 
-          const sanitized = sanitizeEditorialData(loadedData);
+          const hydratedData = await hydrateInlineAssets(loadedData);
+          const sanitized = sanitizeEditorialData(hydratedData);
           if (!sanitized) throw new Error('El archivo no contiene un documento editorial válido.');
           hasEditedRef.current = true;
           history.resetSeed(sanitized);
@@ -1048,28 +1054,24 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               <EditorialCoverPanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={navigateStepTab}
               />
             )}
             {activeStepTab === 'editorial_estructura' && (
               <EditorialStructurePanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={navigateStepTab}
               />
             )}
             {activeStepTab === 'editorial_diseño' && (
               <EditorialStylePanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={navigateStepTab}
               />
             )}
             {activeStepTab === 'editorial_toc' && (
               <EditorialTocPanel
                 draft={draft}
                 updateDraft={updateDraft}
-                setActiveStepTab={navigateStepTab}
                 resolvedTocMap={resolvedTocState.displayMap}
               />
             )}
@@ -1103,29 +1105,114 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[var(--ui-border)]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
-                {activeDynamicSection
-                  ? `Sección ${activeDynamicSection.badgeLabel}`
-                  : `Paso ${activeStepMeta?.stepNumber || 1} de ${EDITORIAL_STEP_SEQUENCE.length}`}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => void handleExportDocx()}
-                  className="px-3 py-2 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Word (.docx)
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportPDF}
-                  className="px-3.5 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Exportar PDF
-                </button>
-              </div>
+              {activeDynamicSection ? (
+                <>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
+                    Sección {activeDynamicSection.badgeLabel}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateStepTab('editorial_secciones')}
+                      className="px-3 py-1.5 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      ← Capítulos
+                    </button>
+                    {(() => {
+                      const allSecs: EditorialSection[] = Array.isArray(draft?.sections) ? draft.sections : [];
+                      const curIdx = allSecs.findIndex((s) => s.id === activeDynamicSection.section.id);
+                      const nextSec = curIdx >= 0 && curIdx + 1 < allSecs.length ? allSecs[curIdx + 1] : null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (nextSec) {
+                              navigateStepTab(nextSec.id);
+                              focusSectionInPreview(nextSec.id);
+                            } else {
+                              navigateStepTab('editorial_bibliografia');
+                            }
+                          }}
+                          className="px-3.5 py-1.5 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
+                          style={{ borderRadius: radius.control }}
+                        >
+                          {nextSec ? 'Siguiente cap. →' : 'Ir a Citas →'}
+                        </button>
+                      );
+                    })()}
+                  </div>
+                </>
+              ) : activeStepMeta?.id === 'editorial_toc' ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateStepTab(getPrevEditorialStepId('editorial_toc'))}
+                      className="px-2.5 py-1.5 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      ← Anterior
+                    </button>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
+                      Paso 7 de {EDITORIAL_STEP_SEQUENCE.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleExportDocx()}
+                      className="px-3 py-2 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      Word (.docx)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExportPDF}
+                      className="px-3.5 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      Exportar PDF
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
+                    Paso {activeStepMeta?.stepNumber || 1} de {EDITORIAL_STEP_SEQUENCE.length} ·{' '}
+                    {activeStepMeta?.shortLabel || 'Inicio'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {(activeStepMeta?.stepNumber || 1) > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigateStepTab(getPrevEditorialStepId(activeStepMeta?.id || 'editorial_inicio'))
+                        }
+                        className="px-3 py-1.5 text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] cursor-pointer"
+                        style={{ borderRadius: radius.control }}
+                      >
+                        ← Anterior
+                      </button>
+                    )}
+                    {(() => {
+                      const nextId = getNextEditorialStepId(activeStepMeta?.id || 'editorial_inicio');
+                      const nextMeta = EDITORIAL_STEP_SEQUENCE.find((s) => s.id === nextId);
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => navigateStepTab(nextId)}
+                          className="px-3.5 py-1.5 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
+                          style={{ borderRadius: radius.control }}
+                        >
+                          Siguiente: {nextMeta?.shortLabel || 'Continuar'} →
+                        </button>
+                      );
+                    })()}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           </ErrorBoundary>

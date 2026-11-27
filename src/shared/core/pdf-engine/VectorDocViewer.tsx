@@ -7,6 +7,7 @@ import { Preset } from './layers/presets/presetSchema';
 import { CvLayoutOverrides } from './layers/sectors/layoutResolutionEngine';
 import { markRenderAsCompleted } from './layers/presets/presetTransitionEngine';
 import { ensurePdfjsWorkerConfigured } from './pdfjsWorkerSetup';
+import { resetBrokenDynamicFonts } from './layers/typography/pdfFontRegistry';
 
 const pdfjsLib = ensurePdfjsWorkerConfigured();
 
@@ -186,7 +187,18 @@ export function VectorDocViewer({
       setLoading(true);
       setError(null);
       try {
-        const blob = await pdf(document).toBlob();
+        let blob: Blob;
+        try {
+          blob = await pdf(document).toBlob();
+        } catch (pdfErr) {
+          const msg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
+          if (/DataView|fontkit|Offset is outside|Invalid JPEG|SOI not found|Font family/i.test(msg)) {
+            resetBrokenDynamicFonts();
+            blob = await pdf(document).toBlob();
+          } else {
+            throw pdfErr;
+          }
+        }
         if (cancelled || renderTokenRef.current !== myToken) return;
 
         const arrayBuffer = await blob.arrayBuffer();

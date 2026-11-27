@@ -38,7 +38,7 @@ import { applyEditorialGlobalConfig } from '../domain/editorialNormEngine';
 import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
 import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
 import { EditorialImportReviewModal } from './EditorialImportReviewModal';
-import type { DocumentAST } from '../../../shared/core/document-ast/documentAst';
+import type { DocumentAST, StructureAuditIssue } from '../../../shared/core/document-ast/documentAst';
 import type { DocxExtractedRichBlock } from '../domain/docxClientExtractor';
 import type { EditorialPresetId, EditorialSection } from '../domain/editorialTypes';
 import { button, radius } from '../../../shared/core/uiDesignSystem';
@@ -99,6 +99,14 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
   const [pendingReview, setPendingReview] = useState<{
     sections: EditorialSection[];
     metadata: { title: string; subtitle: string; author: string };
+    legalFields?: Record<string, string>;
+    auditIssues?: StructureAuditIssue[];
+    losslessSummary?: {
+      totalBlocks: number;
+      recoveredBlocks: number;
+      preservedTables: number;
+      preservedImages: number;
+    };
   } | null>(null);
   const [showPasteBox, setShowPasteBox] = useState(false);
   const [pasteModeOnly, setPasteModeOnly] = useState(false);
@@ -166,6 +174,44 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
     showSuccess(`Tipo de obra cambiado a "${rec.detectedLabel}" conservando tu texto.`);
   };
 
+  const buildPendingReviewFromResult = (
+    result: Awaited<ReturnType<typeof structureManuscriptInChunks>>,
+  ) => {
+    if (result.sections.length === 0) {
+      throw new Error('No encontramos secciones legibles en el texto.');
+    }
+
+    const normalizedSections: EditorialSection[] = result.sections.map((s) => {
+      const { sectionKey, category } = resolveCanonicalEditorialKey(s);
+      return { ...s, sectionKey, category };
+    });
+
+    const currentTitle = coerceEditorialMetaString(draft?.metadata?.title);
+    const isDefaultTitle = !currentTitle || currentTitle === 'Mi obra' || currentTitle === 'Sin título';
+    const aiTitle = coerceEditorialMetaString(result.metadata?.title);
+    const aiSubtitle = coerceEditorialMetaString(result.metadata?.subtitle);
+    const aiAuthor = coerceEditorialMetaString(result.metadata?.author);
+
+    if (result.losslessSummary) {
+      setLosslessSummaryNote(
+        `Integridad 1:1 verificada (${result.losslessSummary.totalBlocks} bloques · ${result.losslessSummary.preservedTables} tablas · ${result.losslessSummary.preservedImages} figuras).`,
+      );
+    }
+
+    setPendingReview({
+      sections: normalizedSections,
+      metadata: {
+        title: isDefaultTitle && aiTitle ? aiTitle : aiTitle || currentTitle,
+        subtitle: aiSubtitle || coerceEditorialMetaString(draft?.metadata?.subtitle),
+        author: aiAuthor || coerceEditorialMetaString(draft?.metadata?.author),
+      },
+      legalFields: result.legalFields,
+      auditIssues: result.auditIssues,
+      losslessSummary: result.losslessSummary,
+    });
+    return normalizedSections;
+  };
+
   const handleFilesSelected = async (filesList: FileList | null) => {
     const files = filesList ? Array.from(filesList) : [];
     if (files.length === 0) return;
@@ -186,17 +232,41 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
         setSourceAst(extracted.ast);
         setAssetUrlMap(extracted.assetUrlMap);
         setImportWarnings(extracted.warnings || []);
-        setLosslessSummaryNote(
-          extracted.ast
-            ? `Despiece sin pérdidas: ${extracted.ast.blocks.length} bloques protegidos por identificador.`
-            : null,
-        );
         setPasteModeOnly(false);
-        setShowPasteBox(true);
-        showSuccess(
-          `Material leído completo (${extracted.text.length.toLocaleString('es-AR')} caracteres). Tocá "Armar capítulos" para estructurar sin perder nada.`,
-        );
-        void runInstantPresetCheck(extracted.text, files[0]?.name);
+        setShowPasteBox(false);
+
+        const [presetRec, structured] = await Promise.all([
+          detectEditorialPresetForText({
+            fullText: extracted.text,
+            currentPresetId:
+              (draft?.design?.presetId as EditorialPresetId) || DEFAULT_EDITORIAL_PRESET.id,
+            fileName: files[0]?.name,
+          }).catch(() => null),
+          structureManuscriptInChunks({
+            fullText: extracted.text,
+            sourceFormat: extracted.sourceFormat,
+            richBlocks: extracted.richBlocks,
+            importedTocEntries: extracted.importedTocEntries,
+            ast: extracted.ast,
+            assetUrlMap: extracted.assetUrlMap,
+            presetId: draft?.design?.presetId as EditorialPresetId | undefined,
+            signal: controller.signal,
+            onProgress: (upd) => setProgress(upd),
+          }),
+        ]);
+
+        if (presetRec && presetRec.recommendedPresetId !== (draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id)) {
+          setPresetRecommendation({
+            ...presetRec,
+            detectedLabel: coerceEditorialMetaString(presetRec.detectedLabel) || 'Obra detectada',
+            reason: coerceEditorialMetaString(presetRec.reason),
+          });
+        } else {
+          setPresetRecommendation(null);
+        }
+
+        const built = buildPendingReviewFromResult(structured);
+        showSuccess(`${built.length} secciones detectadas listas para revisar.`);
         return extracted;
       },
       {
@@ -210,7 +280,7 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
       setProgress(null);
     } else {
       setProgress((prev) =>
-        prev ? { ...prev, stage: 'done', message: 'Lectura completa. Listo para estructurar.' } : null,
+        prev ? { ...prev, stage: 'done', message: 'Análisis completo.' } : null,
       );
     }
     setIsBusy(false);
@@ -219,27 +289,11 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
   const handleStructureManuscript = async (): Promise<string> => {
     const raw = manuscriptText.trim();
     if (!raw) {
-      throw new Error('Subí un documento o pegá tu texto antes de estructurar.');
+      throw new Error('Pegá tu texto antes de estructurar.');
     }
 
     if (!presetRecommendation) {
       void runInstantPresetCheck(raw);
-    }
-
-    const hasExisting =
-      Array.isArray(draft?.sections) &&
-      draft.sections.some((s: any) =>
-        (s?.records || []).some((r: any) => String(r?.content || '').trim().length > 0),
-      );
-    if (hasExisting) {
-      const replaceIt = await confirm({
-        title: 'Ya tenés contenido en tu obra',
-        message:
-          '¿Querés revisar los capítulos detectados para reemplazar la estructura actual? Podés deshacerlo luego si querés.',
-        confirmText: 'Revisar importación',
-        cancelText: 'Cancelar',
-      });
-      if (!replaceIt) return '';
     }
 
     abortRef.current?.abort();
@@ -258,37 +312,8 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
         onProgress: (upd) => setProgress(upd),
       });
 
-      if (result.sections.length === 0) {
-        throw new Error('No encontramos secciones legibles en el texto.');
-      }
-
-      const normalizedSections: EditorialSection[] = result.sections.map((s) => {
-        const { sectionKey, category } = resolveCanonicalEditorialKey(s);
-        return { ...s, sectionKey, category };
-      });
-
-      const currentTitle = coerceEditorialMetaString(draft?.metadata?.title);
-      const isDefaultTitle = !currentTitle || currentTitle === 'Mi obra' || currentTitle === 'Sin título';
-      const aiTitle = coerceEditorialMetaString(result.metadata?.title);
-      const aiSubtitle = coerceEditorialMetaString(result.metadata?.subtitle);
-      const aiAuthor = coerceEditorialMetaString(result.metadata?.author);
-
-      if (result.losslessSummary) {
-        setLosslessSummaryNote(
-          `Integridad 1:1 verificada (${result.losslessSummary.totalBlocks} bloques · ${result.losslessSummary.preservedTables} tablas · ${result.losslessSummary.preservedImages} figuras).`,
-        );
-      }
-
-      setPendingReview({
-        sections: normalizedSections,
-        metadata: {
-          title: isDefaultTitle && aiTitle ? aiTitle : currentTitle,
-          subtitle: aiSubtitle || coerceEditorialMetaString(draft?.metadata?.subtitle),
-          author: aiAuthor || coerceEditorialMetaString(draft?.metadata?.author),
-        },
-      });
-
-      return `${normalizedSections.length} secciones listas para revisar`;
+      const built = buildPendingReviewFromResult(result);
+      return `${built.length} secciones listas para revisar`;
     } finally {
       setIsBusy(false);
     }
@@ -539,27 +564,16 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
           </div>
         )}
 
-        {(showPasteBox || manuscriptText.length > 0) && (
+        {pasteModeOnly && showPasteBox && (
           <div className="space-y-2 pt-1">
-            {losslessSummaryNote && !pasteModeOnly && (
-              <p className="text-[11px] font-semibold text-[var(--color-status-success-text)]">
-                {losslessSummaryNote}
-              </p>
-            )}
-            {pasteModeOnly ? (
-              <Field
-                as="textarea"
-                rows={6}
-                label="Texto del manuscrito"
-                value={manuscriptText}
-                onChange={(e: any) => setManuscriptText(e.target.value)}
-                placeholder="Pegá acá tus apuntes o borrador completo y tocá Armar capítulos..."
-              />
-            ) : (
-              <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                Archivo listo ({manuscriptText.length.toLocaleString('es-AR')} caracteres). Tocá el botón para organizar capítulos sin modificar tus palabras ni tablas.
-              </p>
-            )}
+            <Field
+              as="textarea"
+              rows={6}
+              label="Texto del manuscrito"
+              value={manuscriptText}
+              onChange={(e: any) => setManuscriptText(e.target.value)}
+              placeholder="Pegá acá tus apuntes o borrador completo y tocá Armar capítulos..."
+            />
             <div className="flex flex-wrap items-center gap-2">
               <AIButton
                 onGenerate={handleStructureManuscript}
@@ -638,26 +652,51 @@ export const EditorialInicioArchivoPanel: React.FC<EditorialInicioArchivoPanelPr
           isOpen={true}
           sourceChars={manuscriptText.replace(/\s+/g, '').length}
           initialMetadata={pendingReview.metadata}
+          initialLegalFields={pendingReview.legalFields}
           initialSections={pendingReview.sections}
+          existingSections={Array.isArray(draft?.sections) ? draft.sections : []}
+          presetRecommendation={presetRecommendation}
+          auditIssues={pendingReview.auditIssues}
+          losslessSummary={pendingReview.losslessSummary}
           warnings={[
             ...(losslessSummaryNote ? [losslessSummaryNote] : []),
             ...importWarnings,
           ]}
           onCancel={() => setPendingReview(null)}
-          onConfirm={({ metadata, sections }) => {
-            updateDraft((prev) => ({
-              ...prev,
-              metadata: {
-                ...(prev?.metadata || {}),
-                title: metadata.title || prev?.metadata?.title || 'Mi obra',
-                subtitle: metadata.subtitle,
-                author: metadata.author || prev?.metadata?.author || '',
-              },
-              sections,
-            }));
+          onConfirm={({ metadata, legalFields, sections, applyMetadata, applyDetectedPreset }) => {
+            updateDraft((prev) => {
+              let next = {
+                ...prev,
+                ...(applyMetadata
+                  ? {
+                      metadata: {
+                        ...(prev?.metadata || {}),
+                        title: metadata.title || prev?.metadata?.title || 'Mi obra',
+                        subtitle: metadata.subtitle,
+                        author: metadata.author || prev?.metadata?.author || '',
+                      },
+                      ...(legalFields && Object.keys(legalFields).length > 0
+                        ? { legalFields: { ...(prev?.legalFields || {}), ...legalFields } }
+                        : {}),
+                    }
+                  : {}),
+                sections,
+              };
+              if (applyDetectedPreset && presetRecommendation) {
+                next = applyEditorialGlobalConfig(next, {
+                  presetId: presetRecommendation.recommendedPresetId,
+                  presetMode: 'apply-design',
+                  structuralNormId: presetRecommendation.recommendedStructuralNormId,
+                  bibliographyStyle: presetRecommendation.recommendedBibliographyStyle,
+                  applyMode: 'preserve-manual',
+                });
+              }
+              return next;
+            });
             const firstId = sections[0]?.id;
             setPendingReview(null);
-            showSuccess(`Listo: ${sections.length} secciones creadas con tu contenido intacto.`);
+            setPresetRecommendation(null);
+            showSuccess(`Listo: ${sections.length} secciones aplicadas con tu contenido intacto.`);
             if (firstId) setActiveStepTab(firstId);
           }}
         />
