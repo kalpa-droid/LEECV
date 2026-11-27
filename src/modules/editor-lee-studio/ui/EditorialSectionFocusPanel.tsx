@@ -23,9 +23,14 @@ import {
   extractInlineCitationTokens,
   formatInlineCitation,
   normalizeBibliographyStyle,
-  resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import {
+  buildEditorialCrossRefGraph,
+  buildInlineRefToken,
+  extractInlineRefTokens,
+  resolveAllEditorialInlineTokens,
+} from '../domain/editorialCrossRefEngine';
 import { CleanBlockCanvas } from './chapter-editor/CleanBlockCanvas';
 import {
   SectionProofreadDrawer,
@@ -108,6 +113,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
   const [showParticularSettings, setShowParticularSettings] = useState(false);
   const [pendingSuggestions, setPendingSuggestions] = useState<Record<string, string>>({});
   const [citePickerRecordId, setCitePickerRecordId] = useState<string | null>(null);
+  const [citePickerMode, setCitePickerMode] = useState<'sources' | 'elements'>('sources');
   const [showQuickSourceForm, setShowQuickSourceForm] = useState(false);
   const [quickLocator, setQuickLocator] = useState('');
   const [quickAuthor, setQuickAuthor] = useState('');
@@ -134,6 +140,10 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
   );
   const appearanceOrderMap = useMemo(
     () => computeCitationAppearanceOrder(allSections),
+    [allSections],
+  );
+  const crossRefGraph = useMemo(
+    () => buildEditorialCrossRefGraph(allSections),
     [allSections],
   );
 
@@ -415,11 +425,17 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
 
   const renderCitePickerForRecord = (rec: EditorialRecord) => {
     const tokens = extractInlineCitationTokens(rec.content || '');
+    const refTokens = extractInlineRefTokens(rec.content || '');
+    const crossRefItems = [
+      ...crossRefGraph.tables,
+      ...crossRefGraph.figures,
+      ...crossRefGraph.annexes,
+    ];
     if (sectionKey === 'bibliografia') return null;
 
     return (
       <div className="space-y-1.5">
-        {tokens.length > 0 && (
+        {(tokens.length > 0 || refTokens.length > 0) && (
           <div className="flex flex-wrap items-center gap-1">
             {tokens.map((tok, ti) => {
               const targetBib = bibMap.get(tok.bibId);
@@ -452,8 +468,37 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                 </span>
               );
             })}
+            {refTokens.map((rt, rti) => {
+              const target = crossRefGraph.byTargetId.get(rt.targetId);
+              const label = target ? target.label : '[Ref. pendiente]';
+              return (
+                <span
+                  key={`${rt.rawToken}-${rti}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] text-[10px] font-semibold text-[var(--color-accent-text)]"
+                >
+                  <span>{label}</span>
+                  <button
+                    type="button"
+                    aria-label="Quitar esta referencia cruzada del texto"
+                    onClick={() => {
+                      handleUpdateRecord(rec.id, {
+                        content: (rec.content || '').replace(rt.rawToken, '').replace(/\s{2,}/g, ' ').trim(),
+                      });
+                    }}
+                    className="text-[var(--color-status-danger-text)] cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
             <span className="text-[10px] text-[var(--ui-text-secondary)] truncate max-w-[200px]">
-              {resolveInlineCitationsInText(rec.content || '', bibMap, activeBibStyle, appearanceOrderMap).slice(0, 48)}
+              {resolveAllEditorialInlineTokens(rec.content || '', {
+                bibMap,
+                bibStyle: activeBibStyle,
+                appearanceOrderMap,
+                crossRefGraph,
+              }).slice(0, 56)}
             </span>
           </div>
         )}
@@ -463,101 +508,161 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             className="p-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2"
             style={{ borderRadius: radius.control }}
           >
-            <div className="flex items-center justify-between gap-2">
-              <input
-                type="text"
-                value={quickLocator}
-                onChange={(e) => setQuickLocator(e.target.value)}
-                placeholder="Página opcional (ej: p. 42)"
-                className="flex-1 min-w-0 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
-                style={{ borderRadius: radius.control }}
-              />
+            <div className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-[var(--ui-border)]">
               <button
                 type="button"
-                onClick={() => setShowQuickSourceForm((v) => !v)}
-                className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] cursor-pointer"
+                onClick={() => setCitePickerMode('sources')}
+                className={`px-2 py-1 text-[11px] font-bold border cursor-pointer ${
+                  citePickerMode === 'sources'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]'
+                    : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)]'
+                }`}
                 style={{ borderRadius: radius.control }}
               >
-                <Plus className="w-3 h-3" /> Nueva fuente
+                Fuentes ({bibItems.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCitePickerMode('elements');
+                  setShowQuickSourceForm(false);
+                }}
+                className={`px-2 py-1 text-[11px] font-bold border cursor-pointer ${
+                  citePickerMode === 'elements'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]'
+                    : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)]'
+                }`}
+                style={{ borderRadius: radius.control }}
+              >
+                Tablas, Figuras y Anexos ({crossRefItems.length})
               </button>
             </div>
 
-            {!showQuickSourceForm ? (
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {bibItems.length === 0 ? (
+            {citePickerMode === 'elements' ? (
+              <div className="max-h-36 overflow-y-auto space-y-1">
+                {crossRefItems.length === 0 ? (
                   <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                    No hay fuentes cargadas aún. Tocá <strong>+ Nueva fuente</strong> arriba.
+                    Todavía no hay tablas, imágenes o anexos en los capítulos.
                   </p>
                 ) : (
-                  bibItems.map((bibItem) => (
+                  crossRefItems.map((target) => (
                     <button
-                      key={bibItem.id}
+                      key={`${target.kind}-${target.targetId}`}
                       type="button"
                       onClick={() => {
-                        insertTokenIntoRecord(rec, buildInlineCiteToken(bibItem.id, quickLocator));
-                        setQuickLocator('');
+                        insertTokenIntoRecord(rec, buildInlineRefToken(target.targetId));
                         setCitePickerRecordId(null);
                       }}
-                      className="w-full text-left px-2 py-1 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] flex justify-between gap-2 cursor-pointer"
+                      className="w-full text-left px-2 py-1 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] flex justify-between gap-2 cursor-pointer hover:border-[var(--color-accent-base)]"
                       style={{ borderRadius: radius.control }}
                     >
-                      <span className="truncate">{bibItem.bibAuthor || 'Autor'} ({bibItem.bibYear || 's. f.'})</span>
-                      <span className="font-bold text-[var(--color-accent-text)]">
-                        {formatInlineCitation(bibItem, activeBibStyle, appearanceOrderMap.get(bibItem.id), quickLocator)}
+                      <span className="font-bold text-[var(--color-accent-text)]">{target.label}</span>
+                      <span className="truncate text-[var(--ui-text-secondary)]">
+                        {target.cleanTitle || target.sectionTitle}
                       </span>
                     </button>
                   ))
                 )}
               </div>
             ) : (
-              <div className="space-y-1.5">
-                <div className="grid grid-cols-3 gap-1.5">
+              <>
+                <div className="flex items-center justify-between gap-2">
                   <input
                     type="text"
-                    value={quickAuthor}
-                    onChange={(e) => setQuickAuthor(e.target.value)}
-                    placeholder="Autor"
-                    className="col-span-2 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    value={quickLocator}
+                    onChange={(e) => setQuickLocator(e.target.value)}
+                    placeholder="Página opcional (ej: p. 42)"
+                    className="flex-1 min-w-0 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
                     style={{ borderRadius: radius.control }}
                   />
-                  <input
-                    type="text"
-                    value={quickYear}
-                    onChange={(e) => setQuickYear(e.target.value)}
-                    placeholder="Año"
-                    className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
-                    style={{ borderRadius: radius.control }}
-                  />
-                </div>
-                <div className="flex gap-1.5">
-                  <input
-                    type="text"
-                    value={quickTitle}
-                    onChange={(e) => setQuickTitle(e.target.value)}
-                    placeholder="Título del libro o artículo"
-                    className="flex-1 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
-                    style={{ borderRadius: radius.control }}
-                  />
-                  <select
-                    value={quickSourceType}
-                    onChange={(e) => setQuickSourceType(e.target.value as any)}
-                    className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickSourceForm((v) => !v)}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] cursor-pointer"
                     style={{ borderRadius: radius.control }}
                   >
-                    <option value="libro">Libro</option>
-                    <option value="articulo">Artículo</option>
-                    <option value="web">Web</option>
-                  </select>
+                    <Plus className="w-3 h-3" /> Nueva fuente
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleQuickAddAndCite(rec)}
-                  className="px-2.5 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[11px] font-bold cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Guardar y citar
-                </button>
-              </div>
+
+                {!showQuickSourceForm ? (
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {bibItems.length === 0 ? (
+                      <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                        No hay fuentes cargadas aún. Tocá <strong>+ Nueva fuente</strong> arriba.
+                      </p>
+                    ) : (
+                      bibItems.map((bibItem) => (
+                        <button
+                          key={bibItem.id}
+                          type="button"
+                          onClick={() => {
+                            insertTokenIntoRecord(rec, buildInlineCiteToken(bibItem.id, quickLocator));
+                            setQuickLocator('');
+                            setCitePickerRecordId(null);
+                          }}
+                          className="w-full text-left px-2 py-1 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] flex justify-between gap-2 cursor-pointer"
+                          style={{ borderRadius: radius.control }}
+                        >
+                          <span className="truncate">{bibItem.bibAuthor || 'Autor'} ({bibItem.bibYear || 's. f.'})</span>
+                          <span className="font-bold text-[var(--color-accent-text)]">
+                            {formatInlineCitation(bibItem, activeBibStyle, appearanceOrderMap.get(bibItem.id), quickLocator)}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <input
+                        type="text"
+                        value={quickAuthor}
+                        onChange={(e) => setQuickAuthor(e.target.value)}
+                        placeholder="Autor"
+                        className="col-span-2 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                        style={{ borderRadius: radius.control }}
+                      />
+                      <input
+                        type="text"
+                        value={quickYear}
+                        onChange={(e) => setQuickYear(e.target.value)}
+                        placeholder="Año"
+                        className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                        style={{ borderRadius: radius.control }}
+                      />
+                    </div>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={quickTitle}
+                        onChange={(e) => setQuickTitle(e.target.value)}
+                        placeholder="Título del libro o artículo"
+                        className="flex-1 px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                        style={{ borderRadius: radius.control }}
+                      />
+                      <select
+                        value={quickSourceType}
+                        onChange={(e) => setQuickSourceType(e.target.value as any)}
+                        className="px-2 py-1 text-[11px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                        style={{ borderRadius: radius.control }}
+                      >
+                        <option value="libro">Libro</option>
+                        <option value="articulo">Artículo</option>
+                        <option value="web">Web</option>
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAddAndCite(rec)}
+                      className="px-2.5 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[11px] font-bold cursor-pointer"
+                      style={{ borderRadius: radius.control }}
+                    >
+                      Guardar y citar
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -796,6 +901,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             bibMap={bibMap}
             activeBibStyle={activeBibStyle}
             appearanceOrderMap={appearanceOrderMap}
+            crossRefGraph={crossRefGraph}
             pendingSuggestions={pendingSuggestions}
             onFocusRecord={setFocusedRecordId}
             onUpdateRecord={handleUpdateRecord}
@@ -826,6 +932,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             }}
             onOpenCitePicker={(recId) => {
               setCitePickerRecordId((curr) => (curr === recId ? null : recId));
+              setCitePickerMode('sources');
               setShowQuickSourceForm(false);
             }}
             renderCitePickerForRecord={renderCitePickerForRecord}

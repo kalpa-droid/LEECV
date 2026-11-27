@@ -28,6 +28,7 @@ import {
   repairProposalToLosslessBijection,
 } from '../../../shared/core/document-ast/documentAst';
 import type { EditorialPresetId, EditorialSection } from './editorialTypes';
+import { enrichImportedSectionsWithReferences } from './editorialCrossRefEngine';
 import {
   buildSectionsFromDocxRichBlocks,
   heuristicSplitManuscript,
@@ -683,15 +684,16 @@ export async function structureManuscriptInChunks(params: {
           }
         }
       });
-      onPartialSections?.(richSections, meta);
+      const enrichedDocx = enrichImportedSectionsWithReferences(richSections);
+      onPartialSections?.(enrichedDocx.sections, meta);
       onProgress?.({
         stage: 'done',
         current: 1,
         total: 1,
-        message: `Listo: ${richSections.length} capítulos/apartados con tablas, imágenes y 100% del texto conservado.`,
+        message: `Listo: ${enrichedDocx.sections.length} capítulos/apartados con tablas, imágenes y 100% del texto conservado.`,
       });
       return {
-        sections: richSections,
+        sections: enrichedDocx.sections,
         metadata: meta,
         usedFallbackForChunks: 0,
         ...(docxAudit.length > 0 ? { auditIssues: docxAudit } : {}),
@@ -849,11 +851,17 @@ export async function structureManuscriptInChunks(params: {
     }
   }
 
-  const finalSections = mergedProposal
+  const rawFinalSections = mergedProposal
     ? (reconstructEditorialSectionsFromAst(workingAst, mergedProposal, {
         assetUrlMap,
       }) as unknown as EditorialSection[])
     : mergeEditorialChunkedSections([], heuristicSplitManuscript(fullText));
+
+  const enrichedFinal = enrichImportedSectionsWithReferences(
+    rawFinalSections,
+    mergedProposal?.recommendedBibliographyStyle ?? undefined,
+  );
+  const finalSections = enrichedFinal.sections;
 
   onProgress?.({
     stage: 'done',

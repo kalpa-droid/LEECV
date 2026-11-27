@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 13,
+  minor: 14,
   patch: 0,
-  label: 'V3.13.0',
+  label: 'V3.14.0',
   lastUpdated: '2026-11-27',
   lastAgent: '@antigravity',
-  stage: 'feat(editorial): V3.13.0 — Desarme nativo geométrico/XML + IA híbrida sin pérdidas (Word/ODT/PDF), Mapa Estructural con conciencia global de obra, fusión granular y flujo coherente de 7 pasos.',
+  stage: 'feat(editorial): V3.14.0 — Grafo vivo de referencias cruzadas (Tabla N, Figura N, Anexo A + auto-citas APA/Vancouver/IEEE) y diferenciación visual de interiores por plantilla y paleta.',
 } as const;

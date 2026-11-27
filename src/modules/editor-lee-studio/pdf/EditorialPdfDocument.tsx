@@ -33,9 +33,15 @@ import {
   collectBibliographyFromSections,
   computeCitationAppearanceOrder,
   formatEditorialCitation,
-  resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import {
+  buildEditorialCrossRefGraph,
+  formatAnnexSectionDisplayTitle,
+  formatNormativeElementCaption,
+  resolveAllEditorialInlineTokens,
+} from '../domain/editorialCrossRefEngine';
+import { resolveEditorialInteriorTheme } from './editorialInteriorTheme';
 import { resolveEditorialNormMetrics } from '../domain/editorialNormEngine';
 import {
   resolveEffectiveEditorialPagination,
@@ -53,6 +59,8 @@ import {
 } from '../domain/editorialTocResolver';
 import {
   EditorialCalloutBlock,
+  EditorialDiamondSeparator,
+  EditorialElementCaptionText,
   EditorialEpigraphBlock,
   EditorialFigurePlaceholderBlock,
   EditorialFootnoteListBlock,
@@ -192,6 +200,12 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   const normMetrics = resolveEditorialNormMetrics({ ...data, design: rawDesign });
   const pagination = resolveEffectiveEditorialPagination({ ...data, design: rawDesign });
   const effectiveStructuralNorm = normMetrics.structuralNormId;
+  const interiorTheme = resolveEditorialInteriorTheme({
+    presetId: pdfPreset.id,
+    design: rawDesign,
+    cover: data?.cover,
+    structuralNormId: effectiveStructuralNorm,
+  });
 
   const usePrelimRoman = pagination.preliminaryRomanNumerals;
   const preventRunts = rawDesign.preventRunts !== false;
@@ -208,9 +222,15 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
   const syncedVisibleSections = syncSectionsBibliographyOrder(visibleSections, activeBibStyle);
   const { map: bibMap } = collectBibliographyFromSections(syncedVisibleSections);
   const appearanceMap = computeCitationAppearanceOrder(syncedVisibleSections);
+  const crossRefGraph = buildEditorialCrossRefGraph(syncedVisibleSections);
 
   const resolveRecordText = (rawText: string) =>
-    resolveInlineCitationsInText(rawText, bibMap, activeBibStyle, appearanceMap);
+    resolveAllEditorialInlineTokens(rawText, {
+      bibMap,
+      bibStyle: activeBibStyle,
+      appearanceOrderMap: appearanceMap,
+      crossRefGraph,
+    });
 
   const cleanBookTitle = stripTrailingHeaderPunctuation(
     sanitizeEditorialText(data?.metadata?.title || 'Mi obra', { targetFontIsUnicode: isUnicodeFont }),
@@ -286,21 +306,21 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       fontSize: 9.5,
       letterSpacing: 1.4,
       textTransform: 'uppercase',
-      color: '#475569',
+      color: interiorTheme.kickerColor,
       marginBottom: 4,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: interiorTheme.archetype === 'literario' ? 19 : interiorTheme.archetype === 'academico_formal' ? 15 : 17,
       ...fontStyles.bold,
-      marginTop: 6,
+      marginTop: 4,
       marginBottom: 8,
-      color: '#0F172A',
+      color: interiorTheme.headingColor,
       lineHeight: 1.22,
     },
     subtitle: {
-      ...fontStyles.bold,
+      ...(interiorTheme.subtitleVariant === 'literary_italic' ? fontStyles.italic : fontStyles.bold),
       fontSize: Math.round(resolvedFontSize * 1.18),
-      color: '#1E293B',
+      color: interiorTheme.subtitleVariant === 'apa_flush_bold' ? '#111827' : interiorTheme.subtitleColor,
       marginTop: 12,
       marginBottom: 5,
       lineHeight: 1.28,
@@ -315,12 +335,12 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       color: '#111827',
     },
     quoteWrap: {
-      borderLeftWidth: 2.5,
-      borderLeftColor: '#94A3B8',
-      backgroundColor: '#F8FAFC',
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      marginLeft: effectiveStructuralNorm !== 'libre' ? 36 : 16,
+      borderLeftWidth: interiorTheme.quoteVariant === 'apa_indented_clean' ? 0 : interiorTheme.quoteVariant === 'accent_card' ? 3 : 1.5,
+      borderLeftColor: interiorTheme.quoteVariant === 'accent_card' ? interiorTheme.accentColor : interiorTheme.ruleColor,
+      backgroundColor: interiorTheme.quoteVariant === 'accent_card' ? interiorTheme.tintBgColor : '#FFFFFF',
+      paddingVertical: interiorTheme.quoteVariant === 'apa_indented_clean' ? 4 : 8,
+      paddingHorizontal: interiorTheme.quoteVariant === 'apa_indented_clean' ? 0 : 12,
+      marginLeft: effectiveStructuralNorm !== 'libre' ? 36 : 20,
       marginVertical: 9,
     },
     bibItemWrap: {
@@ -334,7 +354,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
     },
     sectionDivider: {
       borderTopWidth: 1,
-      borderTopColor: '#E2E8F0',
+      borderTopColor: interiorTheme.ruleColor,
       marginTop: 6,
       marginBottom: 14,
     },
@@ -403,14 +423,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       coverMode={model.cover.mode}
       coverStyleId={model.cover.coverStyleId || rawDesign.coverStyleId || pdfPreset.coverStyleId}
       coverPaletteKey={model.cover.coverPaletteKey || rawDesign.coverPaletteKey || pdfPreset.coverPaletteKey}
-      fallbackPalette={{
-        primary: '#1E293B',
-        secondary: '#475569',
-        accent: '#0F172A',
-        text: '#0F172A',
-        textOnPrimary: '#FFFFFF',
-        background: '#FFFFFF',
-      }}
+      fallbackPalette={interiorTheme.palette}
       title={coverTitleText}
       subtitle={coverSubtitleText}
       author={coverAuthorText}
@@ -451,6 +464,12 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
 
       {tocListedSections.map((section, si) => {
         const pageLabel = resolvedTocMap?.[section.id] || String(si + (showCover ? 3 : 2));
+        const annexTocTarget = crossRefGraph.byTargetId.get(section.id);
+        const rawTocTitle = section.title || `Sección ${si + 1}`;
+        const displayTocTitle =
+          annexTocTarget?.kind === 'annex'
+            ? formatAnnexSectionDisplayTitle(rawTocTitle, annexTocTarget)
+            : rawTocTitle;
         const subtitleRecords =
           model.tocConfig.showSubtitles !== false
             ? section.records.filter((r) => r.type === 'subtitle' && (r.content || '').trim())
@@ -469,7 +488,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
             >
               <Text style={[fontStyles.bold, { fontSize: 11, color: '#0F172A' }]}>
                 {stripTrailingHeaderPunctuation(
-                  sanitizeEditorialText(section.title || `Sección ${si + 1}`, {
+                  sanitizeEditorialText(displayTocTitle, {
                     targetFontIsUnicode: isUnicodeFont,
                   }),
                 )}
@@ -589,6 +608,17 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
         });
         const imgWidthPt = Math.max(80, Math.round((colUsableWidthPt * imgPct) / 100));
         const isLeft = record.imageLayoutMode === 'wrap-left';
+        const wrapFigTarget = crossRefGraph.byTargetId.get(record.id);
+        const wrapFigCaption = formatNormativeElementCaption(
+          'figure',
+          wrapFigTarget,
+          record.imageCaption,
+          {
+            structuralNormId: effectiveStructuralNorm,
+            bibliographyStyle: activeBibStyle,
+            interiorArchetype: interiorTheme.archetype,
+          },
+        );
 
         elements.push(
           <React.Fragment key={key}>
@@ -602,13 +632,29 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               }}
             >
               <View style={{ width: imgWidthPt }}>
+                {wrapFigCaption.placement === 'above' && wrapFigCaption.shouldRender ? (
+                  <EditorialElementCaptionText
+                    caption={wrapFigCaption}
+                    fontStyles={fontStyles}
+                    isUnicodeFont={isUnicodeFont}
+                    fontSize={9}
+                    align="center"
+                    marginBottom={4}
+                  />
+                ) : null}
                 {isRenderablePdfImageSrc(record.imagePath) ? (
                   <Image style={{ width: '100%', objectFit: 'contain' }} src={record.imagePath} />
                 ) : null}
-                {record.imageCaption ? (
-                  <Text style={styles.imageCaption}>
-                    {sanitizeEditorialText(record.imageCaption, { targetFontIsUnicode: isUnicodeFont })}
-                  </Text>
+                {wrapFigCaption.placement === 'below' && wrapFigCaption.shouldRender ? (
+                  <EditorialElementCaptionText
+                    caption={wrapFigCaption}
+                    fontStyles={fontStyles}
+                    isUnicodeFont={isUnicodeFont}
+                    fontSize={9}
+                    align="center"
+                    marginTop={4}
+                    marginBottom={0}
+                  />
                 ) : null}
               </View>
               <View style={{ flex: 1 }}>
@@ -663,7 +709,24 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           break;
         }
 
-        case 'subtitle':
+        case 'subtitle': {
+          const subtitleNode = (
+            <Text
+              minPresenceAhead={48}
+              style={[
+                styles.subtitle,
+                record.subtitleLevel === 3
+                  ? { fontSize: Math.round(resolvedFontSize * 1.06), color: interiorTheme.subtitleColor }
+                  : {},
+              ]}
+            >
+              {stripTrailingHeaderPunctuation(
+                sanitizeEditorialText(resolveRecordText(record.content || ''), {
+                  targetFontIsUnicode: isUnicodeFont,
+                }),
+              )}
+            </Text>
+          );
           elements.push(
             <View
               key={key}
@@ -671,24 +734,32 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               minPresenceAhead={52}
             >
               <TocMarker id={`${sectionId}-${record.id}`} emit={emitTocAnchors} />
-              <Text
-                minPresenceAhead={48}
-                style={[
-                  styles.subtitle,
-                  record.subtitleLevel === 3
-                    ? { fontSize: Math.round(resolvedFontSize * 1.06), color: '#334155' }
-                    : {},
-                ]}
-              >
-                {stripTrailingHeaderPunctuation(
-                  sanitizeEditorialText(resolveRecordText(record.content || ''), {
-                    targetFontIsUnicode: isUnicodeFont,
-                  }),
-                )}
-              </Text>
+              {interiorTheme.subtitleVariant === 'accent_left_tick' ? (
+                <View style={{ borderLeftWidth: 2.5, borderLeftColor: interiorTheme.accentColor, paddingLeft: 7, marginTop: 10, marginBottom: 4 }}>
+                  <Text
+                    minPresenceAhead={48}
+                    style={[
+                      styles.subtitle,
+                      { marginTop: 0, marginBottom: 0 },
+                      record.subtitleLevel === 3
+                        ? { fontSize: Math.round(resolvedFontSize * 1.06), color: interiorTheme.subtitleColor }
+                        : {},
+                    ]}
+                  >
+                    {stripTrailingHeaderPunctuation(
+                      sanitizeEditorialText(resolveRecordText(record.content || ''), {
+                        targetFontIsUnicode: isUnicodeFont,
+                      }),
+                    )}
+                  </Text>
+                </View>
+              ) : (
+                subtitleNode
+              )}
             </View>,
           );
           break;
+        }
 
         case 'quote':
           elements.push(
@@ -759,16 +830,30 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           );
           break;
 
-        case 'figure_placeholder':
+        case 'figure_placeholder': {
+          const phTarget = crossRefGraph.byTargetId.get(record.id);
+          const phCaption = formatNormativeElementCaption(
+            'figure',
+            phTarget,
+            record.figureCaption,
+            {
+              structuralNormId: effectiveStructuralNorm,
+              bibliographyStyle: activeBibStyle,
+              interiorArchetype: interiorTheme.archetype,
+            },
+          );
           elements.push(
             <EditorialFigurePlaceholderBlock
               key={key}
               record={record}
               fontStyles={fontStyles}
               isUnicodeFont={isUnicodeFont}
+              accentColor={interiorTheme.accentColor}
+              formattedCaption={phCaption}
             />,
           );
           break;
+        }
 
         case 'footnote_list':
           elements.push(
@@ -814,7 +899,18 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           break;
         }
 
-        case 'table':
+        case 'table': {
+          const tblTarget = crossRefGraph.byTargetId.get(record.id);
+          const tblCaption = formatNormativeElementCaption(
+            'table',
+            tblTarget,
+            record.tableCaption,
+            {
+              structuralNormId: effectiveStructuralNorm,
+              bibliographyStyle: activeBibStyle,
+              interiorArchetype: interiorTheme.archetype,
+            },
+          );
           elements.push(
             <EditorialTableBlock
               key={key}
@@ -823,9 +919,16 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               isUnicodeFont={isUnicodeFont}
               baseFontSize={resolvedFontSize}
               sectionColumns={sectionCols}
+              accentColor={interiorTheme.accentColor}
+              headerBgColor={interiorTheme.tableHeaderBg}
+              headerTextColor={interiorTheme.tableHeaderText}
+              tableVariant={interiorTheme.tableVariant}
+              formattedCaption={tblCaption}
+              cellTextResolver={resolveRecordText}
             />,
           );
           break;
+        }
 
         case 'image': {
           const primaryValid = isRenderablePdfImageSrc(record.imagePath);
@@ -837,8 +940,30 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
             break;
           }
 
+          const figTarget = crossRefGraph.byTargetId.get(record.id);
+          const figCaption = formatNormativeElementCaption(
+            'figure',
+            figTarget,
+            record.imageCaption,
+            {
+              structuralNormId: effectiveStructuralNorm,
+              bibliographyStyle: activeBibStyle,
+              interiorArchetype: interiorTheme.archetype,
+            },
+          );
+
           elements.push(
             <View key={key} wrap={false} style={{ alignItems: 'center', marginVertical: 10 }}>
+              {figCaption.placement === 'above' && figCaption.shouldRender ? (
+                <EditorialElementCaptionText
+                  caption={figCaption}
+                  fontStyles={fontStyles}
+                  isUnicodeFont={isUnicodeFont}
+                  fontSize={9}
+                  align="center"
+                  marginBottom={5}
+                />
+              ) : null}
               {secondaryValid && primaryValid ? (
                 <View style={{ flexDirection: 'row', gap: 10, width: colUsableWidthPt, alignItems: 'center' }}>
                   <Image
@@ -856,10 +981,16 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
                   src={record.imagePath!}
                 />
               ) : null}
-              {record.imageCaption ? (
-                <Text style={styles.imageCaption}>
-                  {sanitizeEditorialText(record.imageCaption, { targetFontIsUnicode: isUnicodeFont })}
-                </Text>
+              {figCaption.placement === 'below' && figCaption.shouldRender ? (
+                <EditorialElementCaptionText
+                  caption={figCaption}
+                  fontStyles={fontStyles}
+                  isUnicodeFont={isUnicodeFont}
+                  fontSize={9}
+                  align="center"
+                  marginTop={5}
+                  marginBottom={0}
+                />
               ) : null}
             </View>,
           );
@@ -1067,14 +1198,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           pageSize={resolvedPageSize}
           coverStyleId={secCoverState.coverStyleId}
           coverPaletteKey={secCoverState.coverPaletteKey}
-          fallbackPalette={{
-            primary: '#1E293B',
-            secondary: '#475569',
-            accent: '#0F172A',
-            text: '#0F172A',
-            textOnPrimary: '#FFFFFF',
-            background: '#FFFFFF',
-          }}
+          fallbackPalette={interiorTheme.palette}
           kicker={autoKicker}
           title={section.title || `Sección ${secIndex + 1}`}
           subtitle={secCoverState.subtitle}
@@ -1164,6 +1288,142 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
       !secCoverState.enabled &&
       prevGroup.masterMode === masterMode;
 
+    const annexTarget = crossRefGraph.byTargetId.get(section.id);
+    const resolvedSectionHeadingBase =
+      annexTarget?.kind === 'annex'
+        ? formatAnnexSectionDisplayTitle(cleanSectionTitle, annexTarget)
+        : cleanSectionTitle;
+    const finalDisplayHeading =
+      isBibSection && /^(?:bibliografía|bibliografia|referencias|obras citadas)$/i.test(cleanSectionTitle)
+        ? normMetrics.bibliographyHeading
+        : resolvedSectionHeadingBase;
+
+    const autoSectionKicker =
+      rawSec?.kickerLabel ||
+      (annexTarget?.kind === 'annex'
+        ? annexTarget.label.toUpperCase()
+        : rawSec?.sectionKey === 'unidad'
+          ? `UNIDAD ${badgeLabel}`
+          : rawSec?.category === 'cuerpo'
+            ? `CAPÍTULO ${badgeLabel}`
+            : undefined);
+
+    const renderSectionHeadingNode = () => {
+      if (interiorTheme.chapterHeaderVariant === 'literary_centered_diamond') {
+        return (
+          <View style={{ marginTop: canJoinPreviousPage ? 0 : interiorTheme.chapterDropTopPt, alignItems: 'center', marginBottom: 10 }}>
+            {autoSectionKicker ? (
+              <Text minPresenceAhead={72} style={[styles.kickerLabel, { textAlign: 'center' }]}>
+                {sanitizeEditorialText(autoSectionKicker, { targetFontIsUnicode: isUnicodeFont })}
+              </Text>
+            ) : null}
+            <Text
+              minPresenceAhead={56}
+              style={[
+                styles.sectionTitle,
+                { textAlign: 'center', marginBottom: 4 },
+              ]}
+            >
+              {finalDisplayHeading}
+            </Text>
+            <EditorialDiamondSeparator color={interiorTheme.accentColor} marginVertical={6} />
+          </View>
+        );
+      }
+
+      if (interiorTheme.chapterHeaderVariant === 'apa_centered_clean') {
+        return (
+          <Text
+            minPresenceAhead={56}
+            style={[
+              styles.sectionTitle,
+              {
+                textAlign: 'center',
+                fontSize: Math.max(resolvedFontSize + 2, 14),
+                color: '#111827',
+                marginBottom: 10,
+              },
+            ]}
+          >
+            {finalDisplayHeading}
+          </Text>
+        );
+      }
+
+      if (interiorTheme.chapterHeaderVariant === 'imryd_accent_rule') {
+        return (
+          <View style={{ marginBottom: 12 }}>
+            {rawSec?.kickerLabel ? (
+              <Text minPresenceAhead={72} style={styles.kickerLabel}>
+                {sanitizeEditorialText(rawSec.kickerLabel, { targetFontIsUnicode: isUnicodeFont })}
+              </Text>
+            ) : null}
+            <Text minPresenceAhead={56} style={[styles.sectionTitle, { marginBottom: 5 }]}>
+              {finalDisplayHeading}
+            </Text>
+            <View style={{ height: 1.5, backgroundColor: interiorTheme.accentColor }} />
+          </View>
+        );
+      }
+
+      if (interiorTheme.chapterHeaderVariant === 'executive_left_bar') {
+        return (
+          <View style={{ marginBottom: 12 }}>
+            <View
+              style={{
+                borderLeftWidth: 4,
+                borderLeftColor: interiorTheme.accentColor,
+                paddingLeft: 10,
+                paddingVertical: 2,
+              }}
+            >
+              {autoSectionKicker ? (
+                <Text minPresenceAhead={72} style={[styles.kickerLabel, { marginBottom: 2 }]}>
+                  {sanitizeEditorialText(autoSectionKicker, { targetFontIsUnicode: isUnicodeFont })}
+                </Text>
+              ) : null}
+              <Text minPresenceAhead={56} style={[styles.sectionTitle, { marginTop: 0, marginBottom: 2 }]}>
+                {finalDisplayHeading}
+              </Text>
+            </View>
+            <View style={[styles.sectionDivider, { marginTop: 8, marginBottom: 2 }]} />
+          </View>
+        );
+      }
+
+      // didactic_pill
+      return (
+        <View style={{ marginBottom: 12 }}>
+          {autoSectionKicker ? (
+            <View
+              style={{
+                alignSelf: 'flex-start',
+                backgroundColor: interiorTheme.tintBgColor,
+                borderWidth: 0.75,
+                borderColor: interiorTheme.ruleColor,
+                borderRadius: 3,
+                paddingHorizontal: 7,
+                paddingVertical: 2.5,
+                marginBottom: 6,
+              }}
+            >
+              <Text style={[styles.kickerLabel, { marginBottom: 0, fontSize: 8.5 }]}>
+                {sanitizeEditorialText(autoSectionKicker, { targetFontIsUnicode: isUnicodeFont })}
+              </Text>
+            </View>
+          ) : null}
+          <Text minPresenceAhead={56} style={[styles.sectionTitle, { marginTop: 0, marginBottom: 6 }]}>
+            {finalDisplayHeading}
+          </Text>
+          {section.records.length > 0 && <View style={[styles.sectionDivider, { marginTop: 2, marginBottom: 2 }]} />}
+        </View>
+      );
+    };
+
+    const isImrydAbstract =
+      interiorTheme.archetype === 'cientifico_imryd' &&
+      (rawSec?.sectionKey === 'resumen' || rawSec?.sectionKey === 'resumen_ejecutivo');
+
     const sectionBlock = (
       <View key={`sec-blk-${section.id}`} style={canJoinPreviousPage ? { marginTop: 18 } : undefined}>
         <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
@@ -1196,25 +1456,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           </View>
         ) : null}
 
-        {rawSec?.kickerLabel ? (
-          <Text minPresenceAhead={72} style={styles.kickerLabel}>
-            {sanitizeEditorialText(rawSec.kickerLabel, { targetFontIsUnicode: isUnicodeFont })}
-          </Text>
-        ) : null}
-
-        <Text
-          minPresenceAhead={56}
-          style={[
-            styles.sectionTitle,
-            (effectiveStructuralNorm === 'apa7' || (isBibSection && normMetrics.bibliographyHeadingCentered))
-              ? { textAlign: 'center', fontSize: Math.max(resolvedFontSize + 2, 14) }
-              : {},
-          ]}
-        >
-          {isBibSection && /^(?:bibliografía|bibliografia|referencias|obras citadas)$/i.test(cleanSectionTitle)
-            ? normMetrics.bibliographyHeading
-            : cleanSectionTitle}
-        </Text>
+        {renderSectionHeadingNode()}
 
         {rawSec?.epigraphText && !secCoverState.enabled ? (
           <EditorialEpigraphBlock
@@ -1230,9 +1472,22 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           />
         ) : null}
 
-        {section.records.length > 0 && <View style={styles.sectionDivider} />}
-
-        {sectionContentNodes}
+        {isImrydAbstract ? (
+          <View
+            style={{
+              backgroundColor: interiorTheme.tintBgColor,
+              borderTopWidth: 1,
+              borderBottomWidth: 1,
+              borderColor: interiorTheme.ruleColor,
+              padding: 10,
+              marginBottom: 10,
+            }}
+          >
+            {sectionContentNodes}
+          </View>
+        ) : (
+          sectionContentNodes
+        )}
 
         <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
         {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}

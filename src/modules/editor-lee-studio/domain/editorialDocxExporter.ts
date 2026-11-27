@@ -21,9 +21,15 @@ import {
   computeCitationAppearanceOrder,
   formatEditorialCitation,
   normalizeBibliographyStyle,
-  resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from './editorialCitationFormatter';
+import {
+  buildEditorialCrossRefGraph,
+  formatAnnexSectionDisplayTitle,
+  formatNormativeElementCaption,
+  resolveAllEditorialInlineTokens,
+} from './editorialCrossRefEngine';
+import { PRESET_COLORS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { resolveEditorialNormMetrics } from './editorialNormEngine';
 import {
   resolveEffectiveEditorialPagination,
@@ -169,8 +175,20 @@ export async function buildEditorialDocxBlob(
   );
   const { map: bibMap } = collectBibliographyFromSections(visibleSections);
   const appearanceMap = computeCitationAppearanceOrder(visibleSections);
+  const crossRefGraph = buildEditorialCrossRefGraph(visibleSections);
+  const activePaletteKey = design?.coverPaletteKey || draft?.cover?.coverPaletteKey;
+  const activePalette = activePaletteKey ? PRESET_COLORS[activePaletteKey]?.palette : undefined;
+  const headingHex =
+    normMetrics.structuralNormId === 'apa7' || normMetrics.structuralNormId === 'mla'
+      ? '111827'
+      : String(activePalette?.primary || '0F172A').replace('#', '');
   const resolveInline = (rawText: string) =>
-    resolveInlineCitationsInText(rawText, bibMap, resolvedBibStyle, appearanceMap);
+    resolveAllEditorialInlineTokens(rawText, {
+      bibMap,
+      bibStyle: resolvedBibStyle,
+      appearanceOrderMap: appearanceMap,
+      crossRefGraph,
+    });
 
   const buildInlineRuns = (
     text: string,
@@ -401,13 +419,18 @@ export async function buildEditorialDocxBlob(
 
     tocListed.forEach((sec, idx) => {
       const pageLabel = options.resolvedTocMap?.[sec.id] || String(idx + (showCover ? 3 : 2));
+      const annexTarget = crossRefGraph.byTargetId.get(sec.id);
+      const tocTitle =
+        annexTarget?.kind === 'annex'
+          ? formatAnnexSectionDisplayTitle(sec.title || `Sección ${idx + 1}`, annexTarget)
+          : sec.title || `Sección ${idx + 1}`;
       tocChildren.push(
         new Paragraph({
           spacing: { before: 80, after: 60 },
           tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
           children: [
             new TextRun({
-              text: `${sec.title || `Sección ${idx + 1}`}\t${pageLabel}`,
+              text: `${tocTitle}\t${pageLabel}`,
               font: bodyFont,
               size: bodySizeHalfPt,
               bold: true,
@@ -480,6 +503,12 @@ export async function buildEditorialDocxBlob(
       );
     }
 
+    const secAnnexTarget = crossRefGraph.byTargetId.get(sec.id);
+    const secHeadingText =
+      secAnnexTarget?.kind === 'annex'
+        ? formatAnnexSectionDisplayTitle(sec.title || 'Sección', secAnnexTarget)
+        : sec.title || 'Sección';
+
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
@@ -490,11 +519,11 @@ export async function buildEditorialDocxBlob(
         spacing: { before: 80, after: 180 },
         children: [
           new TextRun({
-            text: sec.title || 'Sección',
+            text: secHeadingText,
             font: bodyFont,
             size: 30,
             bold: true,
-            color: '0F172A',
+            color: headingHex,
           }),
         ],
       }),
@@ -622,6 +651,27 @@ export async function buildEditorialDocxBlob(
           break;
         }
         case 'table': {
+          const tblTarget = crossRefGraph.byTargetId.get(rec.id);
+          const tblCaption = formatNormativeElementCaption('table', tblTarget, rec.tableCaption, {
+            structuralNormId: normMetrics.structuralNormId,
+            bibliographyStyle: resolvedBibStyle,
+            interiorArchetype: presetId.includes('informe') || presetId.includes('proyecto') ? 'ejecutivo_proyecto' : 'academico_formal',
+          });
+          if (tblCaption.shouldRender) {
+            children.push(
+              new Paragraph({
+                spacing: { before: 80, after: 60 },
+                children: [
+                  ...(tblCaption.boldPrefix
+                    ? [new TextRun({ text: `${tblCaption.boldPrefix}${tblCaption.layout === 'two-line-apa' ? '\n' : ' '}`, font: bodyFont, size: 20, bold: true, color: '0F172A' })]
+                    : []),
+                  ...(tblCaption.titleText
+                    ? [new TextRun({ text: tblCaption.titleText, font: bodyFont, size: 20, italics: true, color: '334155' })]
+                    : []),
+                ],
+              }),
+            );
+          }
           const headers = Array.isArray(rec.tableHeaders) ? rec.tableHeaders : [];
           const rows = Array.isArray(rec.tableRows) ? rec.tableRows : [];
           const docxRows: any[] = [];
@@ -687,6 +737,28 @@ export async function buildEditorialDocxBlob(
           break;
         }
         case 'image': {
+          const figTarget = crossRefGraph.byTargetId.get(rec.id);
+          const figCaption = formatNormativeElementCaption('figure', figTarget, rec.imageCaption, {
+            structuralNormId: normMetrics.structuralNormId,
+            bibliographyStyle: resolvedBibStyle,
+            interiorArchetype: presetId.includes('libro') || presetId.includes('novela') ? 'literario' : 'academico_formal',
+          });
+          const makeCaptionPara = () =>
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 40, after: 80 },
+              children: [
+                ...(figCaption.boldPrefix
+                  ? [new TextRun({ text: `${figCaption.boldPrefix}${figCaption.layout === 'two-line-apa' ? '\n' : ' '}`, font: bodyFont, size: 18, bold: true, color: '0F172A' })]
+                  : []),
+                ...(figCaption.titleText
+                  ? [new TextRun({ text: figCaption.titleText, font: bodyFont, size: 18, italics: true, color: '475569' })]
+                  : []),
+              ],
+            });
+          if (figCaption.placement === 'above' && figCaption.shouldRender) {
+            children.push(makeCaptionPara());
+          }
           const parsedImg = rec.imagePath ? dataUrlToUint8Array(rec.imagePath) : null;
           if (parsedImg) {
             children.push(
@@ -703,22 +775,8 @@ export async function buildEditorialDocxBlob(
               }),
             );
           }
-          if (rec.imageCaption) {
-            children.push(
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 120 },
-                children: [
-                  new TextRun({
-                    text: rec.imageCaption,
-                    font: bodyFont,
-                    size: 18,
-                    italics: true,
-                    color: '475569',
-                  }),
-                ],
-              }),
-            );
+          if (figCaption.placement === 'below' && figCaption.shouldRender) {
+            children.push(makeCaptionPara());
           }
           break;
         }

@@ -16,6 +16,15 @@
  */
 
 import { detectUnsafeWinAnsiChars } from './editorialTypographyEngine';
+import {
+  collectBibliographyFromSections,
+  extractInlineCitationTokens,
+  normalizeBibliographyStyle,
+} from './editorialCitationFormatter';
+import {
+  buildEditorialCrossRefGraph,
+  extractInlineRefTokens,
+} from './editorialCrossRefEngine';
 import type { EditorialRecord, EditorialSection } from './editorialTypes';
 
 export type EditorialPreflightSeverity = 'error' | 'warning';
@@ -28,7 +37,9 @@ export type EditorialPreflightCode =
   | 'low_resolution_image'
   | 'special_typography_chars'
   | 'duplicate_main_title'
-  | 'punctuation_spacing';
+  | 'punctuation_spacing'
+  | 'broken_cross_reference'
+  | 'uncited_bibliography_item';
 
 export interface EditorialPreflightIssue {
   id: string;
@@ -148,14 +159,61 @@ export function runEditorialPreflight(draft: any): EditorialPreflightReport {
     }
   }
 
-  // 5. Recorrido por registros: placeholders, imágenes de baja nitidez, símbolos especiales y puntuación
+  // 5. Recorrido por registros: placeholders, imágenes de baja nitidez, símbolos especiales, puntuación y referencias cruzadas
   const detectedSpecialChars = new Set<string>();
   let hasPunctuationIssue = false;
+  const { items: bibItems, map: bibMap } = collectBibliographyFromSections(visibleSections);
+  const crossRefGraph = buildEditorialCrossRefGraph(visibleSections);
+  const citedBibIds = new Set<string>();
+  const activeStyle = normalizeBibliographyStyle(
+    draft?.design?.bibliographyStyle || draft?.design?.normId || 'tradicional',
+  );
 
   for (const sec of visibleSections) {
     const recs = Array.isArray(sec.records) ? sec.records : [];
     for (const rec of recs) {
       const contentStr = String(rec.content || '');
+      const refScanFields = [
+        contentStr,
+        rec.quoteAttribution || '',
+        rec.tableCaption || '',
+        rec.imageCaption || '',
+        ...(Array.isArray(rec.tableRows) ? rec.tableRows.flat().map((c) => String(c || '')) : []),
+      ];
+
+      for (const rawField of refScanFields) {
+        if (!rawField) continue;
+        for (const tok of extractInlineCitationTokens(rawField)) {
+          if (!bibMap.has(tok.bibId)) {
+            errors.push({
+              id: `pf_broken_cite_${rec.id}_${tok.bibId}`,
+              code: 'broken_cross_reference',
+              severity: 'error',
+              sectionId: sec.id,
+              recordId: rec.id,
+              title: `Cita sin fuente vinculada en "${sec.title || 'Sección'}"`,
+              description:
+                'Este párrafo conserva una cita cuya fuente fue quitada de Bibliografía. Quitá la marca o cargá la fuente.',
+            });
+          } else {
+            citedBibIds.add(tok.bibId);
+          }
+        }
+        for (const rTok of extractInlineRefTokens(rawField)) {
+          if (!crossRefGraph.byTargetId.has(rTok.targetId)) {
+            errors.push({
+              id: `pf_broken_ref_${rec.id}_${rTok.targetId}`,
+              code: 'broken_cross_reference',
+              severity: 'error',
+              sectionId: sec.id,
+              recordId: rec.id,
+              title: `Referencia cruzada rota en "${sec.title || 'Sección'}"`,
+              description:
+                'Apunta a una tabla, figura o anexo que fue eliminado u ocultado del documento.',
+            });
+          }
+        }
+      }
 
       if (rec.type === 'figure_placeholder' || PLACEHOLDER_TEXT_REGEX.test(contentStr)) {
         warnings.push({
@@ -202,6 +260,25 @@ export function runEditorialPreflight(draft: any): EditorialPreflightReport {
           });
         }
       }
+    }
+  }
+
+  const academicStyles = new Set(['apa7', 'vancouver', 'ieee', 'harvard', 'chicago', 'mla']);
+  if (academicStyles.has(activeStyle) && bibItems.length > 0 && citedBibIds.size > 0) {
+    const uncited = bibItems.filter((b) => !citedBibIds.has(b.id));
+    if (uncited.length > 0) {
+      const bibSec = visibleSections.find(
+        (s) => s.sectionKey === 'bibliografia' || s.records?.some((r) => r.type === 'bibliography_item'),
+      );
+      warnings.push({
+        id: 'pf_uncited_bibliography',
+        code: 'uncited_bibliography_item',
+        severity: 'warning',
+        sectionId: bibSec?.id,
+        title: `${uncited.length} fuente(s) en bibliografía sin citar en el texto`,
+        description:
+          'En normas académicas conviene citar todas las referencias dentro de los capítulos o quitar las que no usaste.',
+      });
     }
   }
 
