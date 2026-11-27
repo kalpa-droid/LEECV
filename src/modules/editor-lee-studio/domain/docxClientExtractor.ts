@@ -662,6 +662,57 @@ function mergeConsecutiveVerseBlocks(
   return { blocks: out, mergedPoemCount, replacedParagraphs };
 }
 
+export function isTocSdtElement(
+  sdtEl: Element,
+  stylesById?: Map<string, StyleMeta>,
+): boolean {
+  const sdtPr = getLocalChildren(sdtEl, 'sdtPr')[0];
+  if (sdtPr) {
+    const gallery = getAllByLocal(sdtPr, 'docPartGallery')[0];
+    const galleryVal = String(
+      gallery?.getAttribute('w:val') ?? gallery?.getAttribute('val') ?? '',
+    ).trim();
+    if (/^(?:Table of Contents|TOC|Tabla de contenido|Índice|Indice)$/i.test(galleryVal)) {
+      return true;
+    }
+    const tagOrAlias = [
+      ...getAllByLocal(sdtPr, 'alias'),
+      ...getAllByLocal(sdtPr, 'tag'),
+    ];
+    for (const el of tagOrAlias) {
+      const val = String(el.getAttribute('w:val') ?? el.getAttribute('val') ?? '').trim();
+      if (/^(?:Table of Contents|TOC|Tabla de contenido|Índice|Indice)$/i.test(val)) {
+        return true;
+      }
+    }
+  }
+
+  // Fallback conservador: solo tratar el SDT como índice si no tiene tablas/imágenes
+  // y al menos 2 párrafos son entradas TOC reales sin prosa larga.
+  const sdtContent = getLocalChildren(sdtEl, 'sdtContent')[0];
+  if (!sdtContent) return false;
+  if (getAllByLocal(sdtContent, 'tbl').length > 0 || getAllByLocal(sdtContent, 'drawing').length > 0) {
+    return false;
+  }
+  const paragraphs = getAllByLocal(sdtContent, 'p');
+  if (paragraphs.length === 0) return false;
+  let tocCount = 0;
+  let nonEmptyCount = 0;
+  for (const p of paragraphs) {
+    const plain = extractParagraphPlainText(p);
+    if (!plain) continue;
+    nonEmptyCount++;
+    if (stylesById && isTocParagraph(p, stylesById)) {
+      tocCount++;
+    } else if (isManualTocHeadingText(plain) || isManualTocLineText(plain)) {
+      tocCount++;
+    } else if (plain.length > 120) {
+      return false;
+    }
+  }
+  return nonEmptyCount > 0 && tocCount === nonEmptyCount && tocCount >= 2;
+}
+
 export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array): Promise<DocxClientExtractionResult> {
   const {
     detectSafeDocumentMime,
@@ -1069,7 +1120,11 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     }
   };
 
-  const processSingleParagraph = async (p: Element, lookaheadIndex: number): Promise<number> => {
+  const processSingleParagraph = async (
+    p: Element,
+    lookaheadIndex: number,
+    siblingList: Element[] = bodyChildren,
+  ): Promise<number> => {
     if (isTocParagraph(p, stylesById)) {
       const tocText = extractParagraphPlainText(p);
       if (tocText) parseTocLine(tocText);
@@ -1091,13 +1146,13 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
       if (isManualTocHeadingText(plainText)) {
         let k = lookaheadIndex + 1;
         let tocMatches = 0;
-        while (k < bodyChildren.length && k < lookaheadIndex + 40 && bodyChildren[k].localName === 'p') {
-          const nextPlain = extractParagraphPlainText(bodyChildren[k]);
+        while (k < siblingList.length && k < lookaheadIndex + 40 && siblingList[k].localName === 'p') {
+          const nextPlain = extractParagraphPlainText(siblingList[k]);
           if (!nextPlain) {
             k++;
             continue;
           }
-          if (isTocParagraph(bodyChildren[k], stylesById) || isManualTocLineText(nextPlain)) {
+          if (isTocParagraph(siblingList[k], stylesById) || isManualTocLineText(nextPlain)) {
             parseTocLine(nextPlain);
             tocMatches++;
             k++;
@@ -1166,13 +1221,13 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     if (startsExplicitCaja || hasBoxStyle) {
       const boxParts: string[] = [richText];
       let k = lookaheadIndex + 1;
-      while (k < bodyChildren.length && bodyChildren[k].localName === 'p') {
-        const nextP = bodyChildren[k];
+      while (k < siblingList.length && siblingList[k].localName === 'p') {
+        const nextP = siblingList[k];
         if (resolveHeadingLevel(nextP, stylesById) || isTocParagraph(nextP, stylesById)) break;
         const nextPlain = extractParagraphPlainText(nextP);
         if (!nextPlain) {
           // Terminar grupo tras línea vacía si ya pasó el primer párrafo y el siguiente no tiene sombreado
-          const peek = bodyChildren[k + 1];
+          const peek = siblingList[k + 1];
           if (!peek || peek.localName !== 'p' || !hasParagraphShadingOrBorder(peek)) break;
           k++;
           continue;
@@ -1263,111 +1318,117 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     return lookaheadIndex + 1;
   };
 
-  while (i < bodyChildren.length) {
-    const child = bodyChildren[i];
-    if (child.localName === 'p') {
-      i = await processSingleParagraph(child, i);
-      continue;
-    }
+  const processContainerChildren = async (childrenList: Element[]): Promise<void> => {
+    let idx = 0;
+    while (idx < childrenList.length) {
+      const child = childrenList[idx];
+      if (child.localName === 'p') {
+        idx = await processSingleParagraph(child, idx, childrenList);
+        continue;
+      }
 
-    if (child.localName === 'tbl') {
-      const trNodes = getLocalChildren(child, 'tr');
-      const matrix: string[][] = [];
-      for (const tr of trNodes) {
-        const rowCells: string[] = [];
-        for (const tc of getLocalChildren(tr, 'tc')) {
-          // Extraer imágenes/gráficos/cuadros alojados dentro de celdas antes de leer texto
-          await extractMediaFromNode(tc);
-          const cellText = getLocalChildren(tc, 'p')
-            .map((tp) =>
-              extractParagraphRichText(tp, {
-                preserveFormatting: true,
-                footnoteNumberByRawId,
-                collectedFootnotes: chapterFootnotes,
-                footnotesByRawId,
-                endnoteNumberByRawId,
-                endnotesByRawId,
-                relsById,
-              }),
-            )
-            .filter(Boolean)
-            .join('\n');
-          const tcPr = getLocalChildren(tc, 'tcPr')[0];
-          const gridSpanEl = tcPr ? getLocalChildren(tcPr, 'gridSpan')[0] : undefined;
-          const span = Math.max(
-            1,
-            Number(gridSpanEl?.getAttribute('w:val') ?? gridSpanEl?.getAttribute('val') ?? 1) || 1,
+      if (child.localName === 'tbl') {
+        const trNodes = getLocalChildren(child, 'tr');
+        const matrix: string[][] = [];
+        for (const tr of trNodes) {
+          const rowCells: string[] = [];
+          for (const tc of getLocalChildren(tr, 'tc')) {
+            // Extraer imágenes/gráficos/cuadros alojados dentro de celdas antes de leer texto
+            await extractMediaFromNode(tc);
+            const cellText = getLocalChildren(tc, 'p')
+              .map((tp) =>
+                extractParagraphRichText(tp, {
+                  preserveFormatting: true,
+                  footnoteNumberByRawId,
+                  collectedFootnotes: chapterFootnotes,
+                  footnotesByRawId,
+                  endnoteNumberByRawId,
+                  endnotesByRawId,
+                  relsById,
+                }),
+              )
+              .filter(Boolean)
+              .join('\n');
+            const tcPr = getLocalChildren(tc, 'tcPr')[0];
+            const gridSpanEl = tcPr ? getLocalChildren(tcPr, 'gridSpan')[0] : undefined;
+            const span = Math.max(
+              1,
+              Number(gridSpanEl?.getAttribute('w:val') ?? gridSpanEl?.getAttribute('val') ?? 1) || 1,
+            );
+            rowCells.push(cellText);
+            for (let sp = 1; sp < span; sp++) rowCells.push('');
+          }
+          matrix.push(rowCells);
+        }
+
+        if (matrix.length > 0) {
+          const maxCols = matrix.reduce((m, row) => Math.max(m, row.length), 0);
+          const hasTextContent = matrix.some((row) => row.some((c) => c.trim().length > 0));
+          if (!hasTextContent) {
+            idx++;
+            continue;
+          }
+          const normalizedMatrix = matrix.map((row) =>
+            row.length < maxCols ? [...row, ...new Array(maxCols - row.length).fill('')] : row,
           );
-          rowCells.push(cellText);
-          for (let sp = 1; sp < span; sp++) rowCells.push('');
+          if (maxCols <= 1) {
+            // Tabla de 1 sola columna (ej. Resguardo ético Ley 26.061 o CAJA didáctica en recuadro)
+            const cellParagraphs = normalizedMatrix.flat().filter(Boolean);
+            const structured = parseCalloutParagraphsToStructured(cellParagraphs);
+            const itemsList = Array.isArray(structured.calloutItems) ? structured.calloutItems : [];
+            const totalBoxChars =
+              structured.text.length + itemsList.reduce((acc, it) => acc + it.length, 0);
+            blocks.push({
+              kind: 'callout',
+              calloutTitle: structured.calloutTitle,
+              calloutItems: structured.calloutItems,
+              calloutVariant: structured.calloutVariant,
+              text: structured.text,
+              keepTogether: totalBoxChars < 450 && itemsList.length <= 5,
+            });
+            markdownLines.push(cellParagraphs.join('\n'));
+            stats.callouts++;
+          } else {
+            const hasHeaderRow = !shouldTreatMultiColTableWithoutHeader(trNodes[0], normalizedMatrix);
+            const tableHeaders = normalizedMatrix[0];
+            const tableRows = normalizedMatrix.slice(1);
+            blocks.push({
+              kind: 'table',
+              tableHeaders,
+              tableRows,
+              tableHasHeaderRow: hasHeaderRow,
+            });
+            markdownLines.push(normalizedMatrix.map((r) => r.join(' | ')).join('\n'));
+            stats.tables++;
+          }
         }
-        matrix.push(rowCells);
+        idx++;
+        continue;
       }
 
-      if (matrix.length > 0) {
-        const maxCols = matrix.reduce((m, row) => Math.max(m, row.length), 0);
-        const hasTextContent = matrix.some((row) => row.some((c) => c.trim().length > 0));
-        if (!hasTextContent) {
-          i++;
-          continue;
-        }
-        const normalizedMatrix = matrix.map((row) =>
-          row.length < maxCols ? [...row, ...new Array(maxCols - row.length).fill('')] : row,
-        );
-        if (maxCols <= 1) {
-          // Tabla de 1 sola columna (ej. Resguardo ético Ley 26.061 o CAJA didáctica en recuadro)
-          const cellParagraphs = normalizedMatrix.flat().filter(Boolean);
-          const structured = parseCalloutParagraphsToStructured(cellParagraphs);
-          const itemsList = Array.isArray(structured.calloutItems) ? structured.calloutItems : [];
-          const totalBoxChars =
-            structured.text.length + itemsList.reduce((acc, it) => acc + it.length, 0);
-          blocks.push({
-            kind: 'callout',
-            calloutTitle: structured.calloutTitle,
-            calloutItems: structured.calloutItems,
-            calloutVariant: structured.calloutVariant,
-            text: structured.text,
-            keepTogether: totalBoxChars < 450 && itemsList.length <= 5,
-          });
-          markdownLines.push(cellParagraphs.join('\n'));
-          stats.callouts++;
+      if (child.localName === 'sdt') {
+        if (isTocSdtElement(child, stylesById)) {
+          for (const p of getAllByLocal(child, 'p')) {
+            const line = extractParagraphPlainText(p);
+            if (line) parseTocLine(line);
+            stats.ignoredTocBlocks++;
+          }
         } else {
-          const hasHeaderRow = !shouldTreatMultiColTableWithoutHeader(trNodes[0], normalizedMatrix);
-          const tableHeaders = normalizedMatrix[0];
-          const tableRows = normalizedMatrix.slice(1);
-          blocks.push({
-            kind: 'table',
-            tableHeaders,
-            tableRows,
-            tableHasHeaderRow: hasHeaderRow,
-          });
-          markdownLines.push(normalizedMatrix.map((r) => r.join(' | ')).join('\n'));
-          stats.tables++;
+          const sdtContent = getLocalChildren(child, 'sdtContent')[0];
+          const innerChildren = sdtContent
+            ? Array.from(sdtContent.children)
+            : Array.from(child.children).filter((el) => el.localName !== 'sdtPr');
+          await processContainerChildren(innerChildren);
         }
+        idx++;
+        continue;
       }
-      i++;
-      continue;
-    }
 
-    if (child.localName === 'sdt') {
-      const sdtXml = child.outerHTML || '';
-      if (/Table of Contents|\bTOC\b|Índice|Indice|Tabla de contenido/i.test(sdtXml)) {
-        for (const p of getAllByLocal(child, 'p')) {
-          const line = extractParagraphPlainText(p);
-          if (line) parseTocLine(line);
-          stats.ignoredTocBlocks++;
-        }
-      } else {
-        for (const p of getAllByLocal(child, 'p')) {
-          await processSingleParagraph(p, i);
-        }
-      }
-      i++;
-      continue;
+      idx++;
     }
+  };
 
-    i++;
-  }
+  await processContainerChildren(bodyChildren.slice(i));
 
   flushChapterFootnotes();
 

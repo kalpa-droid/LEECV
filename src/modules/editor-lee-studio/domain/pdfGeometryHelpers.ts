@@ -270,7 +270,7 @@ export function detectTablesInPageLines(
     let curText = '';
     let curX = ln.spans[0]?.x ?? ln.xMin;
     let prevEnd = ln.spans[0]?.x ?? ln.xMin;
-    const colGapMin = Math.max(18, bodyFontPt * 1.9);
+    const colGapMin = Math.max(26, bodyFontPt * 2.4);
 
     for (let i = 0; i < ln.spans.length; i++) {
       const sp = ln.spans[i];
@@ -328,8 +328,13 @@ export function detectTablesInPageLines(
           }
           return row;
         });
+        const avgRowChars =
+          sliceCells.reduce(
+            (sum, cells) => sum + cells.map((c) => c.text).join(' ').length,
+            0,
+          ) / Math.max(1, sliceCells.length);
         const nonEmptyCols = colAnchors.filter((_, ci) => matrix.some((r) => Boolean(r[ci]))).length;
-        if (nonEmptyCols >= 2) {
+        if (nonEmptyCols >= 2 && avgRowChars <= 85) {
           tables.push({
             startLineIdx: i,
             endLineIdx: j - 1,

@@ -395,19 +395,157 @@ export function buildPanoramicDocumentMap(
  * Expande rangos `startBlockId..endBlockId` (y `excludedBlockIds`) de un `SectionNode`
  * hacia la lista exacta de IDs presentes en el AST.
  */
-export function expandSectionNodeBlockIds(ast: DocumentAST, node: SectionNode): string[] {
-  const explicit = Array.isArray(node.blockIds) ? node.blockIds.filter(Boolean) : [];
+function normalizeLexicalText(text: string): string {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+const COVER_LABEL_RE =
+  /^(?:tema|proyecto|t[ií]tulo|subt[ií]tulo|autor(?:es|a)?|alum(?:no|na|nos)|integrantes?|docente|profesor(?:a)?|tutor(?:a)?|c[aá]tedra|materia|asignatura|instituci[oó]n|universidad|facultad|colegio|escuela|fecha|curso|grado|a[ñn]o|carrera|comisi[oó]n|sede)\s*:/i;
+
+const SPECIAL_SECTION_KEYS = new Set([
+  'anexo',
+  'bibliografia',
+  'glosario',
+  'dedicatoria',
+  'agradecimientos',
+]);
+
+const SPECIAL_SECTION_TITLE_RE =
+  /\b(?:anexo|apendice|bibliografia|referencias|glosario)\b/;
+
+/**
+ * Evita que la IA use `coverBlockIds` como agujero negro para absorber párrafos de cuerpo real.
+ */
+export function isGenuineCoverMetadataBlock(blk: CanonicalBlock): boolean {
+  if (!blk) return false;
+  if (
+    blk.type === 'table' ||
+    blk.type === 'footnote_list' ||
+    blk.type === 'diagram' ||
+    blk.type === 'chart'
+  ) {
+    return false;
+  }
+  const text = String(blk.text || '').trim();
+  if (!text) return true;
+  if (blk.type === 'image') return text.length <= 140;
+  if (COVER_LABEL_RE.test(text) && text.length <= 260) return true;
+  if (blk.type === 'heading') return text.length <= 200;
+
+  const sentencePunct = (text.match(/[.!?](?:\s|$)/g) || []).length;
+  if (text.length > 220 || (text.length > 140 && sentencePunct >= 2)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Evita que párrafos reales de la obra terminen descartados dentro de `tocBlockIds`.
+ */
+export function isGenuineTocBlock(blk: CanonicalBlock): boolean {
+  if (!blk) return false;
+  if (
+    blk.type === 'table' ||
+    blk.type === 'image' ||
+    blk.type === 'footnote_list' ||
+    blk.type === 'diagram' ||
+    blk.type === 'chart' ||
+    blk.type === 'quote' ||
+    blk.type === 'poem'
+  ) {
+    return false;
+  }
+  const raw = String(blk.text || '').trim();
+  if (!raw) return true;
+  const norm = normalizeLexicalText(raw);
+  if (/^(?:indice(?:\s+general)?|tabla\s+de\s+contenido(?:s)?|contenido|sumario)\s*:?$/.test(norm) && raw.length <= 80) {
+    return true;
+  }
+  if (/(?:\.{2,}|…|\t|\s{2,})\s*(?:\d{1,4}|[ivxlcdm]{1,6})\s*$/i.test(raw) && raw.length <= 180) {
+    return true;
+  }
+  if (/^(?:\d+(?:\.\d+)*|[ivxlcdm]+)[.)]?\s+\S.{1,120}?\s+(?:\d{1,4}|[ivxlcdm]{1,6})\s*$/i.test(norm)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Expande tanto IDs individuales como rangos string del tipo `"blk_00001..blk_00005"`
+ * que la IA puede emitir dentro de `blockIds`.
+ */
+export function expandBlockIdListOrRanges(
+  ast: DocumentAST,
+  rawIds: string[] = [],
+): string[] {
+  const indexById = new Map<string, number>();
+  ast.blocks.forEach((b, idx) => indexById.set(b.id, idx));
+  const out: string[] = [];
+
+  for (const item of rawIds) {
+    const trimmed = String(item || '').trim();
+    if (!trimmed) continue;
+    const rangeMatch = /^(blk_[A-Za-z0-9_-]+)\s*(?:\.\.|[-–—]|to)\s*(blk_[A-Za-z0-9_-]+)$/i.exec(
+      trimmed,
+    );
+    if (rangeMatch) {
+      const startIdx = indexById.get(rangeMatch[1]);
+      const endIdx = indexById.get(rangeMatch[2]);
+      if (startIdx !== undefined && endIdx !== undefined && endIdx >= startIdx) {
+        for (let k = startIdx; k <= endIdx; k++) {
+          out.push(ast.blocks[k].id);
+        }
+        continue;
+      }
+    }
+    out.push(trimmed);
+  }
+  return out;
+}
+
+export function expandSectionNodeBlockIds(
+  ast: DocumentAST,
+  node: SectionNode,
+  nextSectionStartBlockId?: string | null,
+): string[] {
+  const excluded = new Set(Array.isArray(node.excludedBlockIds) ? node.excludedBlockIds : []);
+  const explicit = expandBlockIdListOrRanges(
+    ast,
+    Array.isArray(node.blockIds) ? node.blockIds.filter(Boolean) : [],
+  );
+
   if (!node.startBlockId && !node.endBlockId) {
-    return explicit;
+    return explicit.filter((id) => !excluded.has(id));
   }
 
-  const excluded = new Set(Array.isArray(node.excludedBlockIds) ? node.excludedBlockIds : []);
-  const startIdx = node.startBlockId
-    ? ast.blocks.findIndex((b) => b.id === node.startBlockId)
-    : -1;
-  const endIdx = node.endBlockId
-    ? ast.blocks.findIndex((b) => b.id === node.endBlockId)
-    : startIdx;
+  const indexById = new Map<string, number>();
+  ast.blocks.forEach((b, idx) => indexById.set(b.id, idx));
+
+  const startIdx = node.startBlockId ? (indexById.get(node.startBlockId) ?? -1) : -1;
+  let endIdx = node.endBlockId ? (indexById.get(node.endBlockId) ?? -1) : -1;
+
+  if (startIdx >= 0 && endIdx < 0) {
+    if (nextSectionStartBlockId) {
+      const nextIdx = indexById.get(nextSectionStartBlockId) ?? -1;
+      if (nextIdx > startIdx) {
+        endIdx = nextIdx - 1;
+      }
+    } else if (nextSectionStartBlockId === null) {
+      endIdx = ast.blocks.length - 1;
+    }
+    if (endIdx < startIdx) {
+      let maxExplicit = startIdx;
+      for (const id of explicit) {
+        const idx = indexById.get(id);
+        if (idx !== undefined && idx > maxExplicit) maxExplicit = idx;
+      }
+      endIdx = maxExplicit;
+    }
+  }
 
   const rangeIds: string[] = [];
   if (startIdx >= 0) {
@@ -418,12 +556,99 @@ export function expandSectionNodeBlockIds(ast: DocumentAST, node: SectionNode): 
     }
   }
 
-  if (explicit.length === 0) return rangeIds;
   const merged = new Set<string>(rangeIds);
   for (const id of explicit) {
     if (!excluded.has(id)) merged.add(id);
   }
   return Array.from(merged);
+}
+
+function getSectionStartCandidateId(ast: DocumentAST, node?: SectionNode): string | undefined {
+  if (!node) return undefined;
+  if (node.startBlockId) return node.startBlockId;
+  const expanded = expandBlockIdListOrRanges(ast, node.blockIds || []);
+  return expanded[0];
+}
+
+function hasLexicalEvidenceForSpecialSection(
+  sec: SectionNode,
+  blocks: CanonicalBlock[],
+): boolean {
+  if (blocks.some((b) => b.type === 'heading')) return true;
+  const key = normalizeLexicalText(sec.sectionKey || '');
+  const titleNorm = normalizeLexicalText(sec.title || '');
+  const isBib = key === 'bibliografia' || /\b(?:bibliografia|referencias)\b/.test(titleNorm);
+
+  for (const blk of blocks.slice(0, 4)) {
+    const norm = normalizeLexicalText(blk.text || '');
+    if (!norm) continue;
+    if (SPECIAL_SECTION_TITLE_RE.test(norm)) return true;
+    if (isBib && (/\(\s*(?:19|20)\d{2}[a-z]?\s*\)/.test(norm) || /https?:\/\/|doi:/i.test(norm))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Neutraliza cortes alucinados (p. ej. "Anexo A", "Bibliografía", "Glosario" o secciones vacías
+ * inventadas por la IA sin respaldo en los bloques reales del AST), fusionando sus bloques reales
+ * de vuelta al capítulo anterior para garantizar 0% invención y 0% pérdida de texto.
+ */
+export function sanitizeHallucinatedSections(
+  ast: DocumentAST,
+  sections: SectionNode[],
+): { sections: SectionNode[]; removedCount: number } {
+  const blockMap = new Map<string, CanonicalBlock>();
+  for (const b of ast.blocks) blockMap.set(b.id, b);
+
+  const sanitized: SectionNode[] = [];
+  let removedCount = 0;
+
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i];
+    const nextStart =
+      i + 1 < sections.length ? (getSectionStartCandidateId(ast, sections[i + 1]) ?? null) : null;
+    const resolvedIds = expandSectionNodeBlockIds(ast, sec, nextStart);
+    const existingBlocks = resolvedIds
+      .map((id) => blockMap.get(id))
+      .filter((b): b is CanonicalBlock => Boolean(b));
+
+    if (existingBlocks.length === 0) {
+      removedCount++;
+      continue;
+    }
+
+    const keyNorm = normalizeLexicalText(sec.sectionKey || '');
+    const titleNorm = normalizeLexicalText(sec.title || '');
+    const isSpecialSection =
+      SPECIAL_SECTION_KEYS.has(keyNorm) || SPECIAL_SECTION_TITLE_RE.test(titleNorm);
+
+    if (
+      sanitized.length > 0 &&
+      isSpecialSection &&
+      !hasLexicalEvidenceForSpecialSection(sec, existingBlocks)
+    ) {
+      const prev = sanitized[sanitized.length - 1];
+      const prevIds = prev.blockIds || [];
+      const mergedSet = new Set(prevIds);
+      for (const blk of existingBlocks) mergedSet.add(blk.id);
+      sanitized[sanitized.length - 1] = {
+        ...prev,
+        blockIds: Array.from(mergedSet),
+      };
+      removedCount++;
+      continue;
+    }
+
+    sanitized.push({
+      ...sec,
+      title: String(sec.title || '').trim() || existingBlocks[0]?.text?.slice(0, 90) || 'Contenido principal',
+      blockIds: existingBlocks.map((b) => b.id),
+    });
+  }
+
+  return { sections: sanitized, removedCount };
 }
 
 /**
@@ -622,22 +847,30 @@ export function assertLosslessIntegrity(
   ast: DocumentAST,
   proposal: StructureAnalysis,
 ): IntegrityAuditResult {
-  const originalIds = new Set(ast.blocks.map((b) => b.id));
+  const blockMap = new Map<string, CanonicalBlock>();
+  for (const b of ast.blocks) blockMap.set(b.id, b);
   const seen = new Set<string>();
   const duplicateIds: string[] = [];
   const extraIds: string[] = [];
 
-  for (const id of proposal.coverBlockIds || []) {
-    if (originalIds.has(id)) seen.add(id);
+  for (const id of expandBlockIdListOrRanges(ast, proposal.coverBlockIds || [])) {
+    const blk = blockMap.get(id);
+    if (blk && isGenuineCoverMetadataBlock(blk)) seen.add(id);
   }
-  for (const id of proposal.tocBlockIds || []) {
-    if (originalIds.has(id)) seen.add(id);
+  for (const id of expandBlockIdListOrRanges(ast, proposal.tocBlockIds || [])) {
+    const blk = blockMap.get(id);
+    if (blk && isGenuineTocBlock(blk)) seen.add(id);
   }
 
-  for (const sec of proposal.proposedSections) {
-    const resolvedIds = expandSectionNodeBlockIds(ast, sec);
+  for (let i = 0; i < proposal.proposedSections.length; i++) {
+    const sec = proposal.proposedSections[i];
+    const nextStart =
+      i + 1 < proposal.proposedSections.length
+        ? (getSectionStartCandidateId(ast, proposal.proposedSections[i + 1]) ?? null)
+        : null;
+    const resolvedIds = expandSectionNodeBlockIds(ast, sec, nextStart);
     for (const id of resolvedIds) {
-      if (!originalIds.has(id)) {
+      if (!blockMap.has(id)) {
         extraIds.push(id);
       }
       if (seen.has(id)) {
@@ -658,7 +891,8 @@ export function assertLosslessIntegrity(
 
 /**
  * Repara determinísticamente cualquier propuesta de IA para garantizar biyección 1:1 exacta:
- * expande rangos `startBlockId..endBlockId`, elimina IDs inexistentes o duplicados e inserta
+ * neutraliza secciones/anexos alucinados, expande rangos `startBlockId..endBlockId` o `"blk_A..blk_B"`,
+ * evita absorber cuerpo real en portada/índice, elimina IDs inexistentes o duplicados e inserta
  * todo bloque omitido junto a su predecesor contiguo.
  */
 export function repairProposalToLosslessBijection(
@@ -671,23 +905,45 @@ export function repairProposalToLosslessBijection(
   dedupedCount: number;
 } {
   const auditBefore = assertLosslessIntegrity(ast, proposal);
-  const originalIds = new Set(ast.blocks.map((b) => b.id));
+  const blockMap = new Map<string, CanonicalBlock>();
+  for (const b of ast.blocks) blockMap.set(b.id, b);
   const seen = new Set<string>();
   const sectionOfBlock = new Map<string, number>();
 
-  for (const id of proposal.coverBlockIds || []) {
-    if (originalIds.has(id)) seen.add(id);
-  }
-  for (const id of proposal.tocBlockIds || []) {
-    if (originalIds.has(id)) seen.add(id);
+  const cleanCoverIds: string[] = [];
+  for (const id of expandBlockIdListOrRanges(ast, proposal.coverBlockIds || [])) {
+    const blk = blockMap.get(id);
+    if (blk && isGenuineCoverMetadataBlock(blk) && !seen.has(id)) {
+      seen.add(id);
+      cleanCoverIds.push(id);
+    }
   }
 
+  const cleanTocIds: string[] = [];
+  for (const id of expandBlockIdListOrRanges(ast, proposal.tocBlockIds || [])) {
+    const blk = blockMap.get(id);
+    if (blk && isGenuineTocBlock(blk) && !seen.has(id)) {
+      seen.add(id);
+      cleanTocIds.push(id);
+    }
+  }
+
+  const { sections: sanitizedSections } = sanitizeHallucinatedSections(
+    ast,
+    proposal.proposedSections,
+  );
+
   const repairedSections: SectionNode[] = [];
-  for (const sec of proposal.proposedSections) {
-    const expandedIds = expandSectionNodeBlockIds(ast, sec);
+  for (let i = 0; i < sanitizedSections.length; i++) {
+    const sec = sanitizedSections[i];
+    const nextStart =
+      i + 1 < sanitizedSections.length
+        ? (getSectionStartCandidateId(ast, sanitizedSections[i + 1]) ?? null)
+        : null;
+    const expandedIds = expandSectionNodeBlockIds(ast, sec, nextStart);
     const cleanIds: string[] = [];
     for (const id of expandedIds) {
-      if (!originalIds.has(id) || seen.has(id)) continue;
+      if (!blockMap.has(id) || seen.has(id)) continue;
       seen.add(id);
       cleanIds.push(id);
     }
@@ -756,6 +1012,8 @@ export function repairProposalToLosslessBijection(
   return {
     repaired: {
       ...proposal,
+      coverBlockIds: cleanCoverIds,
+      tocBlockIds: cleanTocIds,
       proposedSections: repairedSections,
     },
     auditBefore,
@@ -841,8 +1099,9 @@ export function reconstructEditorialSectionsFromAst(
       const recId = `rec_${blk.id}_${rIdx}`;
 
       // Si el bloque fue ascendido exactamente para nombrar esta sección y es un heading idéntico al título,
-      // evitar duplicar el encabezado dentro del cuerpo del capítulo salvo si difiere.
+      // evitar duplicar el encabezado dentro del cuerpo cuando la sección ya tiene otros bloques debajo.
       if (
+        secNode.blockIds.length > 1 &&
         rIdx === 0 &&
         (resolvedType === 'heading' || blk.type === 'heading') &&
         (blk.text || '').trim().toLowerCase() === secNode.title.trim().toLowerCase()

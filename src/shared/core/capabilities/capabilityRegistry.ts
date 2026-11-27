@@ -585,7 +585,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'libro-ensayo-novela',
     legacyAliases: ['editor'],
-    idPrefixes: ['editorial_', 'doc_editorial_'],
+    idPrefixes: ['editorial_', 'doc_editorial_', 'ed_copy_', 'ed_teamcopy_'],
     presetPrefixes: [
       'edit-',
       'libro-ensayo-novela',

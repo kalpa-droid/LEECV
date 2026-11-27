@@ -28,6 +28,7 @@ import { PRODUCT_ICON_IDS, UI_ICON_IDS } from '../../shared/core/ui/iconCatalog'
 import {
   EditorialGlobalAxis,
   EditorialGlobalNormModal,
+  hasEditorialSubstantiveContent,
 } from './ui/EditorialGlobalNormModal';
 import { EditorialPrintFlowModal } from './ui/EditorialPrintFlowModal';
 import { EDITORIAL_PRESETS } from './pdf/editorialPresets';
@@ -35,11 +36,12 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
 import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
-import { OpenTab } from '../../shared/core/documents/tabStore';
+import { OpenTab, openTab, setActiveTabId } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
+import { matchesDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
-import { saveDocumentDraftLocal, loadDocumentById } from '../../shared/core/storage/documentStorageService';
+import { saveDocumentDraftLocal, loadDocumentById, getSavedEditorialsList } from '../../shared/core/storage/documentStorageService';
 import { hydrateInlineAssets } from '../../shared/core/storage/localAssetStore';
 import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -171,6 +173,27 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
   };
 }
 
+const LAST_EDITORIAL_ID_STORAGE_KEY = 'leecv_last_editorial_id';
+
+function readLastEditorialId(): string | null {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage.getItem(LAST_EDITORIAL_ID_STORAGE_KEY) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistLastEditorialId(id: string): void {
+  if (!id) return;
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LAST_EDITORIAL_ID_STORAGE_KEY, id);
+    }
+  } catch {
+    // Storage restringido en entorno sandbox o privado
+  }
+}
+
 /**
  * Estudio de EditorLee (/crear-editor).
  *
@@ -215,15 +238,31 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [onlineTeamEmails, setOnlineTeamEmails] = useState<string[]>([]);
   const localDraftBackupRef = useRef<any | null>(null);
 
-  const editorialId = useMemo(
-    () => resolveDocumentIdWithHandoff(activeTabId, 'editorial'),
-    [activeTabId],
+  const [currentEditorialId, setCurrentEditorialId] = useState<string>(() =>
+    resolveDocumentIdWithHandoff(activeTabId, 'editorial'),
   );
+  const explicitBlankIdsRef = useRef<Set<string>>(new Set());
+  const preloadedDraftsRef = useRef<Map<string, any>>(new Map());
+
+  useEffect(() => {
+    if (activeTabId && matchesDocumentTypeId(activeTabId, 'editorial') && activeTabId !== currentEditorialId) {
+      setCurrentEditorialId(activeTabId);
+    }
+  }, [activeTabId, currentEditorialId]);
+
+  const editorialId = currentEditorialId;
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const hydratedIdRef = useRef<string | null>(null);
   const hasEditedRef = useRef<boolean>(false);
   const [draft, setDraft] = useState<any>(() => createEmptyEditorial());
+  const latestDraftRef = useRef<any>(draft);
+  const latestIdRef = useRef<string>(editorialId);
+  const activeTeamRoomRef = useRef<ActiveTeamRoomContext | null>(activeTeamRoom);
+  const prevSavedSectionsCountRef = useRef<number>(draft?.sections?.length || 0);
+  latestDraftRef.current = draft;
+  latestIdRef.current = editorialId;
+  activeTeamRoomRef.current = activeTeamRoom;
   const [debouncedDraft, setDebouncedDraft] = useState<any>(draft);
 
   const applyEditorialSnapshot = useCallback((snapshot: any) => {
@@ -357,20 +396,93 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
 
   useEffect(() => {
     let active = true;
+    const preloaded = preloadedDraftsRef.current.get(editorialId);
+    if (preloaded) {
+      preloadedDraftsRef.current.delete(editorialId);
+      hydratedIdRef.current = editorialId;
+      hasEditedRef.current = false;
+      history.resetSeed(preloaded);
+      setDraft(preloaded);
+      prevSavedSectionsCountRef.current = Array.isArray(preloaded?.sections) ? preloaded.sections.length : 0;
+      if (hasEditorialSubstantiveContent(preloaded?.sections)) {
+        persistLastEditorialId(editorialId);
+      }
+      return;
+    }
+
     hydratedIdRef.current = null;
     hasEditedRef.current = false;
     void (async () => {
       try {
         const loaded = await loadDocumentById(editorialId, 'editorial');
         const sanitized = sanitizeEditorialData(loaded);
-        if (active) {
-          const initialDraft = sanitized || createEmptyEditorial();
-          history.resetSeed(initialDraft);
-          setDraft(initialDraft);
+        if (!active) return;
+
+        if (sanitized) {
+          hydratedIdRef.current = editorialId;
+          history.resetSeed(sanitized);
+          setDraft(sanitized);
+          prevSavedSectionsCountRef.current = Array.isArray(sanitized.sections) ? sanitized.sections.length : 0;
+          if (hasEditorialSubstantiveContent(sanitized.sections)) {
+            persistLastEditorialId(editorialId);
+          }
+          return;
         }
+
+        // Si el usuario entró sin pestaña editorial activa (ej. recarga F5 o navegación directa),
+        // recuperar su último manuscrito guardado para evitar pérdida silenciosa de texto.
+        const canAutoRecoverLatest =
+          !explicitBlankIdsRef.current.has(editorialId) &&
+          (!activeTabId ||
+            !matchesDocumentTypeId(activeTabId, 'editorial') ||
+            activeTabId === readLastEditorialId());
+
+        if (canAutoRecoverLatest) {
+          const lastId = readLastEditorialId();
+          let candidateDoc = lastId ? sanitizeEditorialData(await loadDocumentById(lastId, 'editorial')) : null;
+          let candidateId = candidateDoc && lastId ? lastId : '';
+
+          if (!candidateDoc || !hasEditorialSubstantiveContent(candidateDoc.sections)) {
+            const savedList = await getSavedEditorialsList();
+            const latestMeta = [...savedList].sort(
+              (a, b) =>
+                (Date.parse(String(b.updated_at || '')) || 0) -
+                (Date.parse(String(a.updated_at || '')) || 0),
+            )[0];
+            if (latestMeta?.id) {
+              const latestDoc = sanitizeEditorialData(await loadDocumentById(latestMeta.id, 'editorial'));
+              if (latestDoc && hasEditorialSubstantiveContent(latestDoc.sections)) {
+                candidateDoc = latestDoc;
+                candidateId = latestMeta.id;
+              }
+            }
+          }
+
+          if (active && candidateDoc && candidateId) {
+            preloadedDraftsRef.current.set(candidateId, candidateDoc);
+            hydratedIdRef.current = candidateId;
+            history.resetSeed(candidateDoc);
+            setDraft(candidateDoc);
+            prevSavedSectionsCountRef.current = Array.isArray(candidateDoc.sections)
+              ? candidateDoc.sections.length
+              : 0;
+            persistLastEditorialId(candidateId);
+            setCurrentEditorialId(candidateId);
+            const updatedTabs = openTab(candidateId, 'editorial', buildEditorialTitle(candidateDoc));
+            setActiveTabId(candidateId);
+            onTabsChanged(updatedTabs);
+            onSelectTab?.(candidateId);
+            return;
+          }
+        }
+
+        const blankDraft = createEmptyEditorial();
+        hydratedIdRef.current = editorialId;
+        history.resetSeed(blankDraft);
+        setDraft(blankDraft);
+        prevSavedSectionsCountRef.current = Array.isArray(blankDraft.sections) ? blankDraft.sections.length : 0;
       } catch (err) {
         console.warn('Error cargando documento editorial:', err);
-      } finally {
         if (active) {
           hydratedIdRef.current = editorialId;
         }
@@ -383,6 +495,11 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
 
   useEffect(() => {
     if (hydratedIdRef.current !== editorialId || !hasEditedRef.current || !draft || activeTeamRoom) return;
+    persistLastEditorialId(editorialId);
+    const nextSectionsCount = Array.isArray(draft?.sections) ? draft.sections.length : 0;
+    const isStructuralOrImportJump = nextSectionsCount !== prevSavedSectionsCountRef.current;
+    const delayMs = isStructuralOrImportJump ? 50 : AUTOSAVE_DEBOUNCE_MS;
+
     const timer = window.setTimeout(() => {
       const fullDoc = {
         ...draft,
@@ -390,10 +507,32 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         type: 'editorial',
         updatedAt: Date.now(),
       };
+      prevSavedSectionsCountRef.current = nextSectionsCount;
       void saveDocumentDraftLocal(fullDoc, 'editorial');
-    }, AUTOSAVE_DEBOUNCE_MS);
+    }, delayMs);
     return () => window.clearTimeout(timer);
   }, [draft, editorialId, activeTeamRoom]);
+
+  useEffect(() => {
+    const flushPendingEditorialDraft = () => {
+      if (!hasEditedRef.current || activeTeamRoomRef.current || !latestDraftRef.current) return;
+      const fullDoc = {
+        ...latestDraftRef.current,
+        id: latestIdRef.current,
+        type: 'editorial',
+        updatedAt: Date.now(),
+      };
+      persistLastEditorialId(latestIdRef.current);
+      void saveDocumentDraftLocal(fullDoc, 'editorial');
+    };
+    window.addEventListener('pagehide', flushPendingEditorialDraft);
+    window.addEventListener('beforeunload', flushPendingEditorialDraft);
+    return () => {
+      flushPendingEditorialDraft();
+      window.removeEventListener('pagehide', flushPendingEditorialDraft);
+      window.removeEventListener('beforeunload', flushPendingEditorialDraft);
+    };
+  }, []);
 
   useEffect(() => {
     if (!activeTeamRoom?.project?.id || !user?.email) {
@@ -534,20 +673,40 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     }
   }, [draft, activeTeamRoom, showSuccess]);
 
+  const activateEditorialDocument = useCallback(
+    (nextDoc: any, nextId: string, stepTab: string) => {
+      if (nextId !== editorialId) {
+        preloadedDraftsRef.current.set(nextId, nextDoc);
+      }
+      hydratedIdRef.current = nextId;
+      hasEditedRef.current = false;
+      prevSavedSectionsCountRef.current = Array.isArray(nextDoc?.sections) ? nextDoc.sections.length : 0;
+      history.resetSeed(nextDoc);
+      setDraft(nextDoc);
+      setCurrentEditorialId(nextId);
+      persistLastEditorialId(nextId);
+      const updatedTabs = openTab(nextId, 'editorial', buildEditorialTitle(nextDoc));
+      setActiveTabId(nextId);
+      onTabsChanged(updatedTabs);
+      onSelectTab?.(nextId);
+      setActiveStepTab(stepTab);
+      setIsPanelOpen(true);
+    },
+    [editorialId, history, onSelectTab, onTabsChanged],
+  );
+
   const updateDraft = useCallback((updater: (prev: any) => any) => {
     hasEditedRef.current = true;
     setDraft((prev: any) => updater(prev || createEmptyEditorial()));
   }, []);
 
   const handleNewDraft = useCallback(() => {
-    hasEditedRef.current = false;
-    const blank = createEmptyEditorial();
-    history.resetSeed(blank);
-    setDraft(blank);
-    setActiveStepTab('editorial_inicio');
-    setIsPanelOpen(true);
+    const newId = `editorial_${Date.now()}`;
+    explicitBlankIdsRef.current.add(newId);
+    const blank = { ...createEmptyEditorial(), id: newId };
+    activateEditorialDocument(blank, newId, 'editorial_inicio');
     showInfo('Nuevo documento editorial listo para redactar.');
-  }, [showInfo, history]);
+  }, [activateEditorialDocument, showInfo]);
 
   const handleSaveDocument = useCallback(async () => {
     if (!draft) return;
@@ -682,6 +841,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const handleAutoCleanFromPreflight = useCallback(() => {
     if (!draft) return;
     const cleaned = autoCleanEditorialPunctuation(draft);
+    hasEditedRef.current = true;
     setDraft(cleaned);
     const updatedReport = runEditorialPreflight(cleaned);
     setPreflightReport(updatedReport);
@@ -734,9 +894,18 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           const hydratedData = await hydrateInlineAssets(loadedData);
           const sanitized = sanitizeEditorialData(hydratedData);
           if (!sanitized) throw new Error('El archivo no contiene un documento editorial válido.');
-          hasEditedRef.current = true;
-          history.resetSeed(sanitized);
-          setDraft(sanitized);
+          const fullDoc: Record<string, any> = {
+            ...sanitized,
+            id: editorialId,
+            type: 'editorial',
+            updatedAt: Date.now(),
+          };
+          await saveDocumentDraftLocal(fullDoc, 'editorial');
+          persistLastEditorialId(editorialId);
+          hasEditedRef.current = false;
+          prevSavedSectionsCountRef.current = Array.isArray(fullDoc.sections) ? fullDoc.sections.length : 0;
+          history.resetSeed(fullDoc);
+          setDraft(fullDoc);
           setActiveStepTab('editorial_secciones');
           setIsPanelOpen(true);
           showSuccess(`Documento abierto (${openedName}).`);
@@ -749,7 +918,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         },
       );
     },
-    [showSuccess, showError],
+    [editorialId, history, showSuccess, showError],
   );
 
   useEffect(() => {
@@ -799,11 +968,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             },
           };
           await saveDocumentDraftLocal(cloned, 'editorial');
-          hasEditedRef.current = false;
-          history.resetSeed(cloned);
-          setDraft(cloned);
-          setActiveStepTab('editorial_inicio');
-          setIsPanelOpen(true);
+          activateEditorialDocument(cloned, copyId, 'editorial_inicio');
           showSuccess('Copia completa creada y abierta.');
         },
         {
@@ -813,7 +978,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         },
       );
     },
-    [history, showSuccess, showError],
+    [activateEditorialDocument, showSuccess, showError],
   );
 
   const handleOpenSaved = useCallback(
@@ -824,11 +989,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           const loaded = await loadDocumentById(saved.id, 'editorial');
           const sanitized = sanitizeEditorialData(loaded);
           if (!sanitized) throw new Error('documento_editorial_invalido');
-          hasEditedRef.current = false;
-          history.resetSeed(sanitized);
-          setDraft(sanitized);
-          setActiveStepTab('editorial_secciones');
-          setIsPanelOpen(true);
+          activateEditorialDocument(sanitized, saved.id, 'editorial_secciones');
           showSuccess('Documento cargado correctamente.');
         },
         {
@@ -838,7 +999,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         },
       );
     },
-    [showSuccess, showError],
+    [activateEditorialDocument, showSuccess, showError],
   );
 
   // Resolver sección enfocada cuando el usuario toca uno de los botones numerados del Dock

@@ -30,6 +30,15 @@ import {
   type PdfRichLine,
 } from './pdfGeometryHelpers';
 
+export function hasUsableEditorialDigitalText(lines: PdfRichLine[]): boolean {
+  if (!Array.isArray(lines) || lines.length === 0) return false;
+  let nonWsChars = 0;
+  for (const ln of lines) {
+    nonWsChars += String(ln?.text || '').replace(/\s+/g, '').length;
+  }
+  return nonWsChars >= 12 || (lines.length >= 2 && nonWsChars >= 6);
+}
+
 export interface PdfEditorialProgress {
   stage: 'reading' | 'ocr' | 'structuring' | 'done';
   current: number;
@@ -215,7 +224,26 @@ export async function extractEditorialFromPdfFile(
       viewportBase.height,
     );
 
-    if (analyzed.mode === 'text' || analyzed.mode === 'hybrid') {
+    const fontStyles: Record<string, PdfFontStyleMeta> = {};
+    if (textContent?.styles && typeof textContent.styles === 'object') {
+      for (const [fKey, fMeta] of Object.entries<any>(textContent.styles)) {
+        const fam = String(fMeta?.fontFamily || '');
+        fontStyles[fKey] = {
+          bold: /bold|black|heavy/i.test(fam),
+          italic: /italic|oblique/i.test(fam),
+        };
+      }
+    }
+
+    const richSpans = normalizePdfRichSpans(textContent?.items || [], fontStyles);
+    const rawLines = groupSpansIntoRichLines(richSpans, viewportBase.width);
+    const orderedLines = orderPageLinesXyCut(rawLines, viewportBase.width);
+
+    if (
+      analyzed.mode === 'text' ||
+      analyzed.mode === 'hybrid' ||
+      hasUsableEditorialDigitalText(orderedLines)
+    ) {
       digitalPages++;
       onProgress?.({
         stage: 'reading',
@@ -223,21 +251,6 @@ export async function extractEditorialFromPdfFile(
         total: totalPages,
         message: `Leyendo estructura, tablas e imágenes de "${file.name}" (página ${p} de ${totalPages})...`,
       });
-
-      const fontStyles: Record<string, PdfFontStyleMeta> = {};
-      if (textContent?.styles && typeof textContent.styles === 'object') {
-        for (const [fKey, fMeta] of Object.entries<any>(textContent.styles)) {
-          const fam = String(fMeta?.fontFamily || '');
-          fontStyles[fKey] = {
-            bold: /bold|black|heavy/i.test(fam),
-            italic: /italic|oblique/i.test(fam),
-          };
-        }
-      }
-
-      const richSpans = normalizePdfRichSpans(textContent?.items || [], fontStyles);
-      const rawLines = groupSpansIntoRichLines(richSpans, viewportBase.width);
-      const orderedLines = orderPageLinesXyCut(rawLines, viewportBase.width);
 
       let visualRegions: ReturnType<typeof extractVisualRegionsFromOperatorList> = [];
       try {
@@ -287,13 +300,31 @@ export async function extractEditorialFromPdfFile(
           }
         }
         ocrPagesData.push({ page: p, text: ocrRes.text, figures: figs });
+      } else if (orderedLines.length > 0) {
+        digitalPagesRaw.push({
+          page: p,
+          widthPt: viewportBase.width,
+          heightPt: viewportBase.height,
+          lines: orderedLines,
+          visualRegions: [],
+        });
       } else {
         warnings.push(`La página escaneada ${p} no pudo leerse en este intento y se omitió sin detener el resto.`);
       }
       clamped.width = 0;
       clamped.height = 0;
     } catch {
-      warnings.push(`La página ${p} presentó un problema de lectura puntual y se continuó con el resto.`);
+      if (orderedLines.length > 0) {
+        digitalPagesRaw.push({
+          page: p,
+          widthPt: viewportBase.width,
+          heightPt: viewportBase.height,
+          lines: orderedLines,
+          visualRegions: [],
+        });
+      } else {
+        warnings.push(`La página ${p} presentó un problema de lectura puntual y se continuó con el resto.`);
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, BookOpen, Check, CheckCircle2, Info, Sparkles } from 'lucide-react';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { button, radius, selectableCard } from '../../../shared/core/uiDesignSystem';
 import { GlobalApplyMode } from '../../../shared/core/presets/configCascadeEngine';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
@@ -49,6 +50,30 @@ const CITATION_OPTIONS: Array<{ id: CanonicalCitationStyle; label: string; tag: 
   { id: 'tradicional', label: 'Libre', tag: 'Escolar' },
 ];
 
+export function hasEditorialSubstantiveContent(sections: any): boolean {
+  if (!Array.isArray(sections)) return false;
+  return sections.some(
+    (s: any) =>
+      Array.isArray(s?.records) &&
+      s.records.some((r: any) => {
+        if (!r || typeof r !== 'object') return false;
+        const hasText = String(r.content || '').trim().length > 0;
+        const hasTitle = String(r.sourceTitle || r.calloutTitle || '').trim().length > 0;
+        const hasImg = Boolean(r.imagePath);
+        const hasTable =
+          (Array.isArray(r.tableRows) && r.tableRows.length > 0) ||
+          (Array.isArray(r.tableHeaders) &&
+            r.tableHeaders.some((h: any) => String(h || '').trim().length > 0));
+        const hasCallout =
+          Array.isArray(r.calloutItems) &&
+          r.calloutItems.some((c: any) => String(c || '').trim().length > 0);
+        const hasFootnote = String(r.footnoteText || '').trim().length > 0;
+        const hasAuthors = Array.isArray(r.authors) && r.authors.length > 0;
+        return hasText || hasTitle || hasImg || hasTable || hasCallout || hasFootnote || hasAuthors;
+      }),
+  );
+}
+
 export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> = ({
   isOpen,
   axis = 'preset',
@@ -56,6 +81,7 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
   draft,
   onApplyGlobalConfig,
 }) => {
+  const { confirm } = useConfirm();
   const [selectedPresetId, setSelectedPresetId] = useState<EditorialPresetId>(
     (draft?.design?.presetId as EditorialPresetId) || 'libro-ensayo-novela',
   );
@@ -68,13 +94,7 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
   const [presetMode, setPresetMode] = useState<'apply-design' | 'replace-structure'>('apply-design');
 
   const hasText = useMemo(
-    () =>
-      Array.isArray(draft?.sections) &&
-      draft.sections.some(
-        (s: any) =>
-          Array.isArray(s?.records) &&
-          s.records.some((r: any) => String(r?.content || '').trim().length > 0),
-      ),
+    () => hasEditorialSubstantiveContent(draft?.sections),
     [draft?.sections],
   );
 
@@ -109,7 +129,18 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
 
   const activeGuide = BIBLIOGRAPHY_NORM_GUIDES[selectedBib];
 
-  const handleApply = (applyMode: GlobalApplyMode) => {
+  const handleApply = async (applyMode: GlobalApplyMode) => {
+    if (axis === 'preset' && presetMode === 'replace-structure' && hasText) {
+      const ok = await confirm({
+        title: '¿Reemplazar capítulos por la plantilla?',
+        message:
+          'Tu documento ya tiene contenido cargado. Si reemplazás la estructura se perderán los capítulos actuales; podés elegir "Solo cambiar diseño" para conservar todo tu texto.',
+        confirmText: 'Sí, reemplazar capítulos',
+        cancelText: 'Conservar mi texto',
+      });
+      if (!ok) return;
+    }
+
     const currentPresetId = (draft?.design?.presetId as EditorialPresetId) || 'libro-ensayo-novela';
     const currentNorm = resolveStructuralNormFromDraft(draft);
     const currentBib = normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId);
