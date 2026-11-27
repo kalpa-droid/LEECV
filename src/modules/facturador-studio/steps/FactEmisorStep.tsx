@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Store, Upload, Trash2 } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { CONDICIONES_IVA, FactStepBaseProps } from '../facturadorStepsShared';
 import { EmpresaConfig } from '../domain/facturadorTypes';
 import { isValidCuit, isValidEmail } from '../../../shared/core/utils/validationEngine';
@@ -10,6 +11,7 @@ import { radius } from '../../../shared/core/uiDesignSystem';
 
 /** Paso 1 — Datos del negocio emisor + logo. */
 export const FactEmisorStep: React.FC<FactStepBaseProps> = ({ vault, updateVault, notify }) => {
+  const { confirm } = useConfirm();
   const empresa = vault.empresa;
   const [logoError, setLogoError] = useState<string | null>(null);
 
@@ -128,8 +130,16 @@ export const FactEmisorStep: React.FC<FactStepBaseProps> = ({ vault, updateVault
               <img src={logoSrc} alt="Logo del negocio" className="max-h-14 max-w-[120px] object-contain bg-white p-1" />
               <button
                 type="button"
-                onClick={() => patch({ logoSvgRaw: undefined, logoPngDataUrl: undefined })}
-                className="ml-auto text-xs font-bold text-[var(--color-status-danger-text)] inline-flex items-center gap-1"
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: '¿Quitar el logo del negocio?',
+                    message: 'Dejará de aparecer en tus comprobantes hasta que subas otro o presiones Deshacer.',
+                    confirmText: 'Sí, quitar',
+                    cancelText: 'Conservar',
+                  });
+                  if (ok) patch({ logoSvgRaw: undefined, logoPngDataUrl: undefined });
+                }}
+                className="ml-auto text-xs font-bold text-[var(--color-status-danger-text)] inline-flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Quitar
               </button>

@@ -295,7 +295,23 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
     }));
   };
 
-  const removeRecord = (recId: string) => {
+  const removeRecord = async (recId: string) => {
+    const target = (section.records || []).find((r) => r.id === recId);
+    const hasPayload = Boolean(
+      target &&
+        (String(target.content || '').trim() ||
+          target.imagePath ||
+          (Array.isArray(target.tableRows) && target.tableRows.length > 0)),
+    );
+    if (hasPayload) {
+      const ok = await confirm({
+        title: '¿Quitar este bloque del capítulo?',
+        message: 'Podés volver a recuperarlo con el botón Deshacer en la barra superior.',
+        confirmText: 'Sí, quitar',
+        cancelText: 'Conservar',
+      });
+      if (!ok) return;
+    }
     updateDraft((prev) => ({
       ...prev,
       sections: (prev?.sections || []).map((s: EditorialSection) =>
@@ -994,11 +1010,18 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                                     type="button"
                                     aria-label="Quitar esta cita del texto"
                                     title="Quitar esta cita del texto"
-                                    onClick={() =>
+                                    onClick={async () => {
+                                      const ok = await confirm({
+                                        title: '¿Quitar esta cita del párrafo?',
+                                        message: 'La fuente seguirá guardada en Bibliografía.',
+                                        confirmText: 'Sí, quitar',
+                                        cancelText: 'Cancelar',
+                                      });
+                                      if (!ok) return;
                                       updateRecord(rec.id, {
                                         content: (rec.content || '').replace(tok.rawToken, '').replace(/\s{2,}/g, ' ').trim(),
-                                      })
-                                    }
+                                      });
+                                    }}
                                     className="text-[var(--color-status-danger-text)] hover:opacity-75 cursor-pointer ml-0.5"
                                   >
                                     ×

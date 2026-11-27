@@ -2,6 +2,7 @@ import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, Gri
 import React from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { SectionSwitch } from '../../../../../shared/core/ui/SectionSwitch';
+import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';
@@ -29,6 +30,7 @@ export const PortadaSection = ({
   triggerPresetTransition,
   getEffectiveCoverFeaturedItems,
   }: any) => {
+  const { confirm } = useConfirm();
   return (
     <>
       {activeTab === 'portada' && (
@@ -124,7 +126,14 @@ export const PortadaSection = ({
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={async () => {
+                                    const ok = await confirm({
+                                      title: '¿Quitar este elemento de la portada?',
+                                      message: 'Seguirá existiendo en su sección correspondiente y podés revertir con Deshacer.',
+                                      confirmText: 'Sí, quitar',
+                                      cancelText: 'Conservar',
+                                    });
+                                    if (!ok) return;
                                     if (item.source === 'roles') {
                                       // Remove from roles array
                                       setCvData((prev: any) => ({

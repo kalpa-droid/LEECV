@@ -77,8 +77,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [isSwitchingDocument, setIsSwitchingDocument] = useState(false);
 
-  // Per-document Undo / Redo History Map (up to 30 snapshots per document ID)
-  const historyMapRef = useRef<Map<string, { stack: CVData[]; index: number }>>(new Map());
+  // Per-document Undo / Redo History Map (up to 50 snapshots per document ID, con coalescing de 800ms)
+  const historyMapRef = useRef<Map<string, { stack: CVData[]; index: number; lastPushTs: number }>>(new Map());
   const [, setHistoryState] = useState(0); // Trigger re-render for UI buttons
 
   const getDocId = useCallback((data: CVData) => data?.id || 'default_cv_doc', []);
@@ -94,22 +94,22 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
       // Save previous document's history state if not existing
       if (!historyMapRef.current.has(prevId)) {
-        historyMapRef.current.set(prevId, { stack: [prev], index: 0 });
+        historyMapRef.current.set(prevId, { stack: [prev], index: 0, lastPushTs: 0 });
       }
 
       // Document switch / load detection: switch to next document's history stack
       if (prevId !== nextId) {
         if (!historyMapRef.current.has(nextId)) {
-          historyMapRef.current.set(nextId, { stack: [nextData], index: 0 });
+          historyMapRef.current.set(nextId, { stack: [nextData], index: 0, lastPushTs: 0 });
         }
         setHistoryState(n => n + 1);
         return nextData;
       }
 
-      // Same document: append to history if content changed
+      // Same document: append to history if content changed (con coalescing para tipeo fluido)
       let entry = historyMapRef.current.get(nextId);
       if (!entry) {
-        entry = { stack: [nextData], index: 0 };
+        entry = { stack: [nextData], index: 0, lastPushTs: 0 };
         historyMapRef.current.set(nextId, entry);
       }
 
@@ -118,21 +118,30 @@ export function CVProvider({ children }: { children: ReactNode }) {
       if (docType !== 'book') {
         const computedTitle = computeAutoDocumentTitle(docType as any, nextData);
         if (computedTitle && nextData.title !== computedTitle) {
-          // El título de la pestaña se sincroniza en un efecto de App.tsx: llamar acá a
-          // updateTabTitle dispararía un evento global (setState de otro componente)
-          // desde dentro de un updater de setState, que React trata como render impuro.
           finalData = { ...nextData, title: computedTitle };
         }
       }
 
-      const currentStack = entry.stack.slice(0, entry.index + 1);
-      const lastItem = currentStack[currentStack.length - 1];
-
+      const lastItem = entry.stack[entry.index];
       if (JSON.stringify(lastItem) !== JSON.stringify(finalData)) {
-        currentStack.push(finalData);
-        if (currentStack.length > 30) currentStack.shift();
-        entry.stack = currentStack;
-        entry.index = currentStack.length - 1;
+        const now = Date.now();
+        const withinCoalesce =
+          entry.lastPushTs > 0 &&
+          entry.index > 0 &&
+          entry.index === entry.stack.length - 1 &&
+          now - entry.lastPushTs <= 800;
+
+        if (withinCoalesce) {
+          entry.stack[entry.index] = finalData;
+          entry.lastPushTs = now;
+        } else {
+          const currentStack = entry.stack.slice(0, entry.index + 1);
+          currentStack.push(finalData);
+          if (currentStack.length > 50) currentStack.shift();
+          entry.stack = currentStack;
+          entry.index = currentStack.length - 1;
+          entry.lastPushTs = now;
+        }
         setHistoryState(n => n + 1);
       }
 
@@ -153,6 +162,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
     const entry = historyMapRef.current.get(activeId);
     if (entry && entry.index > 0) {
       entry.index -= 1;
+      entry.lastPushTs = 0;
       const prev = entry.stack[entry.index];
       setCvDataState(prev);
       setHistoryState(n => n + 1);
@@ -164,6 +174,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
     const entry = historyMapRef.current.get(activeId);
     if (entry && entry.index < entry.stack.length - 1) {
       entry.index += 1;
+      entry.lastPushTs = 0;
       const next = entry.stack[entry.index];
       setCvDataState(next);
       setHistoryState(n => n + 1);
@@ -174,13 +185,17 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const canUndo = activeEntry ? activeEntry.index > 0 : false;
   const canRedo = activeEntry ? activeEntry.index < activeEntry.stack.length - 1 : false;
 
-  // Atajos de teclado globales para Deshacer (Ctrl+Z / Cmd+Z) y Rehacer (Ctrl+Y / Cmd+Y / Cmd+Shift+Z)
+  // Atajos de teclado solo cuando el usuario está en CV / Carta (evita secuestrar Ctrl+Z de otros estudios)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeRouteDoc = getDocTypeForRoute(navigation.getPathname());
+      if (activeRouteDoc !== 'cv' && activeRouteDoc !== 'cover_letter') return;
+
       const target = e.target as HTMLElement | null;
       const isEditingText = target && (
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
         target.isContentEditable
       );
 
@@ -229,25 +244,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
   };
 
   const applyThemePreset = (preset: any) => {
-    setCvData((prev) => {
-      const hasManualOverrides = prev.manualOverrides && Object.keys(prev.manualOverrides).length > 0;
-      if (hasManualOverrides && typeof window !== 'undefined') {
-        const confirmChange = window.confirm(
-          'Advertencia: Cambiar la plantilla restablecerá los ajustes manuales aplicados a registros individuales. ¿Deseas continuar?'
-        );
-        if (!confirmChange) return prev;
+    setCvData((prev) => ({
+      ...prev,
+      activePresetId: preset.id || preset.presetId || prev.activePresetId,
+      manualOverrides: {},
+      layout: {
+        ...prev.layout,
+        ...preset
       }
-
-      return {
-        ...prev,
-        activePresetId: preset.id || preset.presetId || prev.activePresetId,
-        manualOverrides: {},
-        layout: {
-          ...prev.layout,
-          ...preset
-        }
-      };
-    });
+    }));
   };
 
   const toggleSectionVisibility = (sectionKey: string) => {
@@ -266,7 +271,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const resetToBlankCV = (options?: { activePresetId?: string }) => {
     const blank = sanitizeCvData(createBlankCVTemplate(options));
     const blankId = getDocId(blank);
-    historyMapRef.current.set(blankId, { stack: [blank], index: 0 });
+    historyMapRef.current.set(blankId, { stack: [blank], index: 0, lastPushTs: 0 });
     setCvData(blank);
     if (typeof window !== 'undefined') {
       try {
@@ -283,18 +288,30 @@ export function CVProvider({ children }: { children: ReactNode }) {
       const docWithId = newCVData.id ? newCVData : { ...newCVData, id: `cv_${Date.now()}` };
       const docId = getDocId(docWithId);
       if (!historyMapRef.current.has(docId)) {
-        historyMapRef.current.set(docId, { stack: [docWithId], index: 0 });
+        historyMapRef.current.set(docId, { stack: [docWithId], index: 0, lastPushTs: 0 });
       }
       setCvData(docWithId);
     }
   };
 
+  const migrateCvHistoryId = useCallback((oldId: string, newId: string) => {
+    if (!oldId || !newId || oldId === newId) return;
+    const existing = historyMapRef.current.get(oldId);
+    if (existing) {
+      historyMapRef.current.set(newId, { ...existing, lastPushTs: 0 });
+      historyMapRef.current.delete(oldId);
+      setHistoryState((n) => n + 1);
+    }
+  }, []);
+
   const saveCV = async () => {
     setIsSaving(true);
     try {
+      const oldId = getDocId(cvData);
       const confirmedData = markAsConfirmed(cvData);
       const res = await saveCVStorage(confirmedData);
       if (res?.success && res.record?.id && res.record.id !== cvData.id) {
+        migrateCvHistoryId(oldId, res.record.id);
         setCvDataState((prev: CVData) => markAsConfirmed({ ...prev, id: res.record!.id }));
       } else if (res?.success) {
         setCvDataState((prev: CVData) => markAsConfirmed(prev));
@@ -313,10 +330,12 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const saveCVAs = async (versionLabel?: string, documentOverrides: Partial<CVData> = {}) => {
     setIsSaving(true);
     try {
+      const oldId = getDocId(cvData);
       const confirmedData = markAsConfirmed({ ...cvData, ...documentOverrides });
       const res = await saveCVAsStorage(confirmedData, versionLabel);
       if (res?.success && res.record?.id) {
-        setCvDataState((prev: CVData) => {
+        migrateCvHistoryId(oldId, res.record.id);
+        setCvDataState(() => {
           const copy: any = {
             ...confirmedData,
             id: res.record!.id,

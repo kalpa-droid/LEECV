@@ -545,15 +545,6 @@ function mergeConsecutiveVerseBlocks(
   return { blocks: out, mergedPoemCount, replacedParagraphs };
 }
 
-function guessMimeFromPath(path: string): string {
-  const lower = path.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.svg')) return 'image/svg+xml';
-  return 'image/jpeg';
-}
-
 export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array): Promise<DocxClientExtractionResult> {
   const JSZip = (await import('jszip')).default;
   const bytes =
@@ -682,21 +673,47 @@ export async function extractDocxInClient(input: Blob | ArrayBuffer | Uint8Array
     for (const blip of blips) {
       const rId = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
       const targetPath = rId ? relsById.get(rId) : undefined;
-      if (targetPath && /\.(png|jpe?g|webp|gif)$/i.test(targetPath)) {
+      if (targetPath && /\.(png|jpe?g|webp|gif|bmp|tiff?|emf|wmf|svg|avif|heic)$/i.test(targetPath)) {
         const mediaFile = zip.file(targetPath);
         if (mediaFile) {
-          const b64 = await mediaFile.async('base64');
-          const mime = guessMimeFromPath(targetPath);
-          let dataUrl = `data:${mime};base64,${b64}`;
-          if (mime === 'image/webp' || mime === 'image/gif') {
-            try {
-              const { ensurePdfCompatibleImageDataUrl } = await import('../../../shared/core/utils/imageCompressor');
-              dataUrl = await ensurePdfCompatibleImageDataUrl(dataUrl);
-            } catch {}
+          const bytes = await mediaFile.async('uint8array');
+          const {
+            detectImageMagicMime,
+            encodeUint8ArrayToBase64,
+            sanitizeImageDataUrlForPdf,
+          } = await import('../../../shared/core/utils/imageCompressor');
+
+          const magic = detectImageMagicMime(bytes);
+          if (magic === 'empty' || magic === 'unsupported') {
+            blocks.push({
+              kind: 'figure_placeholder',
+              figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen no compatible'}, reemplazar por PNG o JPG)`,
+              figureHint: 'Formato de dibujo interno de Word no compatible directo con PDF',
+            });
+            stats.figurePlaceholders++;
+            warnings.push(
+              `Se detectó "${targetPath.split('/').pop()}" en formato no compatible directo; se preservó como espacio de figura editable.`,
+            );
+            continue;
           }
+
+          const rawDataUrl = `data:${magic};base64,${encodeUint8ArrayToBase64(bytes)}`;
+          const sanitizedDataUrl = await sanitizeImageDataUrlForPdf(rawDataUrl);
+          if (!sanitizedDataUrl) {
+            blocks.push({
+              kind: 'figure_placeholder',
+              figureCaption: `Figura del documento original (${targetPath.split('/').pop() || 'imagen dañada'}, volver a cargar)`,
+            });
+            stats.figurePlaceholders++;
+            warnings.push(
+              `La imagen "${targetPath.split('/').pop()}" tenía datos binarios dañados; se convirtió en espacio de figura para no romper la vista previa.`,
+            );
+            continue;
+          }
+
           blocks.push({
             kind: 'image',
-            imageDataUrl: dataUrl,
+            imageDataUrl: sanitizedDataUrl,
             imageCaption: '',
           });
           stats.images++;

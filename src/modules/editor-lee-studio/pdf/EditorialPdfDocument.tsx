@@ -24,6 +24,7 @@ import {
   splitTextAroundImage,
 } from '../domain/editorialLayoutEngines';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
+import { isRenderablePdfImageSrc } from '../../../shared/core/utils/imageCompressor';
 import { EditorialPdfCoverPage, EditorialSectionDividerPage } from './EditorialPdfCovers';
 import { resolveEditorialSectionCoverState } from '../domain/sanitizeEditorialData';
 import { resolveSectionBadgeLabel } from '../domain/editorialDockEngine';
@@ -601,7 +602,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
               }}
             >
               <View style={{ width: imgWidthPt }}>
-                {record.imagePath && !record.imagePath.startsWith('asset://') ? (
+                {isRenderablePdfImageSrc(record.imagePath) ? (
                   <Image style={{ width: '100%', objectFit: 'contain' }} src={record.imagePath} />
                 ) : null}
                 {record.imageCaption ? (
@@ -826,13 +827,33 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
           );
           break;
 
-        case 'image':
+        case 'image': {
+          const primaryValid = isRenderablePdfImageSrc(record.imagePath);
+          const secondaryValid =
+            record.imageLayoutMode === 'pair-side-by-side' &&
+            isRenderablePdfImageSrc(record.secondaryImagePath);
+
+          if (!primaryValid && !record.imageCaption) {
+            break;
+          }
+
           elements.push(
             <View key={key} wrap={false} style={{ alignItems: 'center', marginVertical: 10 }}>
-              {record.imagePath && !record.imagePath.startsWith('asset://') ? (
+              {secondaryValid && primaryValid ? (
+                <View style={{ flexDirection: 'row', gap: 10, width: colUsableWidthPt, alignItems: 'center' }}>
+                  <Image
+                    style={{ width: Math.floor((colUsableWidthPt - 10) / 2), maxHeight: 220, objectFit: 'contain' }}
+                    src={record.imagePath!}
+                  />
+                  <Image
+                    style={{ width: Math.floor((colUsableWidthPt - 10) / 2), maxHeight: 220, objectFit: 'contain' }}
+                    src={record.secondaryImagePath!}
+                  />
+                </View>
+              ) : primaryValid ? (
                 <Image
                   style={{ maxWidth: Math.min(380, colUsableWidthPt), maxHeight: 260, objectFit: 'contain' }}
-                  src={record.imagePath}
+                  src={record.imagePath!}
                 />
               ) : null}
               {record.imageCaption ? (
@@ -843,6 +864,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
             </View>,
           );
           break;
+        }
 
         case 'bibliography_item': {
           const globalBibIdx = sectionRecordsForBib
@@ -958,7 +980,7 @@ export const EditorialPdfDocument: React.FC<EditorialPdfDocumentProps> = ({
         case 'qr_or_break':
           if (record.isBreak) {
             elements.push(<Text key={key} break />);
-          } else if (record.qrCode) {
+          } else if (isRenderablePdfImageSrc(record.qrCode)) {
             elements.push(<Image key={key} style={styles.qrCode} src={record.qrCode} />);
           }
           break;

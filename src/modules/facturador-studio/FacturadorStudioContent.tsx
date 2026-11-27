@@ -9,6 +9,7 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
+import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { saveInvoiceShell } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { LocalBackupShieldBanner } from '../../shared/core/ui/LocalBackupShieldBanner';
@@ -183,6 +184,21 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
   const design = vault?.design || EMPTY_FACTURADOR_VAULT.design;
   const empresa = vault?.empresa || EMPTY_EMPRESA;
   const preset = getInvoicePreset(design.presetId);
+
+  const applyVaultSnapshot = useCallback(
+    (snap: FacturadorVaultData | null) => {
+      if (snap) updateVault(() => snap);
+    },
+    [updateVault],
+  );
+
+  const history = useStudioHistory<FacturadorVaultData | null>({
+    docId: invoiceId,
+    state: vault,
+    applyState: applyVaultSnapshot,
+    isHydrating: phase !== 'unlocked' || !vault,
+    isActive: phase === 'unlocked',
+  });
 
   const viewport = useDocumentViewport({ pageSizeId: design.pageSizeId });
 
@@ -556,6 +572,10 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
         navbarSlot={
           <StudioNavbar
             docType="invoice"
+            undo={history.undo}
+            redo={history.redo}
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
             currentCvData={{}}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={() => {

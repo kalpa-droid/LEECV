@@ -19,6 +19,7 @@ import {
   resolveDocumentIdWithHandoff,
   useRegisterDocumentTab,
 } from '../../shared/core/documents/documentEngine';
+import { useStudioHistory } from '../../shared/core/documents/session/useStudioHistory';
 import { loadCardById, saveCard } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
@@ -92,6 +93,18 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
   const hydratedIdRef = useRef<string | null>(null);
   const hasEditedRef = useRef<boolean>(false);
 
+  const applyCardSnapshot = useCallback((snap: any) => {
+    hasEditedRef.current = true;
+    setCardDocData(snap);
+  }, []);
+
+  const history = useStudioHistory({
+    docId: cardId,
+    state: cardDocData,
+    applyState: applyCardSnapshot,
+    isHydrating: hydratedIdRef.current !== cardId,
+  });
+
   const viewport = useDocumentViewport({ pageSizeId: 'a4' });
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -112,13 +125,17 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
         const saved = await loadCardById(cardId);
         if (!active) return;
         if (saved) {
-          setCardDocData({
+          const merged = {
             ...createBlankCardDocumentData(cardId),
             ...saved,
             id: cardId,
-          });
+          };
+          history.resetSeed(merged);
+          setCardDocData(merged);
         } else {
-          setCardDocData(createBlankCardDocumentData(cardId));
+          const blank = createBlankCardDocumentData(cardId);
+          history.resetSeed(blank);
+          setCardDocData(blank);
         }
       } catch (err) {
         console.warn('Error cargando tarjeta local:', err);
@@ -222,6 +239,10 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
         navbarSlot={
           <StudioNavbar
             docType="business_card"
+            undo={history.undo}
+            redo={history.redo}
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
             currentCvData={cardDocData}
             currentUiTheme={currentUiTheme}
             onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}

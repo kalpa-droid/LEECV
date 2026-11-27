@@ -14,6 +14,11 @@ export interface StoredCustomFontEntry {
   fileName: string;
   source: 'uploaded' | 'windows_local';
   dataUrl: string;
+  variants?: {
+    bold?: string;
+    italic?: string;
+    boldItalic?: string;
+  };
   createdAt: string;
 }
 
@@ -40,6 +45,18 @@ export async function getStoredCustomFont(familyName: string): Promise<StoredCus
     return data && typeof data === 'object' ? (data as StoredCustomFontEntry) : null;
   } catch {
     return null;
+  }
+}
+
+export async function removeCustomFont(familyName: string): Promise<void> {
+  const slug = slugifyFont(familyName);
+  try {
+    await idbStorage.removeItem(`${FONT_DATA_PREFIX}${slug}`);
+    const index = await listStoredCustomFonts();
+    const nextIndex = index.filter((item) => item.slug !== slug);
+    await idbStorage.setItem(FONT_INDEX_KEY, nextIndex);
+  } catch {
+    // noop
   }
 }
 

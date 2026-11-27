@@ -227,9 +227,9 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             </div>
             <select
               value={design.typography?.fontFamily || 'Times-Roman'}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const fam = e.target.value;
-                void ensureAcademicOrCustomFontRegistered(fam);
+                await ensureAcademicOrCustomFontRegistered(fam).catch(() => false);
                 updateTypography('fontFamily', fam);
               }}
               className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
@@ -306,15 +306,19 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             <span>Subir fuente (.ttf / .otf)</span>
             <input
               type="file"
-              accept=".ttf,.otf,.woff"
+              accept=".ttf,.otf"
               className="hidden"
               onChange={async (e) => {
                 const picked = e.target.files?.[0];
                 e.currentTarget.value = '';
                 if (!picked) return;
-                const family = await uploadCustomPdfFontFile(picked);
-                updateTypography('fontFamily', family);
-                showSuccess?.(`Fuente "${family}" lista y guardada para tu PDF.`);
+                try {
+                  const family = await uploadCustomPdfFontFile(picked);
+                  updateTypography('fontFamily', family);
+                  showSuccess?.(`Fuente "${family}" lista y guardada para tu PDF.`);
+                } catch (err: any) {
+                  showInfo?.(err?.message || 'Elegí un archivo de fuente .ttf u .otf válido.');
+                }
               }}
             />
           </label>
