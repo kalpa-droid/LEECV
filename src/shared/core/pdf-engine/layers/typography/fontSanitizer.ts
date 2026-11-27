@@ -5,6 +5,21 @@
  * `pdfFontRegistry.ts`).
  */
 
+export const STANDARD_PDF_FONT_FAMILIES: ReadonlySet<string> = new Set([
+  'Courier',
+  'Courier-Bold',
+  'Courier-Oblique',
+  'Courier-BoldOblique',
+  'Helvetica',
+  'Helvetica-Bold',
+  'Helvetica-Oblique',
+  'Helvetica-BoldOblique',
+  'Times-Roman',
+  'Times-Bold',
+  'Times-Italic',
+  'Times-BoldItalic',
+]);
+
 const VALID_PDF_FONTS = new Set([
   'Helvetica',
   'Helvetica-Bold',
@@ -17,6 +32,15 @@ const VALID_PDF_FONTS = new Set([
 ]);
 
 const DYNAMIC_REGISTERED_FONTS = new Set<string>();
+let liveFontRegistryProbe: ((family: string) => boolean) | null = null;
+
+export function setLiveFontRegistryProbe(probe: ((family: string) => boolean) | null): void {
+  liveFontRegistryProbe = probe;
+}
+
+export function getDynamicRegisteredFontFamilies(): string[] {
+  return Array.from(DYNAMIC_REGISTERED_FONTS);
+}
 
 export function registerDynamicFontFamily(family: string): void {
   if (family && typeof family === 'string') {
@@ -25,7 +49,13 @@ export function registerDynamicFontFamily(family: string): void {
 }
 
 export function isDynamicFontRegistered(family?: string): boolean {
-  return Boolean(family && DYNAMIC_REGISTERED_FONTS.has(family.trim()));
+  const clean = typeof family === 'string' ? family.trim() : '';
+  if (!clean || !DYNAMIC_REGISTERED_FONTS.has(clean)) return false;
+  if (liveFontRegistryProbe && !liveFontRegistryProbe(clean)) {
+    DYNAMIC_REGISTERED_FONTS.delete(clean);
+    return false;
+  }
+  return true;
 }
 
 export function clearDynamicFontRegistry(): void {
@@ -55,7 +85,7 @@ export function sanitizeFontFamilyPure(
     return resolveHelveticaVariant(isBold, isItalic);
   }
 
-  if (DYNAMIC_REGISTERED_FONTS.has(family.trim())) {
+  if (isDynamicFontRegistered(family)) {
     return family.trim();
   }
 

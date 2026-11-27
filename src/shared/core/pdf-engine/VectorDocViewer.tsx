@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { pdf } from '@react-pdf/renderer';
+import { pdf, Image as PdfImage } from '@react-pdf/renderer';
 import { colorSystem } from '../uiDesignSystem';
 import { scrollToPdfAnchor } from './layers/anchors/pdfAnchorEngine';
 import { ContentSection } from './layers/records/recordTypes';
@@ -7,7 +7,7 @@ import { Preset } from './layers/presets/presetSchema';
 import { CvLayoutOverrides } from './layers/sectors/layoutResolutionEngine';
 import { markRenderAsCompleted } from './layers/presets/presetTransitionEngine';
 import { ensurePdfjsWorkerConfigured } from './pdfjsWorkerSetup';
-import { resetBrokenDynamicFonts } from './layers/typography/pdfFontRegistry';
+import { initPdfFonts, resetBrokenDynamicFonts } from './layers/typography/pdfFontRegistry';
 
 const pdfjsLib = ensurePdfjsWorkerConfigured();
 
@@ -61,6 +61,70 @@ function computeSafeViewport(page: any, containerWidth: number, zoomLevel: numbe
   const maxDim = Math.max(unscaled.width * rawScale, unscaled.height * rawScale);
   const clampedScale = maxDim > MAX_CANVAS_SIDE_PX ? rawScale * (MAX_CANVAS_SIDE_PX / maxDim) : rawScale;
   return page.getViewport({ scale: Math.max(0.5, clampedScale) });
+}
+
+function sanitizeImageFieldsInData(data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  const cloned = { ...data };
+  if (cloned.cover && typeof cloned.cover === 'object') {
+    cloned.cover = { ...cloned.cover, qrCodeUrl: undefined };
+  }
+  if (Array.isArray(cloned.sections)) {
+    cloned.sections = cloned.sections.map((sec: any) =>
+      sec && Array.isArray(sec.records)
+        ? {
+            ...sec,
+            records: sec.records.map((rec: any) =>
+              rec && typeof rec === 'object'
+                ? { ...rec, imagePath: undefined, secondaryImagePath: undefined, qrCode: undefined }
+                : rec,
+            ),
+          }
+        : sec,
+    );
+  }
+  return cloned;
+}
+
+function stripPdfImagesFromElement(node: React.ReactNode): React.ReactNode {
+  if (
+    node === null ||
+    node === undefined ||
+    typeof node === 'boolean' ||
+    typeof node === 'string' ||
+    typeof node === 'number'
+  ) {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map((child) => stripPdfImagesFromElement(child));
+  }
+  if (!React.isValidElement(node)) return node;
+
+  const props: any = node.props || {};
+  const typeName =
+    typeof node.type === 'string'
+      ? node.type
+      : (node.type as any)?.displayName || (node.type as any)?.name || '';
+  if (
+    node.type === PdfImage ||
+    typeName === 'IMAGE' ||
+    (typeof props.src === 'string' && /^(?:data:image\/|https?:\/\/|\/)/i.test(props.src))
+  ) {
+    return null;
+  }
+
+  const nextProps: Record<string, any> = {};
+  let changed = false;
+  if (props.data && typeof props.data === 'object') {
+    nextProps.data = sanitizeImageFieldsInData(props.data);
+    changed = true;
+  }
+  if (props.children !== undefined) {
+    nextProps.children = stripPdfImagesFromElement(props.children);
+    changed = true;
+  }
+  return changed ? React.cloneElement(node as React.ReactElement<any>, nextProps) : node;
 }
 
 /**
@@ -187,14 +251,25 @@ export function VectorDocViewer({
       setLoading(true);
       setError(null);
       try {
+        initPdfFonts();
         let blob: Blob;
         try {
           blob = await pdf(document).toBlob();
         } catch (pdfErr) {
           const msg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
-          if (/DataView|fontkit|Offset is outside|Invalid JPEG|SOI not found|Font family/i.test(msg)) {
+          if (/DataView|fontkit|Offset is outside|Invalid JPEG|SOI not found|Font family|Could not resolve font/i.test(msg)) {
             resetBrokenDynamicFonts();
-            blob = await pdf(document).toBlob();
+            try {
+              blob = await pdf(document).toBlob();
+            } catch (retryErr) {
+              const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+              if (/DataView|Offset is outside|Invalid JPEG|SOI not found|Unknown image format/i.test(retryMsg)) {
+                const safeDoc = stripPdfImagesFromElement(document) as React.ReactElement;
+                blob = await pdf(safeDoc).toBlob();
+              } else {
+                throw retryErr;
+              }
+            }
           } else {
             throw pdfErr;
           }
