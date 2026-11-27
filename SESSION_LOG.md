@@ -1,3 +1,20 @@
+## [2026-11-27] - PR #182 (V3.14.2): EditorLee — Cero Pérdida de Texto en AST, Extractores PDF/DOCX, Persistencia/Pestañas y Guardas Anti-Alucinación
+
+**Commit en `main`:** `935021dcde1b90a643d2f3df065670a362278949`
+
+**Resumen:**
+- **Guardas AST anti-alucinación y biyección sin pérdidas (`documentAst.ts`, `catalog.ts`)**:
+  - Creación de `sanitizeHallucinatedSections()` para neutralizar secciones inventadas sin bloques reales o cortes falsos de `anexo` / `bibliografia` / `glosario` sin evidencia de encabezado o léxico real, reabsorbiéndolos al capítulo previo (preservando bibliografías reales).
+  - Adición de `expandBlockIdListOrRanges()` (soporta rangos `"blk_A..blk_B"` en `blockIds`), soporte de `startBlockId` sin `endBlockId` mediante `nextSectionStartBlockId`, filtros positivos `isGenuineCoverMetadataBlock()` / `isGenuineTocBlock()` contra agujeros negros de portada/TOC, preservación de secciones de 1 solo bloque `heading` en `reconstructEditorialSectionsFromAst()` y endurecimiento de prompts en `editorial_analyze_ast_structure` / `_long` manteniendo `tier: 'fast'`.
+- **Extractores PDF y DOCX sin descarte silencioso (`pdfEditorialExtractor.ts`, `pdfGeometryHelpers.ts`, `docxClientExtractor.ts`)**:
+  - Incorporación de `hasUsableEditorialDigitalText()` para retener páginas digitales cortas o con kerning y respaldo automático a líneas digitales si falla OCR; ajuste de `detectTablesInPageLines()` (`colGapMin` y `avgRowChars <= 85`) para distinguir prosa justificada de tablas reales.
+  - Sustitución del grep por `outerHTML` en `<w:sdt>` de DOCX por `isTocSdtElement()` sobre `<w:sdtPr>` + procesamiento recursivo `processContainerChildren()` para conservar párrafos y tablas dentro de bloques `<w:sdt>` aunque mencionen `"índice"`.
+- **Persistencia, pestañas, modales y versionado (`EditorLeeStudioContent.tsx`, `capabilityRegistry.ts`, `EditorialGlobalNormModal.tsx`, `EditorialImportReviewModal.tsx`, `version.ts`)**:
+  - Incorporación de prefijos `ed_copy_` / `ed_teamcopy_` en `capabilityRegistry.ts`, sincronización de ID activo al abrir/duplicar/abrir desde disco (`activateEditorialDocument`), recuperación automática del último manuscrito guardado al recargar, flush en `pagehide`/`beforeunload`, confirmación con `useConfirm()` al reemplazar estructura sobre contenido real (`hasEditorialSubstantiveContent`), poda de placeholders `rec_seed_*` vacíos al importar y bump PATCH a `V3.14.2`.
+- **Verificación:** `tests/v3142ZeroTextLossAndAntiHallucination.test.ts` (`5/5`), suite dirigida (`26/26`), `npm run check-all` en 0 errores en local y GitHub Actions (`check-all` + Vercel Preview) en verde antes del merge.
+
+---
+
 ## [2026-11-27] - PR #180 (V3.14.1): Motor PDF — Blindaje de Fuentes Estándar (`Times-Roman` / `Helvetica`) y Validación SFNT Profunda sin `Font.clear()`
 
 **Commit en `main`:** `98f2c405baecdb76daaa08aecfd68931c8bde379`
